@@ -11,6 +11,7 @@ const SCENES := {
 	"check": "res://scenes/check.tscn",
 	"audio_render": "res://scenes/audio_render.tscn",
 	"showroom": "res://scenes/showroom.tscn",
+	"map_test": "res://qa/map_test.tscn",
 }
 
 func _ready() -> void:

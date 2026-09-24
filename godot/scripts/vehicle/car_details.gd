@@ -226,6 +226,13 @@ static func add(root: Node3D, b: Dictionary, dims: Dictionary, paint: Material, 
 ## Called by CarView every physics tick: brake lights and headlight emissive.
 static func set_light_state(root: Node3D, braking: bool, lights_on: bool) -> void:
 	for m in root.get_meta("brake_lights", []):
-		var mat: StandardMaterial3D = m.material_override
-		if mat != null:
+		if m == null:
+			continue
+		var mat: Material = m.material_override
+		if mat == null and m is MeshInstance3D:
+			mat = m.get_active_material(0)
+			if mat != null:
+				m.material_override = mat.duplicate()
+				mat = m.material_override
+		if mat is StandardMaterial3D:
 			mat.emission_energy_multiplier = 4.8 if braking else (1.4 if lights_on else 0.5)

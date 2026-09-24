@@ -73,8 +73,12 @@ const PRESETS := {
 			"look_back": {"button": JOY_BUTTON_LEFT_STICK},
 			"reset_car": {"button": JOY_BUTTON_BACK},
 			"pause": {"button": JOY_BUTTON_START},
+			"map": {"button": JOY_BUTTON_RIGHT_STICK},
+			"photo": {"button": JOY_BUTTON_MISC1},
 			"lights": {"button": JOY_BUTTON_DPAD_UP},
 			"horn": {"button": JOY_BUTTON_DPAD_DOWN},
+			"radio_next": {"button": JOY_BUTTON_DPAD_RIGHT},
+			"radio_prev": {"button": JOY_BUTTON_DPAD_LEFT},
 		}
 	},
 	"rp4_retro_abxy": {
@@ -93,8 +97,12 @@ const PRESETS := {
 			"look_back": {"button": JOY_BUTTON_LEFT_STICK},
 			"reset_car": {"button": JOY_BUTTON_BACK},
 			"pause": {"button": JOY_BUTTON_START},
+			"map": {"button": JOY_BUTTON_RIGHT_STICK},
+			"photo": {"button": JOY_BUTTON_MISC1},
 			"lights": {"button": JOY_BUTTON_DPAD_UP},
 			"horn": {"button": JOY_BUTTON_DPAD_DOWN},
+			"radio_next": {"button": JOY_BUTTON_DPAD_RIGHT},
+			"radio_prev": {"button": JOY_BUTTON_DPAD_LEFT},
 		}
 	},
 	"bumper_drive": {
@@ -113,8 +121,12 @@ const PRESETS := {
 			"look_back": {"button": JOY_BUTTON_LEFT_STICK},
 			"reset_car": {"button": JOY_BUTTON_BACK},
 			"pause": {"button": JOY_BUTTON_START},
+			"map": {"button": JOY_BUTTON_RIGHT_STICK},
+			"photo": {"button": JOY_BUTTON_MISC1},
 			"lights": {"button": JOY_BUTTON_DPAD_UP},
 			"horn": {"button": JOY_BUTTON_DPAD_DOWN},
+			"radio_next": {"button": JOY_BUTTON_DPAD_RIGHT},
+			"radio_prev": {"button": JOY_BUTTON_DPAD_LEFT},
 		}
 	},
 	"arcade_buttons": {
@@ -133,8 +145,12 @@ const PRESETS := {
 			"look_back": {"button": JOY_BUTTON_LEFT_STICK},
 			"reset_car": {"button": JOY_BUTTON_BACK},
 			"pause": {"button": JOY_BUTTON_START},
+			"map": {"button": JOY_BUTTON_RIGHT_STICK},
+			"photo": {"button": JOY_BUTTON_MISC1},
 			"lights": {"button": JOY_BUTTON_DPAD_UP},
 			"horn": {"button": JOY_BUTTON_DPAD_DOWN},
+			"radio_next": {"button": JOY_BUTTON_DPAD_RIGHT},
+			"radio_prev": {"button": JOY_BUTTON_DPAD_LEFT},
 		}
 	}
 }

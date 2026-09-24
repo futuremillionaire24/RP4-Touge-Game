@@ -265,7 +265,7 @@ func _play_update(delta: float) -> void:
 	# Dynamic time-sliced reflection probe update (10 Hz on 60 FPS target).
 	_probe_tick += 1
 	if _probe_tick % 6 == 0 and _car_probe:
-		_car_probe.request_update()
+		_car_probe.update_mode = ReflectionProbe.UPDATE_ONCE
 	var pos := player.global_position
 	if _follow_player:
 		streamer.focus = pos
@@ -475,18 +475,23 @@ func _on_pause_choice(id: String) -> void:
 			get_tree().change_scene_to_file("res://scenes/festival.tscn")
 
 func _open_world_map() -> void:
-	if not layer or not world or not player:
+	if not world or not player:
 		return
 	if hud: hud.visible = false
 	if race_hud: race_hud.visible = false
 	if minimap: minimap.visible = false
 	get_tree().paused = true
 	var wm = WorldMapClass.new()
-	layer.add_child(wm)
+	add_child(wm)
 	wm.setup(world, player, markers, activities, self)
-	wm.waypoint_set.connect(func(pos: Vector3, poly: PackedVector2Array):
+	wm.waypoint_set.connect(func(pos: Vector3, poly: PackedVector2Array, centers_3d: PackedVector3Array, ups_3d: PackedVector3Array):
 		if minimap:
 			minimap.route_line = poly
+		if gps_ribbon:
+			if pos != Vector3.INF and centers_3d.size() > 1:
+				gps_ribbon.set_samples(centers_3d, ups_3d)
+			else:
+				gps_ribbon.clear()
 		if pos != Vector3.INF:
 			hud.toast("GPS WAYPOINT SET", 2.0)
 		else:
