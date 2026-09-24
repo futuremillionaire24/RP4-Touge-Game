@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neon Touge Progress</title>
+<style>
+  :root {
+    --bg: #07080d; --card: #10121d; --line: #1f233a; --line2: #32385c;
+    --pink: #ff2a85; --cyan: #00e5f2; --amber: #ffb703; --green: #06d6a0; --red: #ff5a5f;
+    --text: #f0f2fe; --dim: #8a90b0; --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, "Segoe UI", sans-serif; padding: 20px 16px 40px; }
+  .wrap { max-width: 1400px; margin: 0 auto; }
+  header { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 16px; }
+  h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.3px; }
+  h1 b { color: var(--pink); }
+  .sub { color: var(--dim); font-size: 0.85rem; }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill { font: 700 0.75rem var(--mono); padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line2); color: var(--dim); }
+  .pill.live { color: var(--green); border-color: rgba(6,214,160,.45); }
+  .pill.stale { color: var(--red); border-color: rgba(255,90,95,.45); }
+  .pill.dev { color: var(--cyan); border-color: rgba(0,229,242,.4); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  .stat .k { color: var(--dim); font-size: 0.72rem; text-transform: uppercase; letter-spacing: .6px; font-weight: 700; }
+  .stat .v { font-size: 1.35rem; font-weight: 800; }
+  .phase { background: var(--card); border: 1px solid var(--line2); border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; }
+  .phase .k { color: var(--amber); font: 700 0.72rem var(--mono); letter-spacing: .6px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .card.BUILDING, .card.CRITIQUING, .card.JUDGING, .card.INTEGRATING { border-color: rgba(0,229,242,.55); box-shadow: 0 0 18px rgba(0,229,242,.12); }
+  .card.PASSED { border-color: var(--green); }
+  .card.LOST { border-color: rgba(255,90,95,.45); }
+  .top { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+  .num { font: 700 0.72rem var(--mono); color: var(--cyan); }
+  .title { font-weight: 800; font-size: 1rem; }
+  .tag { font: 800 0.68rem var(--mono); padding: 3px 8px; border-radius: 6px; white-space: nowrap; background: rgba(138,144,176,.15); color: var(--dim); }
+  .tag.BUILDING, .tag.BUILT, .tag.INTEGRATING { background: rgba(0,229,242,.15); color: var(--cyan); }
+  .tag.CRITIQUING, .tag.JUDGING { background: rgba(255,183,3,.15); color: var(--amber); }
+  .tag.PASSED { background: rgba(6,214,160,.18); color: var(--green); }
+  .tag.LOST { background: rgba(255,90,95,.15); color: var(--red); }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font: 0.75rem var(--mono); color: var(--dim); }
+  .meta b { color: var(--text); }
+  .bar { height: 6px; background: #191c2c; border-radius: 3px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--pink), var(--cyan)); transition: width .5s; }
+  .note { font-size: 0.82rem; color: var(--text); }
+  .gap { font-size: 0.8rem; color: var(--amber); }
+  .gap::before { content: "Biggest gap: "; font-weight: 800; }
+  .verdict { font-size: 0.8rem; color: var(--dim); font-style: italic; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .shots figure { background: #04050a; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .shots img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; cursor: zoom-in; }
+  .shots figcaption { font: 0.66rem var(--mono); color: var(--dim); padding: 2px 6px; }
+  .hist { display: flex; gap: 3px; flex-wrap: wrap; }
+  .hist span { font: 0.66rem var(--mono); padding: 1px 5px; border-radius: 4px; background: #191c2c; color: var(--dim); }
+  .hist span.w { background: rgba(6,214,160,.2); color: var(--green); }
+  h2 { font-size: 1rem; margin: 22px 0 10px; }
+  .feed { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; max-height: 360px; overflow: auto; }
+  .feed div { font: 0.78rem var(--mono); padding: 4px 0; border-bottom: 1px solid var(--line); color: var(--dim); }
+  .feed div b { color: var(--text); font-weight: 400; }
+  #zoom { position: fixed; inset: 0; background: rgba(0,0,0,.9); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 9; cursor: zoom-out; }
+  #zoom img { max-width: 100%; max-height: 100%; }
+  .err { color: var(--red); font: 0.8rem var(--mono); margin-bottom: 10px; display: none; }
+  @media (max-width: 420px) { .grid { grid-template-columns: 1fr; } h1 { font-size: 1.2rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1><b>峠</b> Neon Touge — Perfection Loop</h1>
+      <div class="sub" id="sub">Builder → on-device critic (RP4) → blind judge vs Forza Horizon / Gran Turismo</div>
+    </div>
+    <div class="pills">
+      <span class="pill" id="live">connecting…</span>
+      <span class="pill dev" id="dev">RP4: —</span>
+    </div>
+  </header>
+  <div class="err" id="err"></div>
+  <div class="stats">
+    <div class="stat"><div class="k">Wave</div><div class="v" id="s-wave">—</div></div>
+    <div class="stat"><div class="k">Pieces won (blind)</div><div class="v" id="s-won">—</div></div>
+    <div class="stat"><div class="k">Active now</div><div class="v" id="s-active">—</div></div>
+    <div class="stat"><div class="k">Rounds run</div><div class="v" id="s-rounds">—</div></div>
+    <div class="stat"><div class="k">Avg critic score</div><div class="v" id="s-score">—</div></div>
+  </div>
+  <div class="phase"><div class="k">NOW</div><div id="phase">—</div></div>
+  <div class="grid" id="grid"></div>
+  <h2>Activity</h2>
+  <div class="feed" id="feed"></div>
+</div>
+<div id="zoom"><img alt=""></div>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const bust = () => "?t=" + Date.now();
+let lastOk = 0;
+
+async function getJson(url) {
+  const r = await fetch(url + bust(), { cache: "no-store" });
+  if (!r.ok) throw new Error(url + " → HTTP " + r.status);
+  return r.json();
+}
+
+function ago(iso) {
+  if (!iso) return "—";
+  const s = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 1000));
+  if (s < 60) return s + "s ago";
+  if (s < 3600) return Math.round(s / 60) + "m ago";
+  return Math.round(s / 3600) + "h ago";
+}
+
+function shot(src, cap) {
+  if (!src) return `<figure><div style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:.7rem">no capture yet</div><figcaption>${esc(cap)}</figcaption></figure>`;
+  return `<figure><img loading="lazy" src="${esc(src)}${bust()}" alt="${esc(cap)}" onerror="this.style.opacity=.2"><figcaption>${esc(cap)}</figcaption></figure>`;
+}
+
+function card(p) {
+  const st = p.status || "QUEUED";
+  const score = typeof p.score === "number" ? p.score : null;
+  const hist = (p.history || []).map(h => `<span class="${h.won ? "w" : ""}" title="${esc(h.gap || "")}">R${h.round}: ${h.score ?? "?"}${h.blind ? " · " + esc(h.blind) : ""}</span>`).join("");
+  return `<div class="card ${st}">
+    <div class="top">
+      <div><div class="num">PIECE ${esc(p.id)} · WAVE ${esc(p.wave)}</div><div class="title">${esc(p.title)}</div></div>
+      <span class="tag ${st}">${esc(st.replace("_", " "))}</span>
+    </div>
+    <div class="meta"><span>round <b>${p.round ?? 0}</b></span><span>score <b>${score ?? "—"}</b>/100</span><span>blind <b>${esc(p.blind || "—")}</b></span><span>${ago(p.updated)}</span></div>
+    <div class="bar"><i style="width:${score ?? 0}%"></i></div>
+    ${p.note ? `<div class="note">${esc(p.note)}</div>` : ""}
+    ${p.gap ? `<div class="gap">${esc(p.gap)}</div>` : ""}
+    ${p.verdict ? `<div class="verdict">“${esc(p.verdict)}”</div>` : ""}
+    ${(p.ours || p.ref) ? `<div class="shots">${shot(p.ours, "ours · RP4 capture")}${shot(p.ref, "reference · FH/GT")}</div>` : ""}
+    ${hist ? `<div class="hist">${hist}</div>` : ""}
+  </div>`;
+}
+
+async function tick() {
+  try {
+    const state = await getJson("progress/state.json");
+    const live = await Promise.all((state.pieces || []).map(p =>
+      getJson(`progress/pieces/${p.id}.json`).catch(() => ({}))));
+    const pieces = state.pieces.map((p, i) => Object.assign({}, p, live[i]));
+    let feed = [];
+    try {
+      const r = await fetch("progress/feed.jsonl" + bust(), { cache: "no-store" });
+      if (r.ok) feed = (await r.text()).split("\n").filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+    } catch {}
+    lastOk = Date.now();
+    $("err").style.display = "none";
+
+    $("s-wave").textContent = state.wave ?? "—";
+    const won = pieces.filter(p => p.status === "PASSED").length;
+    $("s-won").textContent = `${won} / ${pieces.length}`;
+    const activeSt = ["BUILDING", "INTEGRATING", "CRITIQUING", "JUDGING"];
+    $("s-active").textContent = pieces.filter(p => activeSt.includes(p.status)).length;
+    $("s-rounds").textContent = pieces.reduce((a, p) => a + (p.history || []).length, 0);
+    const scored = pieces.filter(p => typeof p.score === "number");
+    $("s-score").textContent = scored.length ? Math.round(scored.reduce((a, p) => a + p.score, 0) / scored.length) : "—";
+    $("phase").textContent = state.phase || "—";
+    $("dev").textContent = "RP4: " + (state.device?.status || "—");
+    $("sub").textContent = `Builder → on-device critic (RP4) → blind judge vs Forza Horizon / Gran Turismo · stop rule: ${state.stop_rule || "—"} · updated ${ago(state.updated)}`;
+
+    const order = { CRITIQUING: 0, JUDGING: 1, INTEGRATING: 2, BUILDING: 3, BUILT: 4, LOST: 5, QUEUED: 6, PASSED: 7 };
+    pieces.sort((a, b) => (order[a.status] ?? 6) - (order[b.status] ?? 6) || String(a.id).localeCompare(String(b.id)));
+    $("grid").innerHTML = pieces.map(card).join("");
+    $("feed").innerHTML = feed.slice(-200).reverse()
+      .map(f => `<div>${esc(new Date(f.t).toLocaleTimeString())} · <b>${esc(f.msg)}</b></div>`).join("");
+  } catch (e) {
+    $("err").textContent = "Poll failed: " + e.message + " (is tools/serve-dashboard.ps1 running?)";
+    $("err").style.display = "block";
+  }
+  const fresh = Date.now() - lastOk < 10000;
+  $("live").textContent = fresh ? "LIVE · polling 3s" : "STALE";
+  $("live").className = "pill " + (fresh ? "live" : "stale");
+}
+
+document.addEventListener("click", e => {
+  const z = $("zoom");
+  if (e.target.matches(".shots img")) { z.querySelector("img").src = e.target.src; z.style.display = "flex"; }
+  else if (e.target.closest("#zoom")) z.style.display = "none";
+});
+tick();
+setInterval(tick, 3000);
+</script>
+</body>
+</html>
