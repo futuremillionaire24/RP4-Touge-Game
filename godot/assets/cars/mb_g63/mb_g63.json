@@ -1,0 +1,227 @@
+{
+ "key": "mb_g63",
+ "traffic": false,
+ "credit": {
+  "title": "Mersedes-Benz G63 AMG",
+  "author": "Black Snow",
+  "author_url": "https://sketchfab.com/BlackSnow02",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/mersedes-benz-g63-amg-e5e2a1d2238048a1a494b3df983c16bb"
+ },
+ "length": 4.873,
+ "width": 2.227,
+ "height": 1.989,
+ "bounds": {
+  "min": [
+   -1.114,
+   -0.082,
+   -2.353
+  ],
+  "max": [
+   1.113,
+   1.907,
+   2.52
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.8004,
+    0.3481,
+    -1.4383
+   ],
+   "radius": 0.3481,
+   "width": 0.3232
+  },
+  {
+   "pos": [
+    0.8004,
+    0.3481,
+    -1.4383
+   ],
+   "radius": 0.3481,
+   "width": 0.3232
+  },
+  {
+   "pos": [
+    -0.8004,
+    0.3481,
+    1.4383
+   ],
+   "radius": 0.3481,
+   "width": 0.3232
+  },
+  {
+   "pos": [
+    0.8004,
+    0.3481,
+    1.4383
+   ],
+   "radius": 0.3481,
+   "width": 0.3232
+  }
+ ],
+ "wheelbase": 2.8766,
+ "track_front": 1.6008,
+ "track_rear": 1.6008,
+ "headlights": [
+  [
+   -0.634,
+   0.845,
+   -2.07
+  ],
+  [
+   0.635,
+   0.852,
+   -2.07
+  ]
+ ],
+ "taillights": [
+  [
+   -0.395,
+   1.039,
+   2.148
+  ],
+  [
+   0.599,
+   0.82,
+   2.179
+  ]
+ ],
+ "exhausts": [
+  [
+   -0.733,
+   0.335,
+   0.479
+  ],
+  [
+   0.732,
+   0.335,
+   0.479
+  ]
+ ],
+ "classes": [
+  "glass:G-class_glass_tint",
+  "glass:IntWindows",
+  "glass:light_signal:G-class_glass",
+  "glass:light_signal:window_plastic",
+  "interior:AMG_dash_black",
+  "interior:G-class_foglights",
+  "interior:RGB_int",
+  "interior:brabus_dash_skin",
+  "interior:carbon_sesto3",
+  "interior:int_badges",
+  "interior:int_badges_clock",
+  "interior:interiordfs",
+  "interior:leather_jesko2",
+  "interior:leatherbmp2",
+  "interior:light_signal:G-class_speedo_black",
+  "interior:light_signal:door_plastic",
+  "interior:light_tail:ptn_leather_016_lcao",
+  "interior:light_tail:setlogo01x",
+  "interior:other:G-class_underbody",
+  "interior:other:black3",
+  "interior:other:common_black033",
+  "interior:other:speakers2_d",
+  "interior:other:trucks_mechanical",
+  "interior:red_b",
+  "interior:seat_plastic",
+  "light_head:G-class_glass.004",
+  "light_head:G-class_lightled",
+  "light_head:lamp_alpha",
+  "light_head:light_signal:G-class_speedo_black",
+  "light_head:light_signal:black4",
+  "light_head:light_signal:window_plastic",
+  "light_head:other:plastic5",
+  "light_misc:G-class_license_light",
+  "light_misc:interior:G-class_foglights",
+  "light_misc:light1",
+  "light_signal:G-class_glass",
+  "light_signal:G-class_speedo_black",
+  "light_signal:G-class_speedo_black_0",
+  "light_signal:black4",
+  "light_signal:door_plastic",
+  "light_signal:interior:int_badges",
+  "light_signal:nlightsf20",
+  "light_signal:window_plastic",
+  "light_tail:G-class_black",
+  "light_tail:G-class_taillight_1",
+  "light_tail:black5",
+  "light_tail:door_handles",
+  "light_tail:glass:G-class_glass_tint",
+  "light_tail:interior:brabus_dash_skin",
+  "light_tail:interior:leatherbmp2",
+  "light_tail:light_signal:G-class_glass",
+  "light_tail:light_signal:G-class_speedo_black",
+  "light_tail:light_signal:black4",
+  "light_tail:light_signal:window_plastic",
+  "light_tail:other:common_black010",
+  "light_tail:ptn_leather_016_lcao",
+  "light_tail:setlogo01x",
+  "light_tail:wiper",
+  "other:AMG_hood_logo",
+  "other:AMG_side_logo",
+  "other:AMG_silver",
+  "other:G-class_speedo_red",
+  "other:G-class_underbody",
+  "other:Music",
+  "other:Scene_-_Root.002",
+  "other:amg_texture5",
+  "other:black3",
+  "other:common_black010",
+  "other:common_black010.001",
+  "other:common_black020",
+  "other:common_black033",
+  "other:exhausts_silver",
+  "other:gavril_v8.001",
+  "other:interior:red_b",
+  "other:light_signal:G-class_speedo_black",
+  "other:light_signal:black4",
+  "other:light_signal:door_plastic",
+  "other:light_tail:G-class_black",
+  "other:light_tail:black5",
+  "other:light_tail:door_handles",
+  "other:light_tail:setlogo01x",
+  "other:light_tail:wiper",
+  "other:other:G-class_underbody",
+  "other:other:trucks_mechanical",
+  "other:plastic5",
+  "other:radiator_silver",
+  "other:red_b.002",
+  "other:speakers2_d",
+  "other:symbols",
+  "other:trucks_mechanical",
+  "paint:G900_rocket_urus_27__PAINT_2",
+  "paint:G900_rocket_urus_27__PAINT_2_0",
+  "paint:G900_rocket_urus_27__PAINT_2_1",
+  "paint:G900_rocket_urus_27__PAINT_2_2",
+  "paint:G900_rocket_urus_27__PAINT_2_3",
+  "paint:G900_rocket_urus_27__PAINT_2_4",
+  "paint:G900_rocket_urus_27__PAINT_2_5",
+  "paint:G900_rocket_urus_27__PAINT_2_6",
+  "paint:G900_rocket_urus_27__PAINT_2_7",
+  "paint:G900_rocket_urus_27__PAINT_2_8",
+  "paint:G900_rocket_urus_27__PAINT_2_9",
+  "paint:bodypaint",
+  "paint:vehicle_generic_smallspecmap__PAINT_2",
+  "rim:AMG_steering_black",
+  "rim:AMG_wheels_color",
+  "rim:AMG_wheels_secondcolor",
+  "rim:gt_34",
+  "rim:interior:G-class_foglights",
+  "rim:leather_wheel",
+  "rim:light_signal:G-class_speedo_black",
+  "rim:light_tail:G-class_black",
+  "rim:other:AMG_silver",
+  "rim:other:symbols",
+  "rim:rim:AMG_wheels_color",
+  "rim:rim:AMG_wheels_secondcolor",
+  "rim:rim:gt_34",
+  "rim:steeringwheel_plastic",
+  "tyre:AMG_sparetire_black",
+  "tyre:other:AMG_silver"
+ ],
+ "triangles": 128296,
+ "source_triangles": 445907
+}

@@ -1,0 +1,140 @@
+{
+ "key": "skoda_superb",
+ "traffic": true,
+ "credit": {
+  "title": "2017 Skoda Superb",
+  "author": "BHP3D",
+  "author_url": "https://sketchfab.com/BHP3D",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/2017-skoda-superb-2da5059c3068448b9541eafb930a45a0"
+ },
+ "length": 4.861,
+ "width": 2.024,
+ "height": 1.5,
+ "bounds": {
+  "min": [
+   -1.011,
+   -0.011,
+   -2.325
+  ],
+  "max": [
+   1.013,
+   1.489,
+   2.536
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.7802,
+    0.3405,
+    -1.4278
+   ],
+   "radius": 0.3298,
+   "width": 0.2699
+  },
+  {
+   "pos": [
+    0.7802,
+    0.3405,
+    -1.4278
+   ],
+   "radius": 0.3298,
+   "width": 0.2699
+  },
+  {
+   "pos": [
+    -0.7802,
+    0.3192,
+    1.4278
+   ],
+   "radius": 0.3298,
+   "width": 0.2699
+  },
+  {
+   "pos": [
+    0.7802,
+    0.3192,
+    1.4278
+   ],
+   "radius": 0.3298,
+   "width": 0.2699
+  }
+ ],
+ "wheelbase": 2.8556,
+ "track_front": 1.5605,
+ "track_rear": 1.5605,
+ "headlights": [
+  [
+   -0.69,
+   0.642,
+   -1.446
+  ],
+  [
+   0.554,
+   0.646,
+   -1.145
+  ]
+ ],
+ "taillights": [
+  [
+   -0.586,
+   0.857,
+   2.337
+  ],
+  [
+   0.588,
+   0.857,
+   2.337
+  ]
+ ],
+ "exhausts": [],
+ "classes": [
+  "glass:glass.003",
+  "glass:glass.004",
+  "glass:glass.005",
+  "glass:glass.006",
+  "glass:light_head:glass.001",
+  "glass:light_head:glass.002",
+  "interior:interior.1",
+  "interior:interior.2",
+  "light_head:glass",
+  "light_head:glass.001",
+  "light_head:glass.002",
+  "light_head:left_front_light",
+  "light_head:right_front_light",
+  "light_misc:lights.10",
+  "light_misc:lights.6",
+  "light_misc:lights.7",
+  "light_signal:light_head:glass",
+  "light_tail:right_rear_light",
+  "other:boot_ok.12",
+  "other:bump_front_ok.10",
+  "other:bump_front_ok.7",
+  "other:bump_front_ok.8",
+  "other:bump_front_ok.9",
+  "other:chassis.4",
+  "other:chassis.5",
+  "other:chassis.6",
+  "other:enginebay.1",
+  "other:enginebay.2",
+  "other:enginebay.3",
+  "other:enginebay.4",
+  "other:enginebay.5",
+  "other:enginebay.6",
+  "paint:primary",
+  "rim:rim:wheel.0",
+  "rim:rim:wheel.1",
+  "rim:rim:wheel.2",
+  "rim:rim:wheel.3",
+  "rim:rim:wheel.4",
+  "rim:wheel.0",
+  "rim:wheel.1",
+  "rim:wheel.2",
+  "rim:wheel.3",
+  "rim:wheel.4"
+ ],
+ "triangles": 40234,
+ "source_triangles": 159630
+}

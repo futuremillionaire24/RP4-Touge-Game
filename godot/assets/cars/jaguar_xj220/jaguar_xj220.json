@@ -1,0 +1,94 @@
+{
+ "key": "jaguar_xj220",
+ "traffic": false,
+ "credit": {
+  "title": "Jaguar XJ220 1991",
+  "author": "Comrade1280",
+  "author_url": "https://sketchfab.com/comrade1280",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/jaguar-xj220-1991-d99bb7b0fc0e4e3c9553246679dd067f"
+ },
+ "length": 4.93,
+ "width": 2.291,
+ "height": 1.14,
+ "bounds": {
+  "min": [
+   -1.146,
+   0.008,
+   -2.473
+  ],
+  "max": [
+   1.145,
+   1.148,
+   2.457
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.9267,
+    0.3272,
+    -1.3272
+   ],
+   "radius": 0.3348,
+   "width": 0.2739
+  },
+  {
+   "pos": [
+    0.9269,
+    0.3272,
+    -1.3258
+   ],
+   "radius": 0.3348,
+   "width": 0.2739
+  },
+  {
+   "pos": [
+    -0.8522,
+    0.3457,
+    1.3265
+   ],
+   "radius": 0.3381,
+   "width": 0.4127
+  },
+  {
+   "pos": [
+    0.8519,
+    0.3457,
+    1.3266
+   ],
+   "radius": 0.3381,
+   "width": 0.4127
+  }
+ ],
+ "wheelbase": 2.6531,
+ "track_front": 1.8537,
+ "track_rear": 1.7041,
+ "headlights": [],
+ "taillights": [],
+ "exhausts": [],
+ "classes": [
+  "caliper:caliper",
+  "caliper:caliper:caliper",
+  "chrome:chrome",
+  "disc:disc:disk",
+  "disc:disk",
+  "glass:glass",
+  "interior:interior",
+  "light_misc:light",
+  "other:chassis",
+  "other:engine",
+  "other:frames",
+  "other:plastic",
+  "other:plastic_matte",
+  "paint:body",
+  "rim:rim:rims",
+  "rim:rims",
+  "rim:stwheel",
+  "tyre:tyre",
+  "tyre:tyre:tyre"
+ ],
+ "triangles": 37858,
+ "source_triangles": 38777
+}

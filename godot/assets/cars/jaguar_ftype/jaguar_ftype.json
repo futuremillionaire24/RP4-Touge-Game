@@ -1,0 +1,137 @@
+{
+ "key": "jaguar_ftype",
+ "traffic": false,
+ "credit": {
+  "title": "2017 Jaguar F-Type R Coupe",
+  "author": "Galaxy Car Showroom",
+  "author_url": "https://sketchfab.com/adrianaflak09",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/2017-jaguar-f-type-r-coupe-de4dfe1256564276b9a134535f324b7a"
+ },
+ "length": 4.47,
+ "width": 2.048,
+ "height": 1.313,
+ "bounds": {
+  "min": [
+   -1.027,
+   0,
+   -2.243
+  ],
+  "max": [
+   1.021,
+   1.313,
+   2.227
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.7827,
+    0.3583,
+    -1.3154
+   ],
+   "radius": 0.3583,
+   "width": 0.29
+  },
+  {
+   "pos": [
+    0.7793,
+    0.3583,
+    -1.3145
+   ],
+   "radius": 0.3583,
+   "width": 0.29
+  },
+  {
+   "pos": [
+    -0.8113,
+    0.3583,
+    1.3146
+   ],
+   "radius": 0.3583,
+   "width": 0.29
+  },
+  {
+   "pos": [
+    0.8147,
+    0.3583,
+    1.3154
+   ],
+   "radius": 0.3583,
+   "width": 0.29
+  }
+ ],
+ "wheelbase": 2.63,
+ "track_front": 1.5619,
+ "track_rear": 1.626,
+ "headlights": [
+  [
+   -0.555,
+   0.827,
+   0.519
+  ],
+  [
+   0.659,
+   0.754,
+   0.38
+  ]
+ ],
+ "taillights": [
+  [
+   -0.63,
+   0.784,
+   1.892
+  ],
+  [
+   0.624,
+   0.784,
+   1.892
+  ]
+ ],
+ "exhausts": [],
+ "classes": [
+  "chrome:M_Opaque_ChromeSmooth_Max",
+  "glass:M_GlassOpaque_Mirror_Max",
+  "glass:M_Glass_WindowRear_Low",
+  "glass:M_Glass_WindowSurroundFront_Low",
+  "interior:M_InteriorTiled_Common_Max",
+  "interior:M_Interior_Max",
+  "light_head:M_LightGlass_Clear_Low",
+  "light_misc:M_Light_Max",
+  "light_tail:M_LightGlass_Red_Low",
+  "other:M_Badge_Max",
+  "other:M_Chassis_Max",
+  "other:M_Engine_Max",
+  "other:M_GrilleA_Max",
+  "other:M_GrilleB_Max",
+  "other:M_Opaque_AluminumRough_Max",
+  "other:M_Opaque_PlasticRoughBlack_Max",
+  "other:M_Opaque_PlasticRoughBlack_Max.006",
+  "other:M_Opaque_PlasticRoughBlack_Max.007",
+  "other:M_Opaque_PlasticSmoothBlack_Max",
+  "other:Material.001",
+  "other:other:M_Chassis_Max",
+  "other:other:M_Engine_Max",
+  "paint:M_CarPaint_Max",
+  "paint:M_CarPaint_Trim_PlasticSmoothBlack_Max",
+  "rim:M_RimBadge_Max",
+  "rim:M_RimBadge_Max.001",
+  "rim:M_RimBadge_Max.002",
+  "rim:M_RimBadge_Max.003",
+  "rim:M_Rim_Secondary_Max",
+  "rim:M_Rim_Secondary_Max.001",
+  "rim:M_Rim_Secondary_Max.002",
+  "rim:M_Rim_Secondary_Max.003",
+  "rim:M_Rim_Secondary_Max.004",
+  "rim:M_Rim_Secondary_Max.005",
+  "rim:M_Rim_Secondary_Max.006",
+  "rim:M_Rim_Secondary_Max.007",
+  "tyre:M_Tire_Max",
+  "tyre:M_Tire_Max.001",
+  "tyre:M_Tire_Max.002",
+  "tyre:M_Tire_Max.003"
+ ],
+ "triangles": 46371,
+ "source_triangles": 47834
+}

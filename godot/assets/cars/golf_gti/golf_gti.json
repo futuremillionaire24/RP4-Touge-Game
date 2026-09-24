@@ -1,0 +1,93 @@
+{
+ "key": "golf_gti",
+ "traffic": false,
+ "credit": {
+  "title": "vw golf 5 gti",
+  "author": "Preview2SEbIT69",
+  "author_url": "https://sketchfab.com/Preview2SEBIT69",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/vw-golf-5-gti-4389c32f54964b5ab01aa8462419b6c1"
+ },
+ "length": 4.216,
+ "width": 1.985,
+ "height": 1.703,
+ "bounds": {
+  "min": [
+   -0.993,
+   0,
+   -2.185
+  ],
+  "max": [
+   0.992,
+   1.703,
+   2.031
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.7601,
+    0.3128,
+    -1.2876
+   ],
+   "radius": 0.3128,
+   "width": 0.2393
+  },
+  {
+   "pos": [
+    0.7601,
+    0.3128,
+    -1.2862
+   ],
+   "radius": 0.3128,
+   "width": 0.2393
+  },
+  {
+   "pos": [
+    -0.7601,
+    0.3128,
+    1.2862
+   ],
+   "radius": 0.3128,
+   "width": 0.2393
+  },
+  {
+   "pos": [
+    0.7601,
+    0.3128,
+    1.2876
+   ],
+   "radius": 0.3128,
+   "width": 0.2393
+  }
+ ],
+ "wheelbase": 2.5738,
+ "track_front": 1.5202,
+ "track_rear": 1.5202,
+ "headlights": [],
+ "taillights": [],
+ "exhausts": [],
+ "classes": [
+  "other:Nuovo",
+  "other:Nuovo.1",
+  "other:Nuovo.10",
+  "other:Nuovo.11",
+  "other:Nuovo.12",
+  "other:Nuovo.13",
+  "other:Nuovo.3",
+  "other:Nuovo.4",
+  "other:Nuovo.5",
+  "other:Nuovo.6",
+  "other:Nuovo.8",
+  "other:Nuovo.9",
+  "other:material",
+  "other:other:Nuovo",
+  "other:other:Nuovo.1",
+  "other:other:Nuovo.13",
+  "other:other:material",
+  "paint:Nuovo.2"
+ ],
+ "triangles": 82308,
+ "source_triangles": 82308
+}

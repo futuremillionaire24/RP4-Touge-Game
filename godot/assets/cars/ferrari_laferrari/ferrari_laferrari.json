@@ -1,0 +1,170 @@
+{
+ "key": "ferrari_laferrari",
+ "traffic": false,
+ "credit": {
+  "title": "2013 Ferrari laferrari",
+  "author": "XENVOR creations",
+  "author_url": "https://sketchfab.com/srineshchethiya",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/2013-ferrari-laferrari-f75b682bb0de4a14b3b6c1f52862ca48"
+ },
+ "length": 4.702,
+ "width": 2.102,
+ "height": 1.125,
+ "bounds": {
+  "min": [
+   -1.048,
+   -0.016,
+   -2.519
+  ],
+  "max": [
+   1.054,
+   1.109,
+   2.183
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.8297,
+    0.3151,
+    -1.3181
+   ],
+   "radius": 0.3275,
+   "width": 0.3013
+  },
+  {
+   "pos": [
+    0.8296,
+    0.3115,
+    -1.3184
+   ],
+   "radius": 0.3274,
+   "width": 0.3013
+  },
+  {
+   "pos": [
+    -0.8226,
+    0.3612,
+    1.3184
+   ],
+   "radius": 0.3453,
+   "width": 0.3177
+  },
+  {
+   "pos": [
+    0.8227,
+    0.3577,
+    1.3181
+   ],
+   "radius": 0.3453,
+   "width": 0.3177
+  }
+ ],
+ "wheelbase": 2.6365,
+ "track_front": 1.6593,
+ "track_rear": 1.6453,
+ "headlights": [
+  [
+   -0.687,
+   0.662,
+   1.705
+  ],
+  [
+   0.638,
+   0.63,
+   1.803
+  ]
+ ],
+ "taillights": [
+  [
+   -0.583,
+   0.684,
+   1.837
+  ],
+  [
+   0.505,
+   0.642,
+   1.846
+  ]
+ ],
+ "exhausts": [],
+ "classes": [
+  "chrome:breake_chrome_2",
+  "chrome:chrome",
+  "chrome:chrome0",
+  "disc:Disk",
+  "glass:Engine_glass",
+  "glass:Glasses",
+  "interior:Interior_2.001",
+  "interior:int_mirror",
+  "interior:seat_belt_lock",
+  "interior:seats_nuts",
+  "light_head:Front_headlights.001",
+  "light_head:Rear_headlights",
+  "light_head:head_lights_glasses.002",
+  "light_head:run_lights",
+  "light_tail:break_lights.001",
+  "light_tail:break_lights_glasses",
+  "light_tail:breake_lights_chrom",
+  "light_tail:red_light",
+  "light_tail:tail_lights",
+  "other:Carbon_fiber",
+  "other:Inside_stickers",
+  "other:Logos",
+  "other:Material.009",
+  "other:Material.019",
+  "other:Material.144",
+  "other:Material.145",
+  "other:Material.146",
+  "other:Material.147",
+  "other:Rear_logo",
+  "other:Rear_something",
+  "other:Seets_logo",
+  "other:Under",
+  "other:Viper",
+  "other:black",
+  "other:black.005",
+  "other:black.007",
+  "other:black_2",
+  "other:hood_black",
+  "other:other:rear_black_something",
+  "other:rear_black_something",
+  "other:side_mirrors",
+  "other:under_carreage",
+  "paint:Body",
+  "rim:material",
+  "rim:sreerean_wheel_buttons",
+  "tyre:Material.111",
+  "tyre:Material.112",
+  "tyre:Material.113",
+  "tyre:Material.114",
+  "tyre:Material.115",
+  "tyre:Material.116",
+  "tyre:Material.117",
+  "tyre:Material.118",
+  "tyre:Material.119",
+  "tyre:Material.120",
+  "tyre:Material.121",
+  "tyre:Material.122",
+  "tyre:disc.003",
+  "tyre:disc.004",
+  "tyre:disc.005",
+  "tyre:disc.006",
+  "tyre:rim.001",
+  "tyre:rim.002",
+  "tyre:rim.003",
+  "tyre:rim.004",
+  "tyre:tread.001",
+  "tyre:tread.002",
+  "tyre:tread.003",
+  "tyre:tread.004",
+  "tyre:visse.009",
+  "tyre:visse.011",
+  "tyre:visse.012",
+  "tyre:visse.013"
+ ],
+ "triangles": 167996,
+ "source_triangles": 582188
+}

@@ -1,0 +1,145 @@
+{
+ "key": "lambo_svj",
+ "traffic": false,
+ "credit": {
+  "title": "Lamborghini Aventador SVJ SDC ( FREE )",
+  "author": "SDC PERFORMANCEâ„¢ï¸",
+  "author_url": "https://sketchfab.com/Lambo_SC04",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/lamborghini-aventador-svj-sdc-free-784e4656aca649cca55d6b18740a19b2"
+ },
+ "length": 4.943,
+ "width": 2.275,
+ "height": 1.144,
+ "bounds": {
+  "min": [
+   -1.14,
+   0.009,
+   -2.589
+  ],
+  "max": [
+   1.135,
+   1.154,
+   2.354
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.8463,
+    0.3405,
+    -1.3503
+   ],
+   "radius": 0.3497,
+   "width": 0.3259
+  },
+  {
+   "pos": [
+    0.8506,
+    0.3405,
+    -1.3702
+   ],
+   "radius": 0.3502,
+   "width": 0.3259
+  },
+  {
+   "pos": [
+    -0.8538,
+    0.3742,
+    1.3603
+   ],
+   "radius": 0.3648,
+   "width": 0.3605
+  },
+  {
+   "pos": [
+    0.8496,
+    0.3742,
+    1.3603
+   ],
+   "radius": 0.3648,
+   "width": 0.3605
+  }
+ ],
+ "wheelbase": 2.7205,
+ "track_front": 1.6969,
+ "track_rear": 1.7034,
+ "headlights": [
+  [
+   -0.684,
+   0.774,
+   1.582
+  ],
+  [
+   0.68,
+   0.774,
+   1.582
+  ]
+ ],
+ "taillights": [
+  [
+   -0.668,
+   0.778,
+   2.031
+  ],
+  [
+   0.664,
+   0.778,
+   2.031
+  ]
+ ],
+ "exhausts": [
+  [
+   -0.343,
+   0.846,
+   1.702
+  ],
+  [
+   0.511,
+   0.819,
+   1.432
+  ]
+ ],
+ "classes": [
+  "chrome:Chrome",
+  "glass:GLASS",
+  "interior:intAlcantara",
+  "light_head:GlassLights",
+  "light_head:GlassWhite",
+  "light_head:HdLightsLens",
+  "light_head:LightEmissiveWhite",
+  "light_signal:GlassOrangeLights",
+  "light_tail:ExteriorDetailTex",
+  "light_tail:GlassRedLights",
+  "other:Aluminum",
+  "other:CARBONE",
+  "other:GLS_MR",
+  "other:Material.001",
+  "other:Material.002",
+  "other:Material.003",
+  "other:Material.004",
+  "other:Material.005",
+  "other:Material.006",
+  "other:MetalDark",
+  "other:MetalExhaustTextured",
+  "other:MetalGoldenLogo",
+  "other:MetalRedEngine",
+  "other:Undercarriage",
+  "other:intPlasticDkPlain",
+  "other:intTexButtonsGlossy",
+  "other:material_0",
+  "other:other:CARBONE",
+  "other:other:Material.004",
+  "other:other:Material.005",
+  "other:other:Material.006",
+  "other:other:material_0",
+  "paint:CARROSSERIE",
+  "rim:WheelMetalBlack",
+  "rim:rim:WheelMetalBlack",
+  "tyre:WheelTireBump",
+  "tyre:tyre:WheelTireBump"
+ ],
+ "triangles": 110260,
+ "source_triangles": 508324
+}

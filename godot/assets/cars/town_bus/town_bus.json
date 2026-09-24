@@ -1,0 +1,96 @@
+{
+ "key": "town_bus",
+ "traffic": true,
+ "credit": {
+  "title": "Generic Town Bus",
+  "author": "own.guest",
+  "author_url": "https://sketchfab.com/own.guest",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/generic-town-bus-14fe03d792914d51b6c6250b393c44fd"
+ },
+ "length": 12,
+ "width": 2.924,
+ "height": 2.969,
+ "bounds": {
+  "min": [
+   -1.368,
+   -0.01,
+   -5.575
+  ],
+  "max": [
+   1.556,
+   2.96,
+   6.425
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.9182,
+    0.5224,
+    -2.7803
+   ],
+   "radius": 0.5223,
+   "width": 0.3046
+  },
+  {
+   "pos": [
+    1.0815,
+    0.5224,
+    -2.7803
+   ],
+   "radius": 0.5223,
+   "width": 0.3046
+  },
+  {
+   "pos": [
+    -0.9873,
+    0.5218,
+    2.7803
+   ],
+   "radius": 0.5219,
+   "width": 0.3044
+  },
+  {
+   "pos": [
+    0.824,
+    0.5218,
+    2.7804
+   ],
+   "radius": 0.5219,
+   "width": 0.3044
+  }
+ ],
+ "wheelbase": 5.5607,
+ "track_front": 1.9997,
+ "track_rear": 1.8113,
+ "headlights": [],
+ "taillights": [],
+ "exhausts": [],
+ "classes": [
+  "chrome:chrome",
+  "glass:glass",
+  "interior:seat",
+  "light_misc:light",
+  "other:1616862037160",
+  "other:black",
+  "other:material",
+  "other:material_4",
+  "other:material_7",
+  "other:metall",
+  "other:other:material",
+  "other:other:material_4",
+  "other:standard",
+  "other:standard11",
+  "other:standard1111",
+  "other:standard11111",
+  "other:standard2",
+  "other:standard21",
+  "other:wood",
+  "paint:standard1",
+  "tyre:rezina"
+ ],
+ "triangles": 45223,
+ "source_triangles": 55355
+}

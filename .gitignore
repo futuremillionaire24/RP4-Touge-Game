@@ -18,3 +18,6 @@ thirdparty/godot-cpp/gen/
 *.o
 *.os
 *.apk
+
+# Node tooling
+node_modules/

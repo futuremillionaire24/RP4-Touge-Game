@@ -1,0 +1,97 @@
+{
+ "key": "mb_sprinter",
+ "traffic": true,
+ "credit": {
+  "title": "Mercedes Benz Sprinter 2006",
+  "author": "Max",
+  "author_url": "https://sketchfab.com/Max-7215",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/mercedes-benz-sprinter-2006-f69de1315bb049c8946d57f6006acd73"
+ },
+ "length": 6.94,
+ "width": 2.395,
+ "height": 2.603,
+ "bounds": {
+  "min": [
+   -1.198,
+   -0.015,
+   -2.843
+  ],
+  "max": [
+   1.198,
+   2.588,
+   4.097
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.8517,
+    0.3882,
+    -1.8419
+   ],
+   "radius": 0.3736,
+   "width": 0.2476
+  },
+  {
+   "pos": [
+    0.8516,
+    0.3882,
+    -1.8419
+   ],
+   "radius": 0.3736,
+   "width": 0.2476
+  },
+  {
+   "pos": [
+    -0.8516,
+    0.3589,
+    1.8419
+   ],
+   "radius": 0.3736,
+   "width": 0.2476
+  },
+  {
+   "pos": [
+    0.8517,
+    0.3589,
+    1.8419
+   ],
+   "radius": 0.3736,
+   "width": 0.2476
+  }
+ ],
+ "wheelbase": 3.6838,
+ "track_front": 1.7033,
+ "track_rear": 1.7033,
+ "headlights": [
+  [
+   -0.767,
+   0.968,
+   -2.492
+  ],
+  [
+   0.753,
+   0.946,
+   -2.511
+  ]
+ ],
+ "taillights": [],
+ "exhausts": [],
+ "classes": [
+  "glass:Vitre",
+  "light_head:Phare",
+  "other:Autre",
+  "other:Chassis",
+  "other:Chassis_2",
+  "other:Interrieur",
+  "other:Porte_2__0",
+  "other:material",
+  "other:other:material",
+  "paint:Carrosserie",
+  "paint:Carrosserie_5"
+ ],
+ "triangles": 34986,
+ "source_triangles": 37564
+}

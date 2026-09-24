@@ -1,0 +1,115 @@
+{
+ "key": "bmw_m3_e30",
+ "traffic": false,
+ "credit": {
+  "title": "[FREE] BMW M3 E30",
+  "author": "Martin Trafas",
+  "author_url": "https://sketchfab.com/TinoD2",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/free-bmw-m3-e30-ac3c7013434e403e8faff87948caf422"
+ },
+ "length": 4.346,
+ "width": 1.738,
+ "height": 1.347,
+ "bounds": {
+  "min": [
+   -0.869,
+   0,
+   -2.06
+  ],
+  "max": [
+   0.869,
+   1.347,
+   2.286
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.6947,
+    0.3109,
+    -1.2908
+   ],
+   "radius": 0.3114,
+   "width": 0.2491
+  },
+  {
+   "pos": [
+    0.6947,
+    0.3109,
+    -1.2908
+   ],
+   "radius": 0.3114,
+   "width": 0.2491
+  },
+  {
+   "pos": [
+    -0.7068,
+    0.3109,
+    1.2908
+   ],
+   "radius": 0.3105,
+   "width": 0.2534
+  },
+  {
+   "pos": [
+    0.7068,
+    0.3109,
+    1.2908
+   ],
+   "radius": 0.3105,
+   "width": 0.2534
+  }
+ ],
+ "wheelbase": 2.5816,
+ "track_front": 1.3894,
+ "track_rear": 1.4137,
+ "headlights": [
+  [
+   -0.527,
+   0.587,
+   -1.316
+  ],
+  [
+   0.527,
+   0.587,
+   -1.316
+  ]
+ ],
+ "taillights": [
+  [
+   -0.551,
+   0.53,
+   0.099
+  ],
+  [
+   0.551,
+   0.53,
+   0.099
+  ]
+ ],
+ "exhausts": [],
+ "classes": [
+  "caliper:Brembo_Calipers",
+  "caliper:caliper:Brembo_Calipers",
+  "chrome:BMW_E30_M3_CHROME",
+  "disc:Brake_Disc",
+  "disc:disc:Brake_Disc",
+  "glass:BMW_E30_M3_WINDOWS",
+  "light_head:BMW_E30_M3_HEADLIGHT_REFLECTOR",
+  "light_head:BMW_E30_M3_LENS",
+  "light_tail:BMW_E30_M3_TAILLIGHT_REFLECTOR",
+  "other:BMW_E30_M3_BLACKOUT",
+  "other:BMW_E30_M3_EMBLEMS",
+  "other:BMW_E30_M3_PLASTIC",
+  "other:BMW_E30_M3_SIDE_MIRROR",
+  "paint:BMW_E30_M3_PAINT",
+  "rim:BMW_E30_M3_RIM",
+  "rim:rim:BMW_E30_M3_RIM",
+  "tyre:BMW_E30_M3_TIRE",
+  "tyre:tyre:BMW_E30_M3_TIRE"
+ ],
+ "triangles": 109984,
+ "source_triangles": 117253
+}

@@ -1,0 +1,121 @@
+{
+ "key": "audi_r8",
+ "traffic": false,
+ "credit": {
+  "title": "Audi R8",
+  "author": "wallon",
+  "author_url": "https://sketchfab.com/realwallon",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/audi-r8-e17e438f076f4427a58d93aa779edaed"
+ },
+ "length": 4.426,
+ "width": 2.178,
+ "height": 1.238,
+ "bounds": {
+  "min": [
+   -1.098,
+   0.002,
+   -2.402
+  ],
+  "max": [
+   1.08,
+   1.24,
+   2.024
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.848,
+    0.3478,
+    -1.2983
+   ],
+   "radius": 0.3505,
+   "width": 0.3625
+  },
+  {
+   "pos": [
+    0.8657,
+    0.3478,
+    -1.2688
+   ],
+   "radius": 0.3505,
+   "width": 0.3625
+  },
+  {
+   "pos": [
+    -0.9075,
+    0.3603,
+    1.2836
+   ],
+   "radius": 0.3577,
+   "width": 0.375
+  },
+  {
+   "pos": [
+    0.8898,
+    0.3603,
+    1.2836
+   ],
+   "radius": 0.3577,
+   "width": 0.375
+  }
+ ],
+ "wheelbase": 2.5671,
+ "track_front": 1.7136,
+ "track_rear": 1.7973,
+ "headlights": [
+  [
+   -0.634,
+   0.555,
+   -1.509
+  ],
+  [
+   0.617,
+   0.555,
+   -1.509
+  ]
+ ],
+ "taillights": [
+  [
+   -0.602,
+   0.74,
+   1.741
+  ],
+  [
+   0.584,
+   0.74,
+   1.741
+  ]
+ ],
+ "exhausts": [],
+ "classes": [
+  "caliper:caliper:calipers",
+  "caliper:calipers",
+  "chrome:light_tail:chrome",
+  "glass:light_tail:glass",
+  "glass:pure_black",
+  "light_head:white_lights",
+  "light_tail:black",
+  "light_tail:chrome",
+  "light_tail:glass",
+  "light_tail:glass:pure_black",
+  "light_tail:red_lights",
+  "other:carbon_fiber",
+  "other:glass:pure_black",
+  "other:license_plate",
+  "other:light_tail:black",
+  "other:matte_black",
+  "other:secondary",
+  "paint:body",
+  "rim:material",
+  "rim:rim:material",
+  "rim:rim:wheel",
+  "rim:wheel",
+  "tyre:tire",
+  "tyre:tyre:tire"
+ ],
+ "triangles": 110322,
+ "source_triangles": 447204
+}

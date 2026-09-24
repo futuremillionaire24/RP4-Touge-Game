@@ -1,0 +1,89 @@
+{
+ "key": "porsche_930",
+ "traffic": false,
+ "credit": {
+  "title": "FREE 1975 Porsche 911 (930) Turbo",
+  "author": "Lionsharp Studios",
+  "author_url": "https://sketchfab.com/lionsharp",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/free-1975-porsche-911-930-turbo-8568d9d14a994b9cae59499f0dbed21e"
+ },
+ "length": 4.291,
+ "width": 1.894,
+ "height": 1.644,
+ "bounds": {
+  "min": [
+   -0.947,
+   0.003,
+   -2.054
+  ],
+  "max": [
+   0.947,
+   1.648,
+   2.237
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.7571,
+    0.3178,
+    -1.1462
+   ],
+   "radius": 0.3211,
+   "width": 0.2356
+  },
+  {
+   "pos": [
+    0.7571,
+    0.3178,
+    -1.1255
+   ],
+   "radius": 0.3211,
+   "width": 0.2356
+  },
+  {
+   "pos": [
+    -0.7761,
+    0.3178,
+    1.1358
+   ],
+   "radius": 0.3144,
+   "width": 0.2709
+  },
+  {
+   "pos": [
+    0.7761,
+    0.3178,
+    1.1359
+   ],
+   "radius": 0.3144,
+   "width": 0.2709
+  }
+ ],
+ "wheelbase": 2.2717,
+ "track_front": 1.5142,
+ "track_rear": 1.5522,
+ "headlights": [],
+ "taillights": [],
+ "exhausts": [],
+ "classes": [
+  "chrome:930_chromes",
+  "glass:glass",
+  "light_misc:930_lights",
+  "light_misc:930_lights_refraction",
+  "other:930_plastics",
+  "other:930_stickers",
+  "other:black",
+  "other:plate",
+  "paint:coat",
+  "paint:paint",
+  "rim:930_rim",
+  "rim:rim:930_rim",
+  "tyre:930_tire",
+  "tyre:tyre:930_tire"
+ ],
+ "triangles": 109927,
+ "source_triangles": 239078
+}

@@ -1,0 +1,95 @@
+{
+ "key": "jaguar_etype",
+ "traffic": false,
+ "credit": {
+  "title": "Jaguar E-Type Lightweight GT",
+  "author": "M17pro",
+  "author_url": "https://sketchfab.com/m17pro",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/jaguar-e-type-lightweight-gt-8c53321301234400b70975fa6abb5e5d"
+ },
+ "length": 4.453,
+ "width": 1.836,
+ "height": 1.249,
+ "bounds": {
+  "min": [
+   -0.909,
+   0,
+   -2.162
+  ],
+  "max": [
+   0.927,
+   1.249,
+   2.291
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.7282,
+    0.3129,
+    -1.2752
+   ],
+   "radius": 0.3129,
+   "width": 0.249
+  },
+  {
+   "pos": [
+    0.7282,
+    0.3129,
+    -1.275
+   ],
+   "radius": 0.3129,
+   "width": 0.249
+  },
+  {
+   "pos": [
+    -0.7282,
+    0.3129,
+    1.275
+   ],
+   "radius": 0.3129,
+   "width": 0.249
+  },
+  {
+   "pos": [
+    0.7282,
+    0.3129,
+    1.2752
+   ],
+   "radius": 0.3129,
+   "width": 0.249
+  }
+ ],
+ "wheelbase": 2.5502,
+ "track_front": 1.4564,
+ "track_rear": 1.4564,
+ "headlights": [],
+ "taillights": [
+  [
+   -0.428,
+   0.617,
+   2.278
+  ],
+  [
+   0.448,
+   0.617,
+   2.278
+  ]
+ ],
+ "exhausts": [],
+ "classes": [
+  "glass:Glass",
+  "glass:Window_Glass",
+  "interior:Interior",
+  "light_misc:Lights",
+  "light_reverse:Reverse_Light",
+  "light_signal:Left_Indicator",
+  "light_signal:Right_Indicator",
+  "light_tail:Rear_Light",
+  "paint:body"
+ ],
+ "triangles": 69590,
+ "source_triangles": 95675
+}

@@ -1,0 +1,168 @@
+{
+ "key": "vw_polo",
+ "traffic": true,
+ "credit": {
+  "title": "2016 Volkswagen Polo",
+  "author": "BHP3D",
+  "author_url": "https://sketchfab.com/BHP3D",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/2016-volkswagen-polo-bab77902c638427bb85e68b6762a481f"
+ },
+ "length": 3.972,
+ "width": 1.939,
+ "height": 1.64,
+ "bounds": {
+  "min": [
+   -0.969,
+   0,
+   -2.074
+  ],
+  "max": [
+   0.97,
+   1.64,
+   1.898
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.7286,
+    0.2933,
+    -1.239
+   ],
+   "radius": 0.2933,
+   "width": 0.1827
+  },
+  {
+   "pos": [
+    0.7286,
+    0.2933,
+    -1.239
+   ],
+   "radius": 0.2933,
+   "width": 0.1827
+  },
+  {
+   "pos": [
+    -0.7286,
+    0.2933,
+    1.239
+   ],
+   "radius": 0.2933,
+   "width": 0.1827
+  },
+  {
+   "pos": [
+    0.7286,
+    0.2933,
+    1.239
+   ],
+   "radius": 0.2933,
+   "width": 0.1827
+  }
+ ],
+ "wheelbase": 2.478,
+ "track_front": 1.4572,
+ "track_rear": 1.4572,
+ "headlights": [
+  [
+   -0.384,
+   0.892,
+   -0.673
+  ],
+  [
+   0.565,
+   0.67,
+   -1.728
+  ]
+ ],
+ "taillights": [
+  [
+   -0.638,
+   0.863,
+   1.619
+  ],
+  [
+   0.638,
+   0.863,
+   1.619
+  ]
+ ],
+ "exhausts": [],
+ "classes": [
+  "glass:glass",
+  "glass:glass.001",
+  "glass:glass.002",
+  "interior:interior_And_engine.15",
+  "interior:interior_And_engine.16",
+  "interior:interior_And_engine.18",
+  "interior:interior_And_engine.19",
+  "interior:interior_And_engine.20",
+  "interior:interior_And_engine.21",
+  "interior:interior_And_engine.22",
+  "interior:interior_And_engine.24",
+  "interior:other:chassis.1",
+  "interior:other:chassis.10",
+  "interior:other:chassis.15",
+  "interior:other:chassis.16",
+  "interior:other:chassis.17",
+  "interior:other:chassis.21",
+  "interior:other:chassis.3",
+  "interior:other:chassis.4",
+  "interior:other:chassis.6",
+  "interior:other:chassis.7",
+  "interior:other:chassis.8",
+  "interior:other:chassis.9",
+  "light_head:left_front_light",
+  "light_head:right_front_light",
+  "light_misc:Imvlm_lighting.10",
+  "light_misc:Imvlm_lighting.2",
+  "light_misc:Imvlm_lighting.3",
+  "light_misc:Imvlm_lighting.4",
+  "light_misc:Imvlm_lighting.5",
+  "light_misc:Imvlm_lighting.6",
+  "light_misc:Imvlm_lighting.7",
+  "light_misc:Imvlm_lighting.8",
+  "light_misc:Imvlm_lighting.9",
+  "light_tail:glass.003",
+  "other:chassis.1",
+  "other:chassis.10",
+  "other:chassis.12",
+  "other:chassis.13",
+  "other:chassis.15",
+  "other:chassis.16",
+  "other:chassis.17",
+  "other:chassis.18",
+  "other:chassis.19",
+  "other:chassis.2",
+  "other:chassis.20",
+  "other:chassis.21",
+  "other:chassis.22",
+  "other:chassis.23",
+  "other:chassis.24",
+  "other:chassis.25",
+  "other:chassis.3",
+  "other:chassis.4",
+  "other:chassis.5",
+  "other:chassis.6",
+  "other:chassis.7",
+  "other:chassis.8",
+  "other:chassis.9",
+  "other:door_lf_ok.6",
+  "other:door_rf_ok.6",
+  "other:other:chassis.1",
+  "other:other:chassis.21",
+  "paint:primary",
+  "paint:primary.001",
+  "rim:other:chassis.1",
+  "rim:other:chassis.10",
+  "rim:other:chassis.7",
+  "rim:rim:wheel.3",
+  "rim:rim:wheel.4",
+  "rim:wheel.3",
+  "rim:wheel.4"
+ ],
+ "triangles": 43035,
+ "source_triangles": 179345
+}

@@ -1,0 +1,168 @@
+{
+ "key": "abarth_500",
+ "traffic": false,
+ "credit": {
+  "title": "Fiat Abarth 500",
+  "author": "Luquita",
+  "author_url": "https://sketchfab.com/speedmodel",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/fiat-abarth-500-b59a403dfa1d40318c1126e658f87c19"
+ },
+ "length": 3.657,
+ "width": 1.885,
+ "height": 1.843,
+ "bounds": {
+  "min": [
+   -0.943,
+   0,
+   -1.93
+  ],
+  "max": [
+   0.943,
+   1.843,
+   1.727
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.6962,
+    0.2968,
+    -1.1492
+   ],
+   "radius": 0.2968,
+   "width": 0.2065
+  },
+  {
+   "pos": [
+    0.6962,
+    0.2968,
+    -1.1492
+   ],
+   "radius": 0.2968,
+   "width": 0.2065
+  },
+  {
+   "pos": [
+    -0.6962,
+    0.2967,
+    1.1492
+   ],
+   "radius": 0.2968,
+   "width": 0.2065
+  },
+  {
+   "pos": [
+    0.6962,
+    0.2967,
+    1.1492
+   ],
+   "radius": 0.2968,
+   "width": 0.2065
+  }
+ ],
+ "wheelbase": 2.2985,
+ "track_front": 1.3923,
+ "track_rear": 1.3923,
+ "headlights": [
+  [
+   -0.559,
+   0.643,
+   -1.293
+  ],
+  [
+   0.559,
+   0.643,
+   -1.293
+  ]
+ ],
+ "taillights": [
+  [
+   -0.569,
+   0.789,
+   1.495
+  ],
+  [
+   0.569,
+   0.789,
+   1.495
+  ]
+ ],
+ "exhausts": [
+  [
+   -0.445,
+   0.284,
+   1.528
+  ],
+  [
+   0.445,
+   0.284,
+   1.528
+  ]
+ ],
+ "classes": [
+  "caliper:CAR_PinzaFreni",
+  "caliper:caliper:CAR_PinzaFreni",
+  "disc:CAR_DiscoFreni",
+  "disc:disc:CAR_DiscoFreni",
+  "glass:CAR_Vetro",
+  "glass:INT_Vetro",
+  "glass:INT_Vetro_Display",
+  "glass:INT_Vetro_Laterale",
+  "interior:INT_Altoparlanti",
+  "interior:INT_Bianco_REF",
+  "interior:INT_COLORE_Nero",
+  "interior:INT_Cintura",
+  "interior:INT_Display",
+  "interior:INT_Display_REF",
+  "interior:INT_Exstrusione_Leva_NM",
+  "interior:INT_Guaina_Cambio",
+  "interior:INT_LCD",
+  "interior:INT_Logo_500",
+  "interior:INT_Logo_Airbag",
+  "interior:INT_Logo_Cambio",
+  "interior:INT_Metallo_Bianco",
+  "interior:INT_Metallo_Nero",
+  "interior:INT_Metallo_Satinato",
+  "interior:INT_Pedali",
+  "interior:INT_Pedana",
+  "interior:INT_Plancia",
+  "interior:INT_Plastica_Nera_REF",
+  "interior:INT_Plastica_Plancia",
+  "interior:INT_Plastica_Rossa",
+  "interior:INT_Skin",
+  "interior:INT_Skin_Spugna",
+  "interior:INT_Tappeto",
+  "interior:INT_Telaio",
+  "interior:INT_Tessuto_soffitto",
+  "interior:INT_Volante",
+  "interior:INT_Volante_METALLO",
+  "interior:INT_Zona1_tessuto",
+  "interior:INT_Zona2_Strip",
+  "interior:INT_cuciture_NM",
+  "interior:INT_cuciture_NM_skin",
+  "light_head:CAR_FariAnteriori",
+  "light_head:CAR_Vetro_Fanali_ANTERIORI",
+  "light_head:CAR_Vetro_Fanali_POSTERIORI",
+  "light_misc:EXT_side_lights",
+  "light_tail:CAR_LuciPosteriori",
+  "other:CAR_Griglia",
+  "other:CAR_Loghi",
+  "other:CAR_PLASTICA",
+  "other:CAR_Scarico",
+  "other:CAR_Sottoscocca",
+  "other:EXT_PLATE_plastic",
+  "other:GLOBAL_Specchio",
+  "other:other:CAR_Sottoscocca",
+  "paint:CAR_Livrea",
+  "rim:CAR_Cerchione",
+  "rim:rim:CAR_Cerchione",
+  "tyre:CAR_GommaBattistrada",
+  "tyre:INT_Gomma_Guarnizioni",
+  "tyre:INT_Tappeto_Gomma",
+  "tyre:tyre:CAR_GommaBattistrada"
+ ],
+ "triangles": 67868,
+ "source_triangles": 105796
+}

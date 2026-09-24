@@ -1,0 +1,19 @@
+﻿{
+  "name": "carbake",
+  "private": true,
+  "type": "module",
+  "description": "Downloads, normalises and optimises real car models (CC-BY / CC0) for the game.",
+  "scripts": {
+    "fetch": "node fetch.mjs",
+    "bake": "node bake.mjs"
+  },
+  "dependencies": {
+    "@gltf-transform/core": "^4.2.1",
+    "@gltf-transform/extensions": "^4.2.1",
+    "@gltf-transform/functions": "^4.2.1",
+    "draco3dgltf": "^1.5.7",
+    "meshoptimizer": "^0.22.0",
+    "sharp": "^0.35.4"
+  }
+}
+

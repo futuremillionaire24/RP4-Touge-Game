@@ -1,0 +1,102 @@
+{
+ "key": "ferrari_testarossa",
+ "traffic": false,
+ "credit": {
+  "title": "Ferrari Testarossa 84 Low Poly",
+  "author": "kekomag",
+  "author_url": "https://sketchfab.com/kekomag",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/ferrari-testarossa-84-low-poly-1786b089bfbb40ea9ecd9dc4f4e73127"
+ },
+ "length": 4.485,
+ "width": 1.947,
+ "height": 1.129,
+ "bounds": {
+  "min": [
+   -0.978,
+   0,
+   -2.37
+  ],
+  "max": [
+   0.969,
+   1.129,
+   2.115
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.7887,
+    0.2972,
+    -1.2553
+   ],
+   "radius": 0.2972,
+   "width": 0.2392
+  },
+  {
+   "pos": [
+    0.7819,
+    0.2972,
+    -1.2602
+   ],
+   "radius": 0.2972,
+   "width": 0.2392
+  },
+  {
+   "pos": [
+    -0.8193,
+    0.2972,
+    1.2573
+   ],
+   "radius": 0.2972,
+   "width": 0.2392
+  },
+  {
+   "pos": [
+    0.826,
+    0.2972,
+    1.2581
+   ],
+   "radius": 0.2972,
+   "width": 0.2392
+  }
+ ],
+ "wheelbase": 2.5154,
+ "track_front": 1.5705,
+ "track_rear": 1.6453,
+ "headlights": [],
+ "taillights": [
+  [
+   -0.358,
+   0.725,
+   1.733
+  ],
+  [
+   0.704,
+   0.592,
+   1.968
+  ]
+ ],
+ "exhausts": [],
+ "classes": [
+  "glass:Glass",
+  "interior:White_interior",
+  "light_misc:Lights",
+  "light_signal:Orange_lights",
+  "light_tail:Red_light",
+  "other:Blackest_black",
+  "other:Yellow",
+  "other:material",
+  "other:metal",
+  "other:mirror",
+  "other:other:metal",
+  "paint:Black_main",
+  "rim:rim:rims",
+  "rim:rims",
+  "tyre:Tires",
+  "tyre:tyre:Tires"
+ ],
+ "triangles": 30310,
+ "source_triangles": 31180
+}

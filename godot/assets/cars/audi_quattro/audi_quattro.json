@@ -1,0 +1,102 @@
+{
+ "key": "audi_quattro",
+ "traffic": false,
+ "credit": {
+  "title": "1980 Audi Ur Quattro",
+  "author": "Robert Doman",
+  "author_url": "https://sketchfab.com/RDoman",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/1980-audi-ur-quattro-b9ccdd8ddc154ee99ab153794042fd07"
+ },
+ "length": 4.404,
+ "width": 1.846,
+ "height": 1.309,
+ "bounds": {
+  "min": [
+   -0.923,
+   0,
+   -2.194
+  ],
+  "max": [
+   0.923,
+   1.309,
+   2.21
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.69,
+    0.3154,
+    -1.2568
+   ],
+   "radius": 0.3154,
+   "width": 0.2342
+  },
+  {
+   "pos": [
+    0.69,
+    0.3154,
+    -1.2568
+   ],
+   "radius": 0.3154,
+   "width": 0.2342
+  },
+  {
+   "pos": [
+    -0.69,
+    0.3154,
+    1.2568
+   ],
+   "radius": 0.3154,
+   "width": 0.2342
+  },
+  {
+   "pos": [
+    0.69,
+    0.3154,
+    1.2568
+   ],
+   "radius": 0.3154,
+   "width": 0.2342
+  }
+ ],
+ "wheelbase": 2.5136,
+ "track_front": 1.38,
+ "track_rear": 1.38,
+ "headlights": [],
+ "taillights": [],
+ "exhausts": [
+  [
+   -0.39,
+   0.343,
+   2.028
+  ]
+ ],
+ "classes": [
+  "glass:Glass",
+  "light_signal:Orange",
+  "light_signal:lambert1",
+  "light_signal:lambert4",
+  "light_signal:lambert5",
+  "other:AudiLogo",
+  "other:Chair",
+  "other:Exhaust",
+  "other:Inside_Metal",
+  "other:Metal",
+  "other:Plastic",
+  "other:Under",
+  "other:material",
+  "other:other:Under",
+  "paint:BlackPaint",
+  "paint:RedPaint",
+  "paint:SilverPaint",
+  "rim:Rims",
+  "rim:rim:Rims",
+  "tyre:Rubber",
+  "tyre:tyre:Rubber"
+ ],
+ "triangles": 110131,
+ "source_triangles": 148992
+}

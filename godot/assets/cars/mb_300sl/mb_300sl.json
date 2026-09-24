@@ -1,0 +1,93 @@
+{
+ "key": "mb_300sl",
+ "traffic": false,
+ "credit": {
+  "title": "Mercedes-Benz 300 SL Gullwing",
+  "author": "Lexyc16",
+  "author_url": "https://sketchfab.com/Lexyc16",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/mercedes-benz-300-sl-gullwing-505241c829c540a4921533000736904e"
+ },
+ "length": 4.52,
+ "width": 1.786,
+ "height": 1.251,
+ "bounds": {
+  "min": [
+   -0.895,
+   0,
+   -1.984
+  ],
+  "max": [
+   0.891,
+   1.251,
+   2.536
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.6973,
+    0.341,
+    -1.2094
+   ],
+   "radius": 0.3407,
+   "width": 0.205
+  },
+  {
+   "pos": [
+    0.6973,
+    0.341,
+    -1.2115
+   ],
+   "radius": 0.341,
+   "width": 0.205
+  },
+  {
+   "pos": [
+    -0.6973,
+    0.3407,
+    1.2114
+   ],
+   "radius": 0.3406,
+   "width": 0.205
+  },
+  {
+   "pos": [
+    0.6973,
+    0.3404,
+    1.2095
+   ],
+   "radius": 0.3409,
+   "width": 0.205
+  }
+ ],
+ "wheelbase": 2.4209,
+ "track_front": 1.3945,
+ "track_rear": 1.3945,
+ "headlights": [],
+ "taillights": [],
+ "exhausts": [],
+ "classes": [
+  "chrome:chrome",
+  "chrome:chrome:chrome",
+  "chrome:chrome:mid-chrome",
+  "chrome:mid-chrome",
+  "other:Material",
+  "other:Material.001",
+  "other:Material.002",
+  "other:Material.003",
+  "other:Material.004",
+  "other:Material.005",
+  "other:Material.006",
+  "other:Material.007",
+  "other:black",
+  "other:material",
+  "other:other:black",
+  "paint:main_color",
+  "tyre:tire",
+  "tyre:tyre:tire"
+ ],
+ "triangles": 96160,
+ "source_triangles": 96160
+}

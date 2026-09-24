@@ -1,0 +1,157 @@
+{
+ "key": "porsche_918",
+ "traffic": false,
+ "credit": {
+  "title": "Porsche 918 Free",
+  "author": "Black Snow",
+  "author_url": "https://sketchfab.com/BlackSnow02",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/porsche-918-free-ec8eebcdbf534bbba151375b9992f6d7"
+ },
+ "length": 4.643,
+ "width": 2.431,
+ "height": 1.164,
+ "bounds": {
+  "min": [
+   -1.359,
+   -0.065,
+   -2.414
+  ],
+  "max": [
+   1.072,
+   1.099,
+   2.229
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.9234,
+    0.3034,
+    -1.3571
+   ],
+   "radius": 0.3036,
+   "width": 0.2378
+  },
+  {
+   "pos": [
+    0.9234,
+    0.3038,
+    -1.3571
+   ],
+   "radius": 0.3036,
+   "width": 0.2378
+  },
+  {
+   "pos": [
+    -0.9234,
+    0.3034,
+    1.3571
+   ],
+   "radius": 0.3036,
+   "width": 0.2378
+  },
+  {
+   "pos": [
+    0.9234,
+    0.3038,
+    1.3571
+   ],
+   "radius": 0.3036,
+   "width": 0.2378
+  }
+ ],
+ "wheelbase": 2.7142,
+ "track_front": 1.8468,
+ "track_rear": 1.8468,
+ "headlights": [
+  [
+   -0.343,
+   0.642,
+   -0.76
+  ],
+  [
+   0.474,
+   0.542,
+   -1.149
+  ]
+ ],
+ "taillights": [
+  [
+   -0.56,
+   0.608,
+   0.113
+  ],
+  [
+   0.593,
+   0.604,
+   0.114
+  ]
+ ],
+ "exhausts": [],
+ "classes": [
+  "caliper:amdb11_caliper",
+  "caliper:caliper:amdb11_caliper",
+  "disc:amdb11_badging",
+  "disc:amdb11_brake",
+  "disc:amdb11_misc",
+  "disc:amdb11_misc_chrome",
+  "disc:disc:amdb11_badging",
+  "disc:disc:amdb11_brake",
+  "disc:disc:amdb11_misc",
+  "disc:disc:amdb11_misc_chrome",
+  "glass:P918_glass.0",
+  "glass:P918_glasses_r.0",
+  "glass:P918_windscreen_ok.2",
+  "interior:P918_dash_leather.0",
+  "interior:P918_interior.0",
+  "interior:P918_leather_dark.0",
+  "interior:P918_movsteer_1.0.0",
+  "interior:P918_movsteer_1.0.2",
+  "interior:P918_movsteer_1.0.4",
+  "interior:P918_movsteer_1.0.5",
+  "interior:P918_seat.0",
+  "interior:P918_seat_logo.0",
+  "interior:movsteer_1.0.3",
+  "interior:movsteer_1.0.7",
+  "interior:other:P918_tahook.0",
+  "interior:other:material",
+  "light_head:left_front_light",
+  "light_head:p918_headlight",
+  "light_misc:P918_basic_light_front.0",
+  "light_misc:P918_light_ref_front.0",
+  "light_misc:P918_revlight_L",
+  "light_signal:p918_signal_L",
+  "light_signal:p918_signal_R",
+  "light_tail:p918_ext_details_rim",
+  "light_tail:p918_taillight",
+  "other:P918_besi.0",
+  "other:P918_black.0",
+  "other:P918_bonnet_ok.0",
+  "other:P918_bump_rear_ok.001",
+  "other:P918_carbon.0",
+  "other:P918_chassis.0",
+  "other:P918_dvorright.0",
+  "other:P918_engines.0",
+  "other:P918_gril.0",
+  "other:P918_hub_lf.2",
+  "other:P918_int_s.0",
+  "other:P918_lcd.0",
+  "other:P918_misc.0",
+  "other:P918_panel.0",
+  "other:P918_sepion_tengah.0",
+  "other:P918_storege.0",
+  "other:P918_tahook.0",
+  "other:P918_tombol.0",
+  "other:Scene_-_Root",
+  "other:material",
+  "paint:P918_paint",
+  "rim:918weissach_wheel",
+  "rim:diff_wheel.0",
+  "rim:rim:918weissach_wheel",
+  "rim:rim:diff_wheel.0"
+ ],
+ "triangles": 216507,
+ "source_triangles": 306716
+}

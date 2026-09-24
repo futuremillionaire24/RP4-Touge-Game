@@ -1,0 +1,134 @@
+{
+ "key": "ferrari_f40",
+ "traffic": false,
+ "credit": {
+  "title": "Ferrari f40",
+  "author": "Black Snow",
+  "author_url": "https://sketchfab.com/BlackSnow02",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/ferrari-f40-52a66c41cfcd4f999fb1b1c49bf24d70"
+ },
+ "length": 4.358,
+ "width": 2.031,
+ "height": 1.127,
+ "bounds": {
+  "min": [
+   -1.013,
+   0,
+   -2.266
+  ],
+  "max": [
+   1.018,
+   1.127,
+   2.092
+  ]
+ },
+ "wheels": [
+  {
+   "pos": [
+    -0.7756,
+    0.3219,
+    -1.2137
+   ],
+   "radius": 0.3219,
+   "width": 0.2837
+  },
+  {
+   "pos": [
+    0.7756,
+    0.3219,
+    -1.2137
+   ],
+   "radius": 0.3219,
+   "width": 0.2837
+  },
+  {
+   "pos": [
+    -0.7741,
+    0.3219,
+    1.2137
+   ],
+   "radius": 0.3219,
+   "width": 0.3404
+  },
+  {
+   "pos": [
+    0.7741,
+    0.3219,
+    1.2137
+   ],
+   "radius": 0.3219,
+   "width": 0.3404
+  }
+ ],
+ "wheelbase": 2.4274,
+ "track_front": 1.5512,
+ "track_rear": 1.5483,
+ "headlights": [
+  [
+   -0.634,
+   0.468,
+   -1.904
+  ],
+  [
+   0.64,
+   0.468,
+   -1.903
+  ]
+ ],
+ "taillights": [
+  [
+   -0.538,
+   0.646,
+   2.042
+  ],
+  [
+   0.543,
+   0.646,
+   2.042
+  ]
+ ],
+ "exhausts": [],
+ "classes": [
+  "chrome:F40_Chrome",
+  "chrome:F40_Chrome.001",
+  "glass:F40_Glass",
+  "glass:F40_Glass.001",
+  "glass:F40_Window",
+  "glass:F40_Window.001",
+  "interior:F40_Cockpit",
+  "interior:F40_Cockpit_HR",
+  "interior:F40_Display",
+  "interior:F40_Display_1",
+  "interior:F40_Pedali",
+  "interior:F40_Tappetini",
+  "interior:super_gauges",
+  "light_head:F40_Headlights",
+  "light_head:super_headlight",
+  "light_misc:F40_Vehiclelight",
+  "light_reverse:super_reverselight",
+  "light_signal:super_signal_L",
+  "light_tail:super_brakelight",
+  "other:F40_Brake",
+  "other:F40_Carbon",
+  "other:F40_Estra",
+  "other:F40_Grid",
+  "other:F40_GridD",
+  "other:F40_Logos",
+  "other:F40_Mechanics",
+  "other:F40_Mechanics.001",
+  "other:F40_Sheft",
+  "other:F40_Strelki",
+  "other:Scene_-_Root.002",
+  "other:material",
+  "other:other:F40_Brake",
+  "other:other:F40_Mechanics",
+  "other:other:Scene_-_Root.002",
+  "paint:F40_Skin",
+  "rim:F40_Rrims",
+  "rim:rim:F40_Rrims"
+ ],
+ "triangles": 110289,
+ "source_triangles": 245552
+}
