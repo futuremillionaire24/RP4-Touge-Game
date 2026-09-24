@@ -7,8 +7,9 @@
 namespace nt {
 
 static const char *KEYS[CAR_COUNT] = {
-	"mame_k", "hachi_gt", "kyudo_type_s", "sylph_s2", "rotora_fd", "tatsu_ix",
-	"senko", "titan_rz", "raijin_r", "kaido_van", "mugen_proto", "kurogane_hyper",
+	"abarth_500", "golf_gti", "bmw_m3_e30", "porsche_930", "jaguar_etype", "mb_300sl", "defender_90",
+	"audi_quattro", "jaguar_ftype", "mb_g63", "bmw_m4", "audi_r8", "porsche_992", "ferrari_testarossa",
+	"ferrari_f40", "lambo_svj", "jaguar_xj220", "porsche_918", "ferrari_laferrari",
 };
 
 const char *car_key(int id) { return (id >= 0 && id < CAR_COUNT) ? KEYS[id] : "unknown"; }
@@ -38,6 +39,19 @@ static void tires(VehicleParams &p, TireCompound c, real wf, real wr) {
 	p.tire_width_rear = wr;
 }
 
+// Geometry from the baked model (wheelbase, tracks, radii) + real body size and weight split.
+static void geo(VehicleParams &p, real mass, real wf, real cg, real wb, real tf, real tr, real rf, real rr, real W, real H, real L) {
+	p.mass = mass;
+	p.weight_front = wf;
+	p.cg_height = cg;
+	p.wheelbase = wb;
+	p.track_front = tf;
+	p.track_rear = tr;
+	p.wheel_radius_front = rf;
+	p.wheel_radius_rear = rr;
+	p.half_extents = {W * 0.5, H * 0.5, L * 0.5};
+}
+
 // Suspension from natural frequency (Hz) and damping ratio: keeps every car's ride consistent.
 static void springs(VehicleParams &p, real freq_f, real freq_r, real zeta_bump, real zeta_rebound) {
 	real mf = p.mass * p.weight_front * 0.5;
@@ -52,249 +66,378 @@ static void springs(VehicleParams &p, real freq_f, real freq_r, real zeta_bump, 
 	p.rebound_rear = cr * zeta_rebound;
 }
 
+// Masses include a 75 kg driver and a half tank. Torque curves are crank torque without boost;
+// boosted peak = curve * (1 + max_boost * boost_gain).
 VehicleParams make_car_params(int id) {
 	VehicleParams p;
 	switch (id) {
-		case CAR_MAME_K: // 660cc kei turbo, front-engine RWD roadster
-			p.mass = 740; p.cg_height = 0.44; p.wheelbase = 2.06; p.weight_front = 0.51;
-			p.track_front = 1.21; p.track_rear = 1.20; p.half_extents = {0.70, 0.60, 1.66};
-			p.wheel_radius_front = p.wheel_radius_rear = 0.27;
-			tires(p, TIRE_STREET, 0.165, 0.165);
-			p.engine_kind = ENGINE_TURBO; p.cylinders = 3;
-			curve(p, {{800, 32}, {2000, 48}, {3500, 58}, {5000, 62}, {6500, 58}, {7800, 48}, {8600, 38}});
-			p.idle_rpm = 1000; p.redline_rpm = 8200; p.limiter_rpm = 8500;
-			p.max_boost = 0.8; p.boost_gain = 0.85; p.spool_rpm = 3600; p.spool_rate = 3.0;
-			p.engine_inertia = 0.08;
-			gears(p, {3.48, 2.10, 1.43, 1.00, 0.82}, 5.1);
-			p.diff_rear = DIFF_OPEN;
-			p.brake_torque = 1700; p.handbrake_torque = 1500;
-			p.drag_area = 0.56; p.lift_front = 0.0; p.lift_rear = 0.02;
-			p.clutch_torque = 240;
-			springs(p, 1.55, 1.65, 0.28, 0.45);
-			p.arb_front = 9000; p.arb_rear = 5000;
-			p.max_steer = 0.64;
-			break;
-
-		case CAR_HACHI_GT: // 1.6 NA twin-cam, light FR hatch
-			p.mass = 950; p.cg_height = 0.48; p.wheelbase = 2.40; p.weight_front = 0.54;
-			p.track_front = 1.36; p.track_rear = 1.35; p.half_extents = {0.83, 0.67, 2.10};
-			p.wheel_radius_front = p.wheel_radius_rear = 0.29;
-			tires(p, TIRE_STREET, 0.185, 0.185);
-			curve(p, {{800, 95}, {2000, 118}, {3500, 132}, {4800, 144}, {5800, 149}, {6600, 139}, {7400, 118}, {7800, 104}});
-			p.idle_rpm = 850; p.redline_rpm = 7400; p.limiter_rpm = 7700;
-			p.engine_inertia = 0.12;
-			gears(p, {3.587, 2.022, 1.384, 1.000, 0.861}, 4.3);
-			p.diff_rear = DIFF_LSD; p.lsd_accel = 0.35; p.lsd_decel = 0.15; p.lsd_preload = 60;
-			p.brake_torque = 2100; p.handbrake_torque = 2000;
-			p.drag_area = 0.64; p.lift_front = -0.04; p.lift_rear = -0.02;
-			p.clutch_torque = 330;
-			springs(p, 1.60, 1.75, 0.30, 0.48);
-			p.arb_front = 14000; p.arb_rear = 6000;
+		case CAR_ABARTH_500: // 2008 Fiat Abarth 500, 1.4 T-Jet 135 PS / 206 Nm, FF
+			geo(p, 1110, 0.63, 0.50, 2.2985, 1.392, 1.392, 0.297, 0.297, 1.627, 1.485, 3.657);
+			tires(p, TIRE_SPORT, 0.195, 0.195);
+			p.layout = DRIVE_FF; p.diff_front = DIFF_OPEN;
+			p.engine_kind = ENGINE_TURBO; p.cylinders = 4;
+			curve(p, {{800, 95}, {1800, 125}, {2750, 138}, {4000, 138}, {5500, 128}, {6250, 112}, {6600, 98}});
+			p.max_boost = 1.0; p.boost_gain = 0.5; p.spool_rpm = 2400; p.spool_rate = 4.0;
+			p.idle_rpm = 850; p.redline_rpm = 6400; p.limiter_rpm = 6600;
+			p.engine_inertia = 0.11;
+			gears(p, {3.909, 2.238, 1.520, 1.156, 0.872}, 3.353);
+			p.brake_torque = 3700; p.brake_bias = 0.70; p.handbrake_torque = 1500;
+			p.drag_area = 0.70; p.lift_front = -0.02; p.lift_rear = 0.0;
+			p.clutch_torque = 320;
+			springs(p, 1.75, 1.95, 0.30, 0.50);
+			p.arb_front = 16000; p.arb_rear = 14000;
 			p.max_steer = 0.62;
 			break;
 
-		case CAR_KYUDO_TYPE_S: // 1.8 high-rev VTEC-style FF
-			p.mass = 1100; p.cg_height = 0.47; p.wheelbase = 2.62; p.weight_front = 0.62;
-			p.track_front = 1.48; p.track_rear = 1.47; p.half_extents = {0.85, 0.68, 2.20};
-			p.wheel_radius_front = p.wheel_radius_rear = 0.30;
-			tires(p, TIRE_SPORT, 0.195, 0.195);
-			p.layout = DRIVE_FF; p.diff_front = DIFF_LSD; p.lsd_accel = 0.40; p.lsd_decel = 0.10;
-			curve(p, {{900, 110}, {2500, 140}, {4500, 152}, {5600, 158}, {6000, 170}, {7400, 182}, {8400, 170}, {9000, 148}});
-			p.idle_rpm = 950; p.redline_rpm = 8800; p.limiter_rpm = 9000;
-			p.engine_inertia = 0.10;
-			gears(p, {3.23, 2.105, 1.458, 1.107, 0.848}, 4.4);
-			p.brake_torque = 2500; p.brake_bias = 0.68;
-			p.drag_area = 0.62; p.lift_front = 0.02; p.lift_rear = 0.04;
-			p.clutch_torque = 360;
-			springs(p, 1.85, 2.05, 0.30, 0.50);
-			p.arb_front = 15000; p.arb_rear = 22000; // rear bar rotates the FF on lift
+		case CAR_GOLF_GTI: // 2005 Volkswagen Golf GTI (Mk5), 2.0 TFSI 200 PS / 280 Nm, FF
+			geo(p, 1410, 0.61, 0.53, 2.5738, 1.520, 1.520, 0.313, 0.313, 1.759, 1.466, 4.216);
+			tires(p, TIRE_SPORT, 0.225, 0.225);
+			p.layout = DRIVE_FF; p.diff_front = DIFF_OPEN;
+			p.engine_kind = ENGINE_TURBO; p.cylinders = 4;
+			curve(p, {{800, 120}, {1800, 187}, {3000, 187}, {5000, 185}, {5700, 172}, {6300, 150}, {6700, 128}});
+			p.max_boost = 1.0; p.boost_gain = 0.5; p.spool_rpm = 1900; p.spool_rate = 4.5;
+			p.idle_rpm = 750; p.redline_rpm = 6500; p.limiter_rpm = 6700;
+			p.engine_inertia = 0.13;
+			gears(p, {3.36, 2.09, 1.47, 1.10, 0.87, 0.73}, 3.65);
+			p.brake_torque = 5200; p.brake_bias = 0.68; p.handbrake_torque = 1800;
+			p.drag_area = 0.71; p.lift_front = 0.0; p.lift_rear = 0.02;
+			p.clutch_torque = 420;
+			springs(p, 1.65, 1.85, 0.30, 0.50);
+			p.arb_front = 17000; p.arb_rear = 19000; // stiff rear bar: lift-off rotation
 			p.max_steer = 0.60;
 			break;
 
-		case CAR_SYLPH_S2: // 2.0 turbo FR coupe, drift benchmark
-			p.mass = 1240; p.cg_height = 0.48; p.wheelbase = 2.525; p.weight_front = 0.55;
-			p.track_front = 1.48; p.track_rear = 1.47; p.half_extents = {0.87, 0.65, 2.23};
-			p.wheel_radius_front = p.wheel_radius_rear = 0.31;
-			tires(p, TIRE_SPORT, 0.215, 0.225);
-			p.engine_kind = ENGINE_TURBO;
-			curve(p, {{800, 120}, {2000, 160}, {3200, 190}, {4800, 205}, {6400, 190}, {7200, 165}, {7600, 150}});
-			p.idle_rpm = 850; p.redline_rpm = 7200; p.limiter_rpm = 7500;
-			p.max_boost = 0.9; p.boost_gain = 0.48; p.spool_rpm = 3600; p.spool_rate = 2.6;
-			p.engine_inertia = 0.15;
-			gears(p, {3.321, 1.902, 1.308, 1.000, 0.759, 0.63}, 4.08);
-			p.diff_rear = DIFF_LSD; p.lsd_accel = 0.55; p.lsd_decel = 0.35; p.lsd_preload = 110;
-			p.brake_torque = 2700; p.handbrake_torque = 2500;
-			p.drag_area = 0.63; p.lift_front = 0.02; p.lift_rear = 0.05;
-			p.clutch_torque = 480;
-			springs(p, 1.75, 1.85, 0.30, 0.50);
-			p.arb_front = 20000; p.arb_rear = 10000;
-			p.max_steer = 0.70;
-			break;
-
-		case CAR_ROTORA_FD: // twin-rotor sequential turbo FR
-			p.mass = 1280; p.cg_height = 0.45; p.wheelbase = 2.425; p.weight_front = 0.50;
-			p.track_front = 1.46; p.track_rear = 1.46; p.half_extents = {0.88, 0.62, 2.15};
-			p.wheel_radius_front = p.wheel_radius_rear = 0.315;
-			tires(p, TIRE_SPORT, 0.225, 0.255);
-			p.engine_kind = ENGINE_ROTARY; p.cylinders = 2;
-			curve(p, {{900, 110}, {2500, 150}, {4000, 185}, {5000, 196}, {6500, 188}, {7600, 160}, {8200, 140}});
-			p.idle_rpm = 900; p.redline_rpm = 8000; p.limiter_rpm = 8300;
-			p.max_boost = 0.85; p.boost_gain = 0.55; p.spool_rpm = 3200; p.spool_rate = 3.2;
-			p.engine_inertia = 0.11;
-			gears(p, {3.483, 2.015, 1.391, 1.000, 0.719}, 4.1);
-			p.diff_rear = DIFF_LSD; p.lsd_accel = 0.45; p.lsd_decel = 0.25;
-			p.brake_torque = 2900;
-			p.drag_area = 0.58; p.lift_front = 0.06; p.lift_rear = 0.10;
-			p.clutch_torque = 500;
-			springs(p, 1.85, 1.95, 0.30, 0.52);
-			p.arb_front = 21000; p.arb_rear = 12000;
+		case CAR_BMW_M3_E30: // 1986 BMW M3 (E30), S14 2.3 195 PS / 240 Nm, FR
+			geo(p, 1275, 0.51, 0.47, 2.5816, 1.389, 1.414, 0.311, 0.311, 1.680, 1.370, 4.346);
+			tires(p, TIRE_STREET, 0.205, 0.205);
+			curve(p, {{800, 150}, {2000, 195}, {3500, 222}, {4750, 240}, {6000, 232}, {6750, 212}, {7300, 185}, {7500, 168}});
+			p.idle_rpm = 900; p.redline_rpm = 7250; p.limiter_rpm = 7500;
+			p.engine_inertia = 0.12;
+			gears(p, {3.72, 2.40, 1.77, 1.26, 1.00}, 3.25); // Getrag 265 dog-leg
+			p.diff_rear = DIFF_LSD; p.lsd_accel = 0.25; p.lsd_decel = 0.25; p.lsd_preload = 60;
+			p.brake_torque = 4700; p.brake_bias = 0.66; p.handbrake_torque = 2200;
+			p.drag_area = 0.61; p.lift_front = 0.02; p.lift_rear = 0.02;
+			p.clutch_torque = 380;
+			springs(p, 1.70, 1.85, 0.30, 0.50);
+			p.arb_front = 18000; p.arb_rear = 9000;
 			p.max_steer = 0.64;
 			break;
 
-		case CAR_TATSU_IX: // 2.0 turbo AWD rally sedan
-			p.mass = 1400; p.cg_height = 0.52; p.wheelbase = 2.625; p.weight_front = 0.59;
-			p.track_front = 1.52; p.track_rear = 1.52; p.half_extents = {0.89, 0.72, 2.24};
-			p.wheel_radius_front = p.wheel_radius_rear = 0.32;
-			tires(p, TIRE_SPORT, 0.235, 0.235);
-			p.layout = DRIVE_AWD; p.awd_front_split = 0.50; p.center_lock = 0.45;
-			p.diff_front = DIFF_LSD; p.diff_rear = DIFF_LSD; p.lsd_accel = 0.45;
-			p.engine_kind = ENGINE_TURBO;
-			curve(p, {{800, 140}, {2000, 200}, {3000, 245}, {4500, 250}, {6500, 215}, {7200, 185}, {7600, 165}});
-			p.idle_rpm = 850; p.redline_rpm = 7000; p.limiter_rpm = 7300;
-			p.max_boost = 1.2; p.boost_gain = 0.52; p.spool_rpm = 3000; p.spool_rate = 2.8;
+		case CAR_PORSCHE_930: // 1975 Porsche 911 Turbo (930), 3.0 flat-6 turbo 260 PS / 343 Nm, RR
+			geo(p, 1215, 0.38, 0.46, 2.2717, 1.514, 1.552, 0.321, 0.314, 1.775, 1.310, 4.291);
+			tires(p, TIRE_STREET, 0.205, 0.225);
+			p.layout = DRIVE_RR;
+			p.engine_kind = ENGINE_TURBO; p.cylinders = 6;
+			curve(p, {{900, 150}, {2500, 205}, {4000, 238}, {5000, 232}, {5500, 222}, {6200, 196}, {6800, 170}});
+			p.max_boost = 0.8; p.boost_gain = 0.55; p.spool_rpm = 4200; p.spool_rate = 1.4; // old-school lag
+			p.idle_rpm = 950; p.redline_rpm = 6800; p.limiter_rpm = 7000;
 			p.engine_inertia = 0.15;
-			gears(p, {2.785, 1.950, 1.407, 1.031, 0.720}, 4.53);
-			p.brake_torque = 3300;
-			p.drag_area = 0.68; p.lift_front = 0.08; p.lift_rear = 0.14;
-			p.clutch_torque = 600;
-			springs(p, 1.75, 1.80, 0.32, 0.50);
-			p.arb_front = 20000; p.arb_rear = 16000;
-			p.max_steer = 0.60;
-			break;
-
-		case CAR_SENKO: // 3.0 NA V6 mid-engine
-			p.mass = 1370; p.cg_height = 0.44; p.wheelbase = 2.53; p.weight_front = 0.42;
-			p.track_front = 1.51; p.track_rear = 1.53; p.half_extents = {0.90, 0.59, 2.21};
-			p.wheel_radius_front = 0.30; p.wheel_radius_rear = 0.32;
-			tires(p, TIRE_SPORT, 0.215, 0.255);
-			p.layout = DRIVE_MR; p.cylinders = 6;
-			curve(p, {{900, 190}, {2500, 245}, {4000, 270}, {5400, 294}, {6500, 285}, {7300, 270}, {8000, 235}});
-			p.idle_rpm = 900; p.redline_rpm = 8000; p.limiter_rpm = 8300;
-			p.engine_inertia = 0.14;
-			gears(p, {3.066, 1.956, 1.428, 1.125, 0.914, 0.717}, 4.235);
-			p.diff_rear = DIFF_LSD; p.lsd_accel = 0.40; p.lsd_decel = 0.20;
-			p.brake_torque = 3300; p.brake_bias = 0.58;
-			p.drag_area = 0.56; p.lift_front = 0.08; p.lift_rear = 0.12;
+			gears(p, {2.25, 1.30, 0.89, 0.66}, 4.0);
+			p.shift_time = 0.22;
+			p.diff_rear = DIFF_LSD; p.lsd_accel = 0.40; p.lsd_decel = 0.40;
+			p.brake_torque = 5600; p.brake_bias = 0.58; p.handbrake_torque = 2200;
+			p.drag_area = 0.70; p.lift_front = 0.06; p.lift_rear = 0.02;
 			p.clutch_torque = 520;
-			springs(p, 1.95, 2.10, 0.32, 0.55);
-			p.arb_front = 22000; p.arb_rear = 14000;
-			p.max_steer = 0.58;
-			break;
-
-		case CAR_TITAN_RZ: // 3.0 twin-turbo I6 GT
-			p.mass = 1510; p.cg_height = 0.48; p.wheelbase = 2.55; p.weight_front = 0.53;
-			p.track_front = 1.52; p.track_rear = 1.53; p.half_extents = {0.91, 0.64, 2.26};
-			p.wheel_radius_front = 0.32; p.wheel_radius_rear = 0.33;
-			tires(p, TIRE_SPORT, 0.235, 0.265);
-			p.engine_kind = ENGINE_TURBO; p.cylinders = 6;
-			curve(p, {{800, 190}, {2000, 250}, {3000, 285}, {4000, 300}, {5600, 290}, {6800, 250}, {7200, 225}});
-			p.idle_rpm = 750; p.redline_rpm = 6800; p.limiter_rpm = 7100;
-			p.max_boost = 1.0; p.boost_gain = 0.5; p.spool_rpm = 3600; p.spool_rate = 2.2;
-			p.engine_inertia = 0.20;
-			gears(p, {3.827, 2.360, 1.685, 1.312, 1.000, 0.793}, 3.27);
-			p.diff_rear = DIFF_LSD; p.lsd_accel = 0.45; p.lsd_decel = 0.25;
-			p.brake_torque = 3700;
-			p.drag_area = 0.66; p.lift_front = 0.04; p.lift_rear = 0.10;
-			p.clutch_torque = 700;
-			springs(p, 1.70, 1.85, 0.30, 0.50);
-			p.arb_front = 24000; p.arb_rear = 13000;
+			springs(p, 1.75, 1.95, 0.30, 0.50);
+			p.arb_front = 16000; p.arb_rear = 8000;
 			p.max_steer = 0.60;
 			break;
 
-		case CAR_RAIJIN_R: // 2.6 twin-turbo I6, rear-biased AWD
-			p.mass = 1560; p.cg_height = 0.49; p.wheelbase = 2.665; p.weight_front = 0.56;
-			p.track_front = 1.48; p.track_rear = 1.48; p.half_extents = {0.89, 0.68, 2.30};
-			p.wheel_radius_front = p.wheel_radius_rear = 0.33;
-			tires(p, TIRE_SPORT, 0.245, 0.245);
-			p.layout = DRIVE_AWD; p.awd_front_split = 0.30; p.center_lock = 0.55;
-			p.diff_front = DIFF_OPEN; p.diff_rear = DIFF_LSD; p.lsd_accel = 0.50; p.lsd_decel = 0.30;
-			p.engine_kind = ENGINE_TURBO; p.cylinders = 6;
-			curve(p, {{800, 180}, {2200, 240}, {3500, 280}, {4400, 295}, {6000, 280}, {7200, 245}, {7700, 215}});
-			p.idle_rpm = 900; p.redline_rpm = 7700; p.limiter_rpm = 8000;
-			p.max_boost = 1.05; p.boost_gain = 0.55; p.spool_rpm = 3600; p.spool_rate = 2.4;
+		case CAR_JAGUAR_ETYPE: // 1963 Jaguar E-Type Lightweight, 3.8 I6 ~330 PS / 380 Nm, FR
+			geo(p, 1040, 0.49, 0.44, 2.5502, 1.456, 1.456, 0.313, 0.313, 1.657, 1.220, 4.453);
+			tires(p, TIRE_STREET, 0.185, 0.185);
+			p.tire_front.grip = p.tire_rear.grip = 0.96; // period Dunlop racing crossplies
+			p.cylinders = 6;
+			curve(p, {{800, 220}, {2000, 300}, {3500, 360}, {4500, 380}, {5500, 365}, {6200, 335}, {6700, 300}});
+			p.idle_rpm = 800; p.redline_rpm = 6500; p.limiter_rpm = 6700;
+			p.engine_inertia = 0.16;
+			gears(p, {2.68, 1.74, 1.27, 1.00}, 3.31);
+			p.shift_time = 0.2;
+			p.diff_rear = DIFF_LSD; p.lsd_accel = 0.35; p.lsd_decel = 0.20;
+			p.brake_torque = 3600; p.brake_bias = 0.62;
+			p.drag_area = 0.58; p.lift_front = -0.06; p.lift_rear = -0.04;
+			p.clutch_torque = 520;
+			springs(p, 1.60, 1.70, 0.28, 0.48);
+			p.arb_front = 14000; p.arb_rear = 5000;
+			p.max_steer = 0.60;
+			break;
+
+		case CAR_MB_300SL: // 1955 Mercedes-Benz 300 SL (W198), 3.0 I6 215 PS / 274 Nm, FR
+			geo(p, 1370, 0.52, 0.49, 2.4209, 1.395, 1.395, 0.341, 0.341, 1.790, 1.300, 4.520);
+			tires(p, TIRE_STREET, 0.175, 0.175);
+			p.tire_front.grip = p.tire_rear.grip = 0.92; // 1950s cross-plies
+			p.cylinders = 6;
+			curve(p, {{700, 170}, {2000, 225}, {3500, 258}, {4600, 274}, {5500, 262}, {6000, 240}, {6400, 212}});
+			p.idle_rpm = 750; p.redline_rpm = 6200; p.limiter_rpm = 6400;
 			p.engine_inertia = 0.18;
-			gears(p, {3.827, 2.360, 1.685, 1.312, 1.000, 0.793}, 3.545);
-			p.brake_torque = 3900;
-			p.drag_area = 0.70; p.lift_front = 0.10; p.lift_rear = 0.16;
-			p.clutch_torque = 720;
-			springs(p, 1.85, 1.95, 0.32, 0.52);
-			p.arb_front = 26000; p.arb_rear = 15000;
+			gears(p, {3.34, 2.27, 1.44, 1.00}, 3.64);
+			p.shift_time = 0.25;
+			p.diff_rear = DIFF_OPEN;
+			p.brake_torque = 4000; p.brake_bias = 0.62;
+			p.drag_area = 0.70; p.lift_front = -0.04; p.lift_rear = -0.05;
+			p.clutch_torque = 420;
+			springs(p, 1.35, 1.45, 0.26, 0.44);
+			p.arb_front = 12000; p.arb_rear = 2000; // swing-axle rear: no rear bar
+			p.camber_rear = -0.01;
 			p.max_steer = 0.58;
 			break;
 
-		case CAR_KAIDO_VAN: // 3.0 turbo-diesel box van
-			p.mass = 1900; p.cg_height = 0.78; p.wheelbase = 2.57; p.weight_front = 0.52;
-			p.track_front = 1.66; p.track_rear = 1.64; p.half_extents = {0.94, 0.98, 2.40};
-			p.wheel_radius_front = p.wheel_radius_rear = 0.34;
-			tires(p, TIRE_STREET, 0.215, 0.215);
-			p.engine_kind = ENGINE_DIESEL; p.cylinders = 4;
-			curve(p, {{700, 210}, {1400, 300}, {1600, 330}, {2800, 330}, {3400, 290}, {4000, 230}, {4400, 190}});
-			p.idle_rpm = 700; p.redline_rpm = 4000; p.limiter_rpm = 4300;
-			p.max_boost = 1.1; p.boost_gain = 0.3; p.spool_rpm = 1800; p.spool_rate = 2.0;
-			p.engine_inertia = 0.30; p.engine_brake = 0.030;
-			gears(p, {4.313, 2.330, 1.436, 1.000, 0.838}, 4.1);
-			p.diff_rear = DIFF_LSD; p.lsd_accel = 0.40; p.lsd_decel = 0.20;
-			p.brake_torque = 4600; p.handbrake_torque = 3200;
-			p.drag_area = 1.05; p.lift_front = -0.08; p.lift_rear = -0.06;
-			p.clutch_torque = 600;
-			springs(p, 1.45, 1.55, 0.30, 0.45);
-			p.arb_front = 18000; p.arb_rear = 8000;
+		case CAR_DEFENDER_90: // Land Rover Defender 90 Td5, 2.5 I5 turbo-diesel 122 PS / 300 Nm, permanent 4x4
+			geo(p, 1990, 0.52, 0.82, 2.4888, 1.484, 1.484, 0.399, 0.399, 1.790, 1.990, 3.883);
+			tires(p, TIRE_RALLY, 0.235, 0.235); // all-terrains
+			p.layout = DRIVE_AWD; p.awd_front_split = 0.50; p.center_lock = 0.60;
+			p.diff_front = DIFF_OPEN; p.diff_rear = DIFF_OPEN;
+			p.engine_kind = ENGINE_DIESEL; p.cylinders = 5;
+			curve(p, {{700, 130}, {1400, 185}, {1950, 200}, {3000, 190}, {3600, 160}, {4200, 120}});
+			p.max_boost = 1.0; p.boost_gain = 0.5; p.spool_rpm = 1700; p.spool_rate = 2.2;
+			p.idle_rpm = 750; p.redline_rpm = 4000; p.limiter_rpm = 4200;
+			p.engine_inertia = 0.32; p.engine_brake = 0.03;
+			gears(p, {3.69, 2.13, 1.40, 1.00, 0.77}, 4.29); // incl. transfer-box high range
+			p.brake_torque = 8600; p.brake_bias = 0.62; p.handbrake_torque = 2800;
+			p.drag_area = 1.55; p.lift_front = -0.10; p.lift_rear = -0.08;
+			p.clutch_torque = 560;
+			p.rest_length_front = p.rest_length_rear = 0.42; p.travel_front = p.travel_rear = 0.28;
+			springs(p, 1.25, 1.35, 0.28, 0.45);
+			p.arb_front = 9000; p.arb_rear = 4000;
 			p.max_steer = 0.66;
 			break;
 
-		case CAR_MUGEN_PROTO: // featherweight MR track car with real aero
-			p.mass = 800; p.cg_height = 0.38; p.wheelbase = 2.37; p.weight_front = 0.40;
-			p.track_front = 1.50; p.track_rear = 1.48; p.half_extents = {0.88, 0.55, 1.95};
-			p.wheel_radius_front = 0.29; p.wheel_radius_rear = 0.30;
-			tires(p, TIRE_SEMI_SLICK, 0.225, 0.255);
-			p.layout = DRIVE_MR;
-			curve(p, {{1000, 150}, {3000, 190}, {5000, 225}, {7000, 250}, {8400, 240}, {9000, 220}, {9400, 200}});
-			p.idle_rpm = 1100; p.redline_rpm = 9000; p.limiter_rpm = 9300;
-			p.engine_inertia = 0.08;
-			gears(p, {3.10, 2.20, 1.68, 1.35, 1.12, 0.95}, 4.1);
+		case CAR_AUDI_QUATTRO: // 1983 Audi quattro, 2.1 I5 turbo 200 PS / 285 Nm, permanent quattro
+			geo(p, 1365, 0.58, 0.50, 2.5136, 1.380, 1.380, 0.315, 0.315, 1.723, 1.344, 4.404);
+			tires(p, TIRE_SPORT, 0.205, 0.205);
+			p.tire_front.loose_bonus = p.tire_rear.loose_bonus = 0.15;
+			p.layout = DRIVE_AWD; p.awd_front_split = 0.50; p.center_lock = 0.35;
+			p.diff_front = DIFF_OPEN; p.diff_rear = DIFF_LSD; p.lsd_accel = 0.35;
+			p.engine_kind = ENGINE_TURBO; p.cylinders = 5;
+			curve(p, {{800, 140}, {2200, 175}, {3500, 190}, {4500, 186}, {5500, 172}, {6200, 150}, {6600, 132}});
+			p.max_boost = 0.85; p.boost_gain = 0.6; p.spool_rpm = 3400; p.spool_rate = 2.0;
+			p.idle_rpm = 850; p.redline_rpm = 6500; p.limiter_rpm = 6800;
+			p.engine_inertia = 0.15;
+			gears(p, {3.60, 2.13, 1.36, 0.97, 0.75}, 3.89);
+			p.brake_torque = 4900; p.brake_bias = 0.64; p.handbrake_torque = 2600;
+			p.drag_area = 0.72; p.lift_front = 0.02; p.lift_rear = 0.04;
+			p.clutch_torque = 480;
+			springs(p, 1.70, 1.85, 0.30, 0.50);
+			p.arb_front = 16000; p.arb_rear = 12000;
+			p.max_steer = 0.62;
+			break;
+
+		case CAR_JAGUAR_FTYPE: // 2017 Jaguar F-Type R Coupe AWD, 5.0 supercharged V8 550 PS / 680 Nm
+			geo(p, 1825, 0.51, 0.47, 2.63, 1.562, 1.626, 0.358, 0.358, 1.923, 1.311, 4.470);
+			tires(p, TIRE_SPORT, 0.255, 0.295);
+			p.layout = DRIVE_AWD; p.awd_front_split = 0.25; p.center_lock = 0.45;
+			p.diff_front = DIFF_OPEN; p.diff_rear = DIFF_LSD; p.lsd_accel = 0.55; p.lsd_decel = 0.30;
+			p.engine_kind = ENGINE_TURBO; p.cylinders = 8; // twin-screw supercharger: boost from idle
+			curve(p, {{700, 330}, {1500, 420}, {2500, 470}, {3500, 486}, {5000, 470}, {6000, 440}, {6500, 405}, {6800, 370}});
+			p.max_boost = 0.8; p.boost_gain = 0.5; p.spool_rpm = 1200; p.spool_rate = 9.0;
+			p.idle_rpm = 700; p.redline_rpm = 6500; p.limiter_rpm = 6800;
+			p.engine_inertia = 0.22;
+			gears(p, {4.71, 3.14, 2.11, 1.67, 1.29, 1.00, 0.84, 0.67}, 3.15); // ZF 8HP
+			p.shift_time = 0.12;
+			p.brake_torque = 8000; p.brake_bias = 0.62; p.handbrake_torque = 2400;
+			p.drag_area = 0.76; p.lift_front = 0.04; p.lift_rear = 0.10;
+			p.clutch_torque = 1100;
+			springs(p, 1.95, 2.10, 0.32, 0.54);
+			p.arb_front = 26000; p.arb_rear = 16000;
+			p.max_steer = 0.58;
+			break;
+
+		case CAR_MB_G63: // 2019 Mercedes-AMG G 63, 4.0 V8 biturbo 585 PS / 850 Nm, 4MATIC 40:60
+			geo(p, 2620, 0.52, 0.80, 2.8766, 1.601, 1.601, 0.348, 0.348, 1.984, 1.966, 4.873);
+			tires(p, TIRE_SPORT, 0.275, 0.275);
+			p.layout = DRIVE_AWD; p.awd_front_split = 0.40; p.center_lock = 0.55;
+			p.diff_front = DIFF_OPEN; p.diff_rear = DIFF_LSD; p.lsd_accel = 0.40;
+			p.engine_kind = ENGINE_TURBO; p.cylinders = 8;
+			curve(p, {{700, 330}, {1500, 470}, {2500, 567}, {3500, 567}, {5000, 535}, {6000, 478}, {6500, 430}, {6900, 380}});
+			p.max_boost = 1.0; p.boost_gain = 0.5; p.spool_rpm = 2200; p.spool_rate = 4.0;
+			p.idle_rpm = 650; p.redline_rpm = 6500; p.limiter_rpm = 6900;
+			p.engine_inertia = 0.24;
+			gears(p, {5.35, 3.24, 2.25, 1.64, 1.21, 1.00, 0.87, 0.72, 0.60}, 3.27); // 9G-Tronic
+			p.shift_time = 0.12;
+			p.top_speed_limiter = 61.1; // 220 km/h governed
+			p.brake_torque = 11000; p.brake_bias = 0.64; p.handbrake_torque = 3000;
+			p.drag_area = 1.65; p.lift_front = -0.08; p.lift_rear = -0.06;
+			p.clutch_torque = 1300;
+			p.rest_length_front = p.rest_length_rear = 0.40; p.travel_front = p.travel_rear = 0.24;
+			springs(p, 1.45, 1.55, 0.32, 0.52);
+			p.arb_front = 30000; p.arb_rear = 20000;
+			p.max_steer = 0.60;
+			break;
+
+		case CAR_BMW_M4: // 2015 BMW M4 (F82), S55 3.0 I6 twin-turbo 431 PS / 550 Nm, FR, Active M Diff
+			geo(p, 1612, 0.52, 0.48, 2.793, 1.502, 1.502, 0.297, 0.297, 1.870, 1.383, 4.671);
+			tires(p, TIRE_SPORT, 0.255, 0.275);
+			p.engine_kind = ENGINE_TURBO; p.cylinders = 6;
+			curve(p, {{800, 250}, {1850, 367}, {3500, 367}, {5500, 365}, {6250, 340}, {7000, 300}, {7400, 270}});
+			p.max_boost = 1.0; p.boost_gain = 0.5; p.spool_rpm = 2100; p.spool_rate = 4.5;
+			p.idle_rpm = 750; p.redline_rpm = 7300; p.limiter_rpm = 7600;
+			p.engine_inertia = 0.16;
+			gears(p, {4.806, 2.593, 1.701, 1.277, 1.000, 0.844, 0.671}, 3.462); // M DCT
 			p.shift_time = 0.07;
-			p.diff_rear = DIFF_LSD; p.lsd_accel = 0.45; p.lsd_decel = 0.30;
-			p.brake_torque = 2900; p.brake_bias = 0.56;
-			p.drag_area = 0.72; p.lift_front = 0.55; p.lift_rear = 0.85;
-			p.clutch_torque = 420;
-			springs(p, 2.60, 2.80, 0.35, 0.60);
-			p.rest_length_front = p.rest_length_rear = 0.28; p.travel_front = p.travel_rear = 0.12;
+			p.diff_rear = DIFF_LSD; p.lsd_accel = 0.55; p.lsd_decel = 0.35; p.lsd_preload = 100;
+			p.top_speed_limiter = 69.4; // 250 km/h
+			p.brake_torque = 6200; p.brake_bias = 0.62; p.handbrake_torque = 2600;
+			p.drag_area = 0.68; p.lift_front = 0.04; p.lift_rear = 0.08;
+			p.clutch_torque = 900;
+			springs(p, 2.00, 2.20, 0.32, 0.54);
+			p.arb_front = 26000; p.arb_rear = 14000;
+			p.max_steer = 0.58;
+			break;
+
+		case CAR_AUDI_R8: // 2019 Audi R8 V10 performance, 5.2 V10 620 PS / 580 Nm, quattro, mid-engine
+			geo(p, 1670, 0.42, 0.44, 2.5671, 1.714, 1.797, 0.351, 0.358, 1.940, 1.240, 4.426);
+			tires(p, TIRE_SPORT, 0.245, 0.305);
+			p.layout = DRIVE_AWD; p.awd_front_split = 0.30; p.center_lock = 0.45;
+			p.diff_front = DIFF_OPEN; p.diff_rear = DIFF_LSD; p.lsd_accel = 0.45; p.lsd_decel = 0.25;
+			p.cylinders = 10;
+			curve(p, {{1000, 330}, {2500, 420}, {4000, 490}, {5500, 545}, {6600, 580}, {8000, 555}, {8500, 520}, {8800, 480}});
+			p.idle_rpm = 1000; p.redline_rpm = 8500; p.limiter_rpm = 8800;
+			p.engine_inertia = 0.13;
+			gears(p, {3.13, 2.19, 1.63, 1.29, 1.03, 0.84, 0.66}, 4.89); // S tronic 7
+			p.shift_time = 0.06;
+			p.brake_torque = 7200; p.brake_bias = 0.58; p.handbrake_torque = 2600;
+			p.drag_area = 0.72; p.lift_front = 0.20; p.lift_rear = 0.35;
+			p.clutch_torque = 1000;
+			springs(p, 2.25, 2.45, 0.34, 0.56);
+			p.arb_front = 28000; p.arb_rear = 18000;
+			p.max_steer = 0.56;
+			break;
+
+		case CAR_PORSCHE_992: // 2020 Porsche 911 Turbo S (992), 3.7 flat-6 twin-turbo 650 PS / 800 Nm, AWD, rear-engine
+			geo(p, 1715, 0.39, 0.45, 2.4429, 1.552, 1.564, 0.335, 0.352, 1.900, 1.303, 4.535);
+			tires(p, TIRE_SPORT, 0.255, 0.315);
+			p.layout = DRIVE_AWD; p.awd_front_split = 0.20; p.center_lock = 0.40;
+			p.diff_front = DIFF_OPEN; p.diff_rear = DIFF_LSD; p.lsd_accel = 0.50; p.lsd_decel = 0.30;
+			p.engine_kind = ENGINE_TURBO; p.cylinders = 6;
+			curve(p, {{800, 330}, {2000, 480}, {2500, 533}, {4500, 533}, {6000, 500}, {6750, 470}, {7200, 420}});
+			p.max_boost = 1.0; p.boost_gain = 0.5; p.spool_rpm = 2200; p.spool_rate = 5.0;
+			p.idle_rpm = 800; p.redline_rpm = 7000; p.limiter_rpm = 7200;
+			p.engine_inertia = 0.15;
+			gears(p, {4.89, 3.17, 2.15, 1.56, 1.18, 0.94, 0.76, 0.61}, 3.26); // PDK 8
+			p.shift_time = 0.05;
+			p.brake_torque = 7800; p.brake_bias = 0.60; p.handbrake_torque = 2600;
+			p.drag_area = 0.72; p.lift_front = 0.18; p.lift_rear = 0.30;
+			p.clutch_torque = 1400;
+			springs(p, 2.20, 2.40, 0.34, 0.56);
+			p.arb_front = 28000; p.arb_rear = 18000;
+			p.max_steer = 0.58;
+			break;
+
+		case CAR_FERRARI_TESTAROSSA: // 1985 Ferrari Testarossa, 4.9 flat-12 390 PS / 490 Nm, mid-engine RWD
+			geo(p, 1580, 0.40, 0.46, 2.5154, 1.571, 1.645, 0.297, 0.297, 1.976, 1.130, 4.485);
+			tires(p, TIRE_SPORT, 0.225, 0.255);
+			p.layout = DRIVE_MR; p.cylinders = 12;
+			curve(p, {{900, 300}, {2500, 400}, {4500, 490}, {5500, 478}, {6300, 455}, {6800, 420}, {7100, 385}});
+			p.idle_rpm = 900; p.redline_rpm = 6800; p.limiter_rpm = 7100;
+			p.engine_inertia = 0.20;
+			gears(p, {3.139, 2.014, 1.526, 1.167, 0.875}, 3.21);
+			p.shift_time = 0.18;
+			p.diff_rear = DIFF_LSD; p.lsd_accel = 0.40; p.lsd_decel = 0.25;
+			p.brake_torque = 5700; p.brake_bias = 0.60;
+			p.drag_area = 0.68; p.lift_front = 0.02; p.lift_rear = 0.04;
+			p.clutch_torque = 800;
+			springs(p, 1.85, 2.00, 0.30, 0.50);
+			p.arb_front = 20000; p.arb_rear = 14000;
+			p.max_steer = 0.58;
+			break;
+
+		case CAR_FERRARI_F40: // 1987 Ferrari F40, 2.9 V8 twin-turbo 478 PS / 577 Nm, mid-engine RWD, no assists era
+			geo(p, 1330, 0.42, 0.42, 2.4274, 1.551, 1.548, 0.322, 0.322, 1.970, 1.124, 4.358);
+			tires(p, TIRE_SPORT, 0.245, 0.335);
+			p.layout = DRIVE_MR;
+			p.engine_kind = ENGINE_TURBO; p.cylinders = 8;
+			curve(p, {{1000, 230}, {2500, 300}, {4000, 360}, {5500, 358}, {7000, 340}, {7750, 300}, {8000, 275}});
+			p.max_boost = 1.1; p.boost_gain = 0.55; p.spool_rpm = 4000; p.spool_rate = 1.8; // famous lag, then a kick
+			p.idle_rpm = 1000; p.redline_rpm = 7750; p.limiter_rpm = 8000;
+			p.engine_inertia = 0.12;
+			gears(p, {2.769, 1.722, 1.217, 0.964, 0.806}, 3.45);
+			p.shift_time = 0.16;
+			p.diff_rear = DIFF_LSD; p.lsd_accel = 0.50; p.lsd_decel = 0.35;
+			p.brake_torque = 5600; p.brake_bias = 0.58;
+			p.drag_area = 0.66; p.lift_front = 0.12; p.lift_rear = 0.30;
+			p.clutch_torque = 900;
+			springs(p, 2.30, 2.50, 0.34, 0.56);
 			p.arb_front = 26000; p.arb_rear = 18000;
 			p.max_steer = 0.56;
 			break;
 
-		case CAR_KUROGANE_HYPER: // twin-turbo V8 hybrid AWD hypercar
-			p.mass = 1650; p.cg_height = 0.42; p.wheelbase = 2.78; p.weight_front = 0.45;
-			p.track_front = 1.66; p.track_rear = 1.62; p.half_extents = {0.99, 0.58, 2.38};
-			p.wheel_radius_front = 0.34; p.wheel_radius_rear = 0.35;
-			tires(p, TIRE_SEMI_SLICK, 0.265, 0.325);
-			p.layout = DRIVE_AWD; p.awd_front_split = 0.35; p.center_lock = 0.5;
-			p.diff_front = DIFF_LSD; p.diff_rear = DIFF_LSD; p.lsd_accel = 0.45; p.lsd_decel = 0.25;
-			p.engine_kind = ENGINE_HYBRID; p.cylinders = 8;
-			curve(p, {{900, 340}, {2500, 420}, {4000, 470}, {5500, 480}, {7000, 450}, {8200, 400}, {8600, 370}});
-			p.idle_rpm = 950; p.redline_rpm = 8300; p.limiter_rpm = 8600;
-			p.max_boost = 1.2; p.boost_gain = 0.55; p.spool_rpm = 3400; p.spool_rate = 3.2;
-			p.hybrid_boost_nm = 260;
-			p.engine_inertia = 0.17;
-			gears(p, {3.13, 2.24, 1.73, 1.39, 1.13, 0.93, 0.76}, 3.6);
+		case CAR_LAMBO_SVJ: // 2019 Lamborghini Aventador SVJ, 6.5 V12 770 PS / 720 Nm, AWD, mid-engine, ALA aero
+			geo(p, 1750, 0.43, 0.42, 2.7205, 1.697, 1.703, 0.350, 0.365, 2.098, 1.136, 4.943);
+			tires(p, TIRE_SEMI_SLICK, 0.255, 0.355);
+			p.layout = DRIVE_AWD; p.awd_front_split = 0.30; p.center_lock = 0.40;
+			p.diff_front = DIFF_OPEN; p.diff_rear = DIFF_LSD; p.lsd_accel = 0.45; p.lsd_decel = 0.25;
+			p.cylinders = 12;
+			curve(p, {{1000, 360}, {2500, 480}, {4500, 600}, {6750, 720}, {8000, 700}, {8500, 670}, {8900, 620}});
+			p.idle_rpm = 1000; p.redline_rpm = 8700; p.limiter_rpm = 8900;
+			p.engine_inertia = 0.16;
+			gears(p, {3.91, 2.44, 1.81, 1.46, 1.19, 0.97, 0.84}, 2.86); // ISR 7
 			p.shift_time = 0.05;
-			p.brake_torque = 5600; p.brake_bias = 0.60;
-			p.drag_area = 0.78; p.lift_front = 0.55; p.lift_rear = 0.85;
-			p.clutch_torque = 1400;
-			springs(p, 2.30, 2.50, 0.34, 0.56);
+			p.brake_torque = 7400; p.brake_bias = 0.58;
+			p.drag_area = 0.86; p.lift_front = 0.50; p.lift_rear = 0.85;
+			p.clutch_torque = 1500;
+			springs(p, 2.45, 2.65, 0.35, 0.58);
+			p.arb_front = 32000; p.arb_rear = 22000;
+			p.max_steer = 0.55;
+			break;
+
+		case CAR_JAGUAR_XJ220: // 1992 Jaguar XJ220, 3.5 V6 twin-turbo 550 PS / 644 Nm, mid-engine RWD
+			geo(p, 1545, 0.42, 0.44, 2.6531, 1.854, 1.704, 0.335, 0.338, 2.220, 1.150, 4.930);
+			tires(p, TIRE_SPORT, 0.255, 0.345);
+			p.layout = DRIVE_MR;
+			p.engine_kind = ENGINE_TURBO; p.cylinders = 6;
+			curve(p, {{1000, 260}, {2500, 330}, {4000, 405}, {4500, 415}, {6000, 400}, {7000, 370}, {7400, 330}});
+			p.max_boost = 1.0; p.boost_gain = 0.55; p.spool_rpm = 3600; p.spool_rate = 2.2;
+			p.idle_rpm = 900; p.redline_rpm = 7200; p.limiter_rpm = 7400;
+			p.engine_inertia = 0.14;
+			gears(p, {2.90, 1.94, 1.45, 1.13, 0.88}, 2.90);
+			p.shift_time = 0.15;
+			p.diff_rear = DIFF_LSD; p.lsd_accel = 0.45; p.lsd_decel = 0.30;
+			p.brake_torque = 6200; p.brake_bias = 0.58;
+			p.drag_area = 0.68; p.lift_front = 0.15; p.lift_rear = 0.30;
+			p.clutch_torque = 1000;
+			springs(p, 2.20, 2.40, 0.34, 0.56);
+			p.arb_front = 26000; p.arb_rear = 18000;
+			p.max_steer = 0.55;
+			break;
+
+		case CAR_PORSCHE_918: // 2015 Porsche 918 Spyder, 4.6 V8 608 PS + e-motors (887 PS / 1280 Nm), AWD hybrid
+			geo(p, 1750, 0.43, 0.40, 2.7142, 1.847, 1.847, 0.304, 0.304, 1.940, 1.167, 4.643);
+			tires(p, TIRE_SEMI_SLICK, 0.265, 0.325);
+			p.layout = DRIVE_AWD; p.awd_front_split = 0.30; p.center_lock = 0.40;
+			p.diff_front = DIFF_OPEN; p.diff_rear = DIFF_LSD; p.lsd_accel = 0.45; p.lsd_decel = 0.25;
+			p.engine_kind = ENGINE_HYBRID; p.cylinders = 8;
+			curve(p, {{1000, 330}, {3000, 440}, {5000, 500}, {6700, 528}, {8500, 505}, {9000, 470}, {9300, 430}});
+			p.hybrid_boost_nm = 380;
+			p.idle_rpm = 1000; p.redline_rpm = 9000; p.limiter_rpm = 9300;
+			p.engine_inertia = 0.11;
+			gears(p, {3.91, 2.35, 1.69, 1.31, 1.08, 0.90, 0.72}, 3.30); // PDK 7
+			p.shift_time = 0.05;
+			p.brake_torque = 7400; p.brake_bias = 0.58;
+			p.drag_area = 0.74; p.lift_front = 0.40; p.lift_rear = 0.70;
+			p.clutch_torque = 1600;
+			springs(p, 2.40, 2.60, 0.35, 0.58);
 			p.arb_front = 30000; p.arb_rear = 22000;
-			p.max_steer = 0.56;
-			p.top_speed_limiter = 97.0;
+			p.max_steer = 0.55;
+			break;
+
+		case CAR_FERRARI_LAFERRARI: // 2014 Ferrari LaFerrari, 6.3 V12 800 PS + HY-KERS (963 PS / 900+ Nm), RWD hybrid
+			geo(p, 1660, 0.41, 0.40, 2.6365, 1.659, 1.645, 0.328, 0.345, 1.992, 1.116, 4.702);
+			tires(p, TIRE_SEMI_SLICK, 0.265, 0.345);
+			p.layout = DRIVE_MR;
+			p.engine_kind = ENGINE_HYBRID; p.cylinders = 12;
+			curve(p, {{1000, 380}, {3000, 520}, {5000, 610}, {6750, 700}, {8500, 670}, {9000, 630}, {9400, 580}});
+			p.hybrid_boost_nm = 270;
+			p.diff_rear = DIFF_LSD; p.lsd_accel = 0.50; p.lsd_decel = 0.30;
+			p.idle_rpm = 1000; p.redline_rpm = 9250; p.limiter_rpm = 9400;
+			p.engine_inertia = 0.13;
+			gears(p, {3.08, 2.19, 1.63, 1.29, 1.03, 0.84, 0.69}, 4.44); // Getrag 7DCT
+			p.shift_time = 0.04;
+			p.brake_torque = 7600; p.brake_bias = 0.58;
+			p.drag_area = 0.74; p.lift_front = 0.45; p.lift_rear = 0.75;
+			p.clutch_torque = 1600;
+			springs(p, 2.40, 2.60, 0.35, 0.58);
+			p.arb_front = 30000; p.arb_rear = 22000;
+			p.max_steer = 0.55;
 			break;
 	}
 	return p;
@@ -303,18 +446,25 @@ VehicleParams make_car_params(int id) {
 EngineAudioProfile make_car_audio(int id) {
 	EngineAudioProfile a;
 	switch (id) {
-		case CAR_MAME_K: a.cylinders = 3; a.exhaust_resonance = 260; a.roughness = 0.25; a.growl = 0.3; a.turbo_whistle = 0.5; a.uneven = 0.3; break;
-		case CAR_HACHI_GT: a.cylinders = 4; a.exhaust_resonance = 210; a.roughness = 0.18; a.growl = 0.45; break;
-		case CAR_KYUDO_TYPE_S: a.cylinders = 4; a.vtec = true; a.crossover_rpm = 5800; a.exhaust_resonance = 240; a.roughness = 0.12; a.growl = 0.35; break;
-		case CAR_SYLPH_S2: a.cylinders = 4; a.exhaust_resonance = 180; a.roughness = 0.2; a.growl = 0.55; a.turbo_whistle = 0.7; break;
-		case CAR_ROTORA_FD: a.cylinders = 2; a.rotors = 2; a.exhaust_resonance = 300; a.roughness = 0.3; a.growl = 0.4; a.turbo_whistle = 0.6; break;
-		case CAR_TATSU_IX: a.cylinders = 4; a.exhaust_resonance = 170; a.roughness = 0.28; a.growl = 0.6; a.turbo_whistle = 0.9; break;
-		case CAR_SENKO: a.cylinders = 6; a.exhaust_resonance = 220; a.roughness = 0.1; a.growl = 0.5; a.uneven = 0.15; break;
-		case CAR_TITAN_RZ: a.cylinders = 6; a.exhaust_resonance = 150; a.roughness = 0.1; a.growl = 0.65; a.turbo_whistle = 0.8; break;
-		case CAR_RAIJIN_R: a.cylinders = 6; a.exhaust_resonance = 160; a.roughness = 0.12; a.growl = 0.6; a.turbo_whistle = 0.85; break;
-		case CAR_KAIDO_VAN: a.cylinders = 4; a.diesel = true; a.exhaust_resonance = 110; a.roughness = 0.45; a.growl = 0.8; a.turbo_whistle = 0.6; break;
-		case CAR_MUGEN_PROTO: a.cylinders = 4; a.exhaust_resonance = 280; a.roughness = 0.1; a.growl = 0.4; a.straight_cut = true; break;
-		case CAR_KUROGANE_HYPER: a.cylinders = 8; a.hybrid = true; a.exhaust_resonance = 140; a.roughness = 0.14; a.growl = 0.75; a.turbo_whistle = 0.5; a.uneven = 0.35; a.straight_cut = true; break;
+		case CAR_ABARTH_500: a.cylinders = 4; a.exhaust_resonance = 240; a.roughness = 0.22; a.growl = 0.5; a.turbo_whistle = 0.5; break;
+		case CAR_GOLF_GTI: a.cylinders = 4; a.exhaust_resonance = 200; a.roughness = 0.16; a.growl = 0.42; a.turbo_whistle = 0.45; break;
+		case CAR_BMW_M3_E30: a.cylinders = 4; a.exhaust_resonance = 225; a.roughness = 0.16; a.growl = 0.5; break;
+		case CAR_PORSCHE_930: a.cylinders = 6; a.exhaust_resonance = 175; a.roughness = 0.18; a.growl = 0.55; a.turbo_whistle = 0.9; a.uneven = 0.25; break;
+		case CAR_JAGUAR_ETYPE: a.cylinders = 6; a.exhaust_resonance = 150; a.roughness = 0.14; a.growl = 0.6; break;
+		case CAR_MB_300SL: a.cylinders = 6; a.exhaust_resonance = 145; a.roughness = 0.14; a.growl = 0.45; break;
+		case CAR_DEFENDER_90: a.cylinders = 5; a.diesel = true; a.exhaust_resonance = 105; a.roughness = 0.45; a.growl = 0.75; a.turbo_whistle = 0.5; a.uneven = 0.2; break;
+		case CAR_AUDI_QUATTRO: a.cylinders = 5; a.exhaust_resonance = 170; a.roughness = 0.2; a.growl = 0.62; a.turbo_whistle = 0.85; a.uneven = 0.22; break;
+		case CAR_JAGUAR_FTYPE: a.cylinders = 8; a.exhaust_resonance = 120; a.roughness = 0.14; a.growl = 0.9; a.turbo_whistle = 0.35; a.uneven = 0.35; break;
+		case CAR_MB_G63: a.cylinders = 8; a.exhaust_resonance = 112; a.roughness = 0.16; a.growl = 0.85; a.turbo_whistle = 0.4; a.uneven = 0.35; break;
+		case CAR_BMW_M4: a.cylinders = 6; a.exhaust_resonance = 150; a.roughness = 0.12; a.growl = 0.62; a.turbo_whistle = 0.55; break;
+		case CAR_AUDI_R8: a.cylinders = 10; a.exhaust_resonance = 210; a.roughness = 0.1; a.growl = 0.6; a.uneven = 0.12; break;
+		case CAR_PORSCHE_992: a.cylinders = 6; a.exhaust_resonance = 170; a.roughness = 0.12; a.growl = 0.55; a.turbo_whistle = 0.6; a.uneven = 0.2; break;
+		case CAR_FERRARI_TESTAROSSA: a.cylinders = 12; a.exhaust_resonance = 190; a.roughness = 0.1; a.growl = 0.55; a.uneven = 0.1; break;
+		case CAR_FERRARI_F40: a.cylinders = 8; a.exhaust_resonance = 205; a.roughness = 0.16; a.growl = 0.72; a.turbo_whistle = 1.0; a.straight_cut = true; break;
+		case CAR_LAMBO_SVJ: a.cylinders = 12; a.exhaust_resonance = 220; a.roughness = 0.08; a.growl = 0.78; a.straight_cut = true; break;
+		case CAR_JAGUAR_XJ220: a.cylinders = 6; a.exhaust_resonance = 165; a.roughness = 0.16; a.growl = 0.6; a.turbo_whistle = 0.9; a.uneven = 0.3; break;
+		case CAR_PORSCHE_918: a.cylinders = 8; a.hybrid = true; a.exhaust_resonance = 235; a.roughness = 0.08; a.growl = 0.68; a.straight_cut = true; break;
+		case CAR_FERRARI_LAFERRARI: a.cylinders = 12; a.hybrid = true; a.exhaust_resonance = 240; a.roughness = 0.07; a.growl = 0.72; a.straight_cut = true; break;
 		default: break;
 	}
 	return a;
@@ -388,13 +538,13 @@ bool apply_override(VehicleParams &p, const std::string &key, real v) {
 	}
 	if (k.rfind("gear_", 0) == 0) {
 		int g = std::atoi(k.c_str() + 5);
-		if (g >= 1 && g <= 8) {
+		if (g >= 1 && g <= 9) {
 			p.gear_ratios[g - 1] = v;
 			return true;
 		}
 		return false;
 	}
-	if (k == "gear_count") { p.gear_count = (int)clampr(v, 4, 8); return true; }
+	if (k == "gear_count") { p.gear_count = (int)clampr(v, 4, 9); return true; }
 	if (k == "tire_compound") {
 		TireCompound c = (TireCompound)(int)clampr(v, 0, TIRE_COUNT - 1);
 		p.tire_front = TireSpec::compound(c);

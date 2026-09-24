@@ -1,5 +1,7 @@
-// Stock physics definitions for the 12 cars. Display data (names, prices, lore) lives in
-// godot/scripts/data/cars.gd; upgrades and tuning are applied on top via apply_override().
+// Stock physics definitions for the 19 real European cars. Display data (names, prices, lore)
+// lives in godot/scripts/data/cars.gd; upgrades and tuning are applied on top via apply_override().
+// Wheelbase, track and wheel radii match the baked models (godot/assets/cars/<key>/<key>.json),
+// so the simulated contact patches sit exactly under the visual tyres.
 #pragma once
 
 #include "vehicle.h"
@@ -11,18 +13,25 @@
 namespace nt {
 
 enum CarId {
-	CAR_MAME_K = 0,
-	CAR_HACHI_GT,
-	CAR_KYUDO_TYPE_S,
-	CAR_SYLPH_S2,
-	CAR_ROTORA_FD,
-	CAR_TATSU_IX,
-	CAR_SENKO,
-	CAR_TITAN_RZ,
-	CAR_RAIJIN_R,
-	CAR_KAIDO_VAN,
-	CAR_MUGEN_PROTO,
-	CAR_KUROGANE_HYPER,
+	CAR_ABARTH_500 = 0,
+	CAR_GOLF_GTI,
+	CAR_BMW_M3_E30,
+	CAR_PORSCHE_930,
+	CAR_JAGUAR_ETYPE,
+	CAR_MB_300SL,
+	CAR_DEFENDER_90,
+	CAR_AUDI_QUATTRO,
+	CAR_JAGUAR_FTYPE,
+	CAR_MB_G63,
+	CAR_BMW_M4,
+	CAR_AUDI_R8,
+	CAR_PORSCHE_992,
+	CAR_FERRARI_TESTAROSSA,
+	CAR_FERRARI_F40,
+	CAR_LAMBO_SVJ,
+	CAR_JAGUAR_XJ220,
+	CAR_PORSCHE_918,
+	CAR_FERRARI_LAFERRARI,
 	CAR_COUNT
 };
 

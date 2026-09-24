@@ -77,13 +77,12 @@
   "other:930_stickers",
   "other:black",
   "other:plate",
-  "paint:coat",
   "paint:paint",
   "rim:930_rim",
   "rim:rim:930_rim",
   "tyre:930_tire",
   "tyre:tyre:930_tire"
  ],
- "triangles": 109927,
- "source_triangles": 239078
+ "triangles": 109947,
+ "source_triangles": 195365
 }

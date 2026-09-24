@@ -1355,7 +1355,7 @@
       }
     },
     {
-      "name": "paint:RedPaint",
+      "name": "other:RedPaint",
       "doubleSided": true,
       "pbrMetallicRoughness": {
         "roughnessFactor": 0.27058823529411763,
@@ -1363,7 +1363,7 @@
       }
     },
     {
-      "name": "paint:BlackPaint",
+      "name": "other:BlackPaint",
       "doubleSided": true,
       "pbrMetallicRoughness": {
         "roughnessFactor": 0.5882352941176471,

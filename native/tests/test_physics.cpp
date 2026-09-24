@@ -90,7 +90,7 @@ TEST_CASE("every car settles at rest without creeping") {
 		Vehicle v = make(id, g);
 		Vec3 p0 = v.state.pos;
 		for (int i = 0; i < 600; ++i) v.step(g, DT);
-		INFO("car " << car_key(id));
+		INFO("car " << std::string(car_key(id)));
 		REQUIRE(finite_state(v));
 		CHECK((v.state.pos - p0).flat().length() < 0.05);
 		CHECK(v.state.speed() < 0.05);
@@ -163,7 +163,7 @@ TEST_CASE("roster performance envelope") {
 	for (int id = 0; id < CAR_COUNT; ++id) {
 		Perf p = measure(id);
 		std::printf("%-16s %8.2f %8.1f %9.1f %7.2f\n", car_key(id), p.t100, p.top, p.brake_dist, p.lat_g);
-		INFO("car " << car_key(id));
+		INFO("car " << std::string(car_key(id)));
 		CHECK(p.t100 > 2.0);
 		CHECK(p.t100 < 20.0);
 		CHECK(p.top > 130.0);
@@ -190,7 +190,7 @@ TEST_CASE("simulation is deterministic") {
 	CollisionGrid g;
 	build_pad(g);
 	auto run = [&]() {
-		Vehicle v = make(CAR_SYLPH_S2, g);
+		Vehicle v = make(CAR_BMW_M3_E30, g);
 		for (int i = 0; i < 120 * 20; ++i) {
 			real t = i * DT;
 			v.input.throttle = 0.5 + 0.5 * std::sin(t * 0.7);
@@ -219,7 +219,7 @@ TEST_CASE("simulation is deterministic") {
 TEST_CASE("handbrake flick breaks the rear loose on the drift car") {
 	CollisionGrid g;
 	build_pad(g);
-	Vehicle v = make(CAR_SYLPH_S2, g);
+	Vehicle v = make(CAR_BMW_M3_E30, g);
 	v.assists.stm = false;
 	v.assists.tcs = false;
 	v.assists.countersteer = 0.0;
@@ -241,7 +241,7 @@ TEST_CASE("handbrake flick breaks the rear loose on the drift car") {
 TEST_CASE("rewind snapshot restores state exactly") {
 	CollisionGrid g;
 	build_pad(g);
-	Vehicle v = make(CAR_RAIJIN_R, g);
+	Vehicle v = make(CAR_AUDI_R8, g);
 	v.input.throttle = 1.0;
 	for (int i = 0; i < 300; ++i) v.step(g, DT);
 	std::vector<uint8_t> snap;
@@ -254,21 +254,21 @@ TEST_CASE("rewind snapshot restores state exactly") {
 }
 
 TEST_CASE("override ops stack and engine swaps transplant the engine") {
-	VehicleParams p = make_car_params(CAR_MAME_K);
+	VehicleParams p = make_car_params(CAR_ABARTH_500);
 	real m0 = p.mass;
 	CHECK(apply_override(p, "*mass", 0.9));
 	CHECK(p.mass == doctest::Approx(m0 * 0.9));
 	CHECK(apply_override(p, "+lift_rear", 0.5));
 	CHECK_FALSE(apply_override(p, "*torque_scale", 2.0));
 	CHECK_FALSE(apply_override(p, "no_such_key", 1.0));
-	VehicleParams titan = make_car_params(CAR_TITAN_RZ);
-	VehicleParams s = make_car_params(CAR_MAME_K);
+	VehicleParams titan = make_car_params(CAR_BMW_M4);
+	VehicleParams s = make_car_params(CAR_ABARTH_500);
 	real mass_before = s.mass;
-	CHECK(apply_override(s, "engine_swap", (real)CAR_TITAN_RZ));
+	CHECK(apply_override(s, "engine_swap", (real)CAR_BMW_M4));
 	CHECK(s.cylinders == titan.cylinders);
 	CHECK(s.redline_rpm == titan.redline_rpm);
 	CHECK(s.mass > mass_before); // 3 -> 6 cylinders adds weight
-	BenchmarkResult stock = run_benchmark(make_car_params(CAR_MAME_K));
+	BenchmarkResult stock = run_benchmark(make_car_params(CAR_ABARTH_500));
 	BenchmarkResult swapped = run_benchmark(s);
 	MESSAGE("mame stock PI " << stock.pi << " swapped PI " << swapped.pi);
 	CHECK(swapped.pi > stock.pi + 60);

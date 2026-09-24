@@ -102,7 +102,7 @@ struct VehicleParams {
 
 	// Transmission.
 	int gear_count = 5;
-	real gear_ratios[8] = {3.59, 2.06, 1.44, 1.10, 0.85, 0.72, 0.62, 0.55};
+	real gear_ratios[10] = {3.59, 2.06, 1.44, 1.10, 0.85, 0.72, 0.62, 0.55, 0.5, 0.45};
 	real reverse_ratio = 3.4;
 	real final_drive = 4.3;
 	real shift_time = 0.16;

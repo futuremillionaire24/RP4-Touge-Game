@@ -127,7 +127,7 @@ TEST_CASE("AI completes the touge ascent on real terrain") {
 		ts[i].half_width_right = road.samples[i].rs.width_right;
 	}
 	sim.set_line(ts, false);
-	int id = sim.add_car(make_car_params(CAR_HACHI_GT), true, 42);
+	int id = sim.add_car(make_car_params(CAR_GOLF_GTI), true, 42);
 	sim.ai[id].personality = difficulty_personality(5, 3);
 	const RoadSample &s0 = road.samples[2].rs;
 	sim.cars[id].reset(s0.center + Vec3(0, 0.7, 0), quat_look(s0.tangent, Vec3(0, 1, 0)), 0.0);

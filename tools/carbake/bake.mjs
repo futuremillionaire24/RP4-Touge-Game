@@ -66,7 +66,8 @@ function classify(name, cfg) {
 			return map(cls);
 		}
 	}
-	if (DEFAULT_RX.paint.test(name)) return 'paint';
+	// A configured paint regex is authoritative (names like "..._PAINT_2" are often not the body).
+	if (!cfg.paint && DEFAULT_RX.paint.test(name)) return 'paint';
 	return 'other';
 	function map(c) {
 		return { reverse: 'light_reverse', signal: 'light_signal', tail: 'light_tail', head: 'light_head', light: 'light_misc' }[c] || c;

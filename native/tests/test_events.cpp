@@ -77,7 +77,7 @@ static void load_route_collision(const World &w, WorldSim &sim, const std::vecto
 TEST_CASE("every event route is raceable by a full AI grid") {
 	World &w = test_world_instance();
 	std::printf("\n%-16s %7s %6s %9s %8s %9s\n", "event", "len km", "grid", "winner s", "finish", "respawns");
-	const int car_pool[] = {CAR_SYLPH_S2, CAR_RAIJIN_R, CAR_TATSU_IX, CAR_ROTORA_FD, CAR_SENKO, CAR_TITAN_RZ, CAR_KYUDO_TYPE_S, CAR_HACHI_GT};
+	const int car_pool[] = {CAR_BMW_M3_E30, CAR_AUDI_R8, CAR_AUDI_QUATTRO, CAR_PORSCHE_930, CAR_FERRARI_TESTAROSSA, CAR_BMW_M4, CAR_JAGUAR_ETYPE, CAR_GOLF_GTI};
 	for (const EventSpec &e : events()) {
 		std::vector<RouteSample> route = w.compose_route(e.roads);
 		REQUIRE(route.size() > 50);

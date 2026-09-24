@@ -123,7 +123,7 @@ void Vehicle::reset(const Vec3 &pos, const Quat &rot, real speed) {
 real Vehicle::gear_ratio(int gear) const {
 	if (gear < 0) return -params.reverse_ratio;
 	if (gear == 0) return 0.0;
-	int g = std::min(gear, std::min(params.gear_count, 8));
+	int g = std::min(gear, std::min(params.gear_count, 10));
 	return params.gear_ratios[g - 1];
 }
 
@@ -553,8 +553,11 @@ void Vehicle::substep(const CollisionGrid &world, real h) {
 		real launch_rpm = P.idle_rpm + (P.redline_rpm * 0.45 - P.idle_rpm) * throttle;
 		if (locked_rpm < launch_rpm) {
 			// No creep: with the throttle closed the auto clutch opens fully near standstill.
-			real slip_engage = smoothstep(P.idle_rpm * 0.9, launch_rpm, s.engine_rpm) * 0.85 * smoothstep(0.02, 0.12, throttle);
-			engage = std::min(engage, std::max(slip_engage, locked_rpm / std::max(launch_rpm, 1.0)));
+			// Below idle speed in gear the clutch only closes with throttle (like a DCT/auto), else a
+			// short first gear plus big idle torque feeds back into a slow creep.
+			real pedal = smoothstep(0.02, 0.12, throttle);
+			real slip_engage = smoothstep(P.idle_rpm * 0.9, launch_rpm, s.engine_rpm) * 0.85 * pedal;
+			engage = std::min(engage, std::max(slip_engage, locked_rpm / std::max(launch_rpm, 1.0) * pedal));
 		}
 	}
 	s.clutch_engagement = engage;
