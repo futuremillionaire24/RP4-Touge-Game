@@ -29,8 +29,8 @@ static func build(key: String, spec: Dictionary, wheels: PackedFloat32Array, pai
 	var dims := {"hx": he.x, "hz": he.z, "cg": cg, "wheels": wheel_list(wheels), "key": key}
 	var lod := 1 if is_player else 0
 
-	# Only use external 3D model if explicitly registered in CarData
-	var model_path: String = car.get("model_path", "")
+	# Use external 3D model if registered, or default to standard model path for the car
+	var model_path: String = car.get("model_path", "res://assets/models/cars/%s.tscn" % key)
 
 	if model_path != "" and ResourceLoader.exists(model_path):
 		var model_scene := load(model_path) as PackedScene
@@ -39,6 +39,11 @@ static func build(key: String, spec: Dictionary, wheels: PackedFloat32Array, pai
 			if model_inst != null:
 				root.add_child(model_inst)
 				model_inst.name = "ModelMesh"
+
+				# In Neon Touge, all cars face -Z. Models from asset packs face +Z; rotate 180° around Y
+				var faces_backward := (key != "kurogane_hyper")
+				if faces_backward:
+					model_inst.rotation.y = PI
 
 				# Hide static wheel nodes in the model so dynamic CarWheels mount cleanly
 				var brake_lights := []
@@ -49,7 +54,7 @@ static func build(key: String, spec: Dictionary, wheels: PackedFloat32Array, pai
 				while not stack.is_empty():
 					var n: Node = stack.pop_back()
 					var n_name := n.name.to_lower()
-					if n_name.begins_with("wheel"):
+					if n_name.begins_with("wheel") or n_name.contains("rim") or n_name.contains("tire") or n_name.contains("brakepad"):
 						if n is Node3D:
 							(n as Node3D).visible = false
 					elif n_name.contains("brake") or n_name.contains("tail"):
@@ -71,14 +76,33 @@ static func build(key: String, spec: Dictionary, wheels: PackedFloat32Array, pai
 								var mat = mi.get_surface_override_material(s)
 								if mat == null: mat = mi.mesh.surface_get_material(s)
 								var m_name: String = mat.resource_name.to_lower() if mat != null else ""
-								if m_name.contains("paint") or m_name.contains("body") or m_name.contains("color") or m_name.contains("lospec"):
+								if m_name.contains("paint 1") or (key == "kurogane_hyper" and m_name.contains("paint")):
 									mi.set_surface_override_material(s, paint)
 								elif m_name.contains("glass") or m_name.contains("window"):
 									mi.set_surface_override_material(s, CarMaterials.shared("glass"))
 								elif m_name.contains("chrome") or m_name.contains("mirror"):
 									mi.set_surface_override_material(s, CarMaterials.shared("chrome"))
-								elif m_name.contains("trim") or m_name.contains("plastic") or m_name.contains("black"):
+								elif m_name.contains("trim") or m_name.contains("plastic") or m_name.contains("black") or m_name.contains("paint 2"):
 									mi.set_surface_override_material(s, CarMaterials.shared("trim"))
+								elif m_name.contains("headlight") or m_name.contains("head"):
+									var hl_mat = CarMaterials.shared("headlight").duplicate()
+									mi.set_surface_override_material(s, hl_mat)
+									headlights.append(mi)
+								elif m_name.contains("brakelight") or m_name.contains("tail") or m_name.contains("signallight"):
+									var bl_mat = CarMaterials.shared("taillight").duplicate()
+									mi.set_surface_override_material(s, bl_mat)
+									brake_lights.append(mi)
+								elif mat is StandardMaterial3D and (mat as StandardMaterial3D).albedo_texture != null:
+									# Retain palette texture (windows, grilles, lights, decals) with PBR clearcoat
+									var pbr_mat: StandardMaterial3D = (mat as StandardMaterial3D).duplicate()
+									pbr_mat.roughness = 0.28
+									pbr_mat.metallic = 0.2
+									pbr_mat.clearcoat_enabled = true
+									pbr_mat.clearcoat = 0.85
+									pbr_mat.clearcoat_roughness = 0.06
+									var p_col: Color = car.get("paint", Color.WHITE)
+									pbr_mat.albedo_color = Color(1, 1, 1).lerp(p_col, 0.42)
+									mi.set_surface_override_material(s, pbr_mat)
 					for c in n.get_children():
 						stack.push_back(c)
 
@@ -89,7 +113,8 @@ static func build(key: String, spec: Dictionary, wheels: PackedFloat32Array, pai
 					var s_factor := minf(target_w / sz.x, target_l / sz.z)
 					model_inst.scale = Vector3(s_factor, s_factor, s_factor)
 					var center := (min_v + max_v) * 0.5 * s_factor
-					model_inst.position = Vector3(-center.x, -cg + 0.12, -center.z)
+					var local_center := (Basis(Vector3.UP, PI if faces_backward else 0.0) * center)
+					model_inst.position = Vector3(-local_center.x, -cg + 0.12, -local_center.z)
 
 				# Add full functional GT/Forza details (plates, exhausts, mirrors, lights)
 				CarDetails.add(root, b, dims, paint, car)

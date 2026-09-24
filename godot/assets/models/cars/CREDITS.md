@@ -33,3 +33,23 @@ In compliance with the project licensing guidelines and user directive for real-
 - **Author**: Neon Touge Project Team
 - **License**: MIT / Original Project Code
 - **Components**: Recaro sports bucket seats, aerodynamic teardrop side mirrors with chrome reflective faces, +0.052m blister fender arches, JDM 3-spoke sports steering rims, custom exhaust geometries.
+
+## 4. Kenney Vehicle & Racing Kits
+- **Source**: [KenneyNL/Starter-Kit-Racing](https://github.com/KenneyNL/Starter-Kit-Racing) & Kenney Car Kit
+- **Author**: Kenney (Kenney.nl)
+- **License**: CC0 1.0 Universal (Public Domain)
+- **Integrated Models**:
+  - `sports_hatch.glb` — Honda Civic Type R (EK9)
+  - `sports_sedan.glb` — Mitsubishi Lancer Evolution IX MR
+  - `race_future.glb` — Tommykaira ZZ Proto
+  - `traffic_kei.glb` — Ambient Kei car
+  - `traffic_sedan.glb` — Ambient 4-door family sedan
+  - `traffic_taxi.glb` — Japanese green/black taxi with roof sign
+  - `traffic_van.glb` — Ambient delivery van
+  - `traffic_truck.glb` — Commercial freight truck
+
+## 5. Urban Transit Bus
+- **Source**: [matthewmain/bus_derby](https://github.com/matthewmain/bus_derby)
+- **Author**: Matthew Main
+- **License**: MIT
+- **Model**: `traffic_bus.glb` — Tokyo metropolitan transit bus

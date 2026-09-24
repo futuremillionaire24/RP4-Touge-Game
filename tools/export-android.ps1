@@ -59,7 +59,22 @@ if ($Debug) {
     $env:GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD = $kv.password
 }
 
-# 5. Import + export.
+# 5. Clean Gradle build cache to avoid stale stripped .so or asset intermediates.
+if (Test-Path "$buildDir\build") {
+    Write-Host "Cleaning stale Gradle build cache..." -ForegroundColor Yellow
+    Remove-Item -Recurse -Force "$buildDir\build"
+}
+
+# Ensure native library is placed into gradle build libs directly
+$nativeLib = Join-Path $godotDir "native\bin\$(if ($Debug) { 'libneontouge.android.template_debug.arm64.so' } else { 'libneontouge.android.template_release.arm64.so' })"
+if (Test-Path $nativeLib) {
+    $targetLibDir = Join-Path $buildDir "libs\$(if ($Debug) { 'debug' } else { 'release' })\arm64-v8a"
+    New-Item -ItemType Directory -Force $targetLibDir | Out-Null
+    Copy-Item $nativeLib (Join-Path $targetLibDir (Split-Path $nativeLib -Leaf)) -Force
+    Write-Host "Ingested native library ($((Get-Item $nativeLib).Length) bytes) -> $targetLibDir" -ForegroundColor Cyan
+}
+
+# 6. Import + export.
 Push-Location $godotDir
 & $NT_GODOT --headless --path . --import | Out-Null
 $apk = Join-Path $dist $(if ($Debug) { "NeonTougeRP4-debug.apk" } else { "NeonTougeRP4.apk" })
@@ -69,9 +84,14 @@ $code = $LASTEXITCODE
 Pop-Location
 if ($code -ne 0 -or -not (Test-Path $apk)) { throw "export failed ($code)" }
 
-# 6. Verify.
+# 7. Mirror to root workspace directory for user convenience.
+$rootApk = Join-Path $NT_ROOT "NeonTougeRP4.apk"
+Copy-Item $apk $rootApk -Force
+
+# 8. Verify.
 $bt = "$env:ANDROID_HOME\build-tools\36.1.0"
 $java = if ($env:JAVA_HOME) { "$env:JAVA_HOME\bin\java.exe" } else { "java.exe" }
 & $java -jar "$bt\lib\apksigner.jar" verify --print-certs $apk
 & "$bt\aapt.exe" dump badging $apk | Select-String -Pattern "package:|sdkVersion|targetSdkVersion|uses-permission|native-code|application-label"
 "APK: $apk  ($([math]::Round((Get-Item $apk).Length / 1MB, 1)) MB)"
+"Root APK: $rootApk  ($([math]::Round((Get-Item $rootApk).Length / 1MB, 1)) MB)"
