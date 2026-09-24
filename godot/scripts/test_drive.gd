@@ -109,7 +109,7 @@ func _scatter_markers(root: Node3D, pts: PackedVector3Array, tans: PackedVector3
 	root.add_child(mmi)
 
 func _spawn_cars() -> void:
-	var key: String = args.get("car", "sylph_s2")
+	var key: String = args.get("car", CarData.DEFAULT_KEY)
 	var ai_count := int(args.get("ai", "0"))
 	var line := sim.get_racing_line_points()
 	var n := line.size()

@@ -30,6 +30,7 @@ const OUT = path.join(root, 'godot/assets/cars');
 
 await MeshoptDecoder.ready;
 await MeshoptSimplifier.ready;
+MeshoptSimplifier.useExperimentalFeatures = true; // simplifyWithAttributes (normal-aware decimation)
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({
 	'draco3d.decoder': await draco3d.createDecoderModule(),
 	'meshopt.decoder': MeshoptDecoder,
@@ -498,6 +499,16 @@ async function bake(key, cfg, isTraffic) {
 			w.box = { mn: [w.box.mn[0] + dx, w.box.mn[1] + dy, w.box.mn[2] + dz], mx: [w.box.mx[0] + dx, w.box.mx[1] + dy, w.box.mx[2] + dz] };
 		}
 
+	if (isTraffic) {
+		// Two LODs: near (<= 45 m) and far; the traffic view splits instances by distance.
+		const outDir = path.join(OUT, key);
+		fs.rmSync(outDir, { recursive: true, force: true });
+		fs.mkdirSync(outDir, { recursive: true });
+		await writeTrafficLite(key, '', cfg.budget || 24000, credit, parts, isl, wheels, log);
+		await writeTrafficLite(key, '_lod1', Math.round((cfg.budget || 24000) / 4), credit, parts, isl, wheels, []);
+		return;
+	}
+
 	// Group islands -> output buckets: key = group|material|class.
 	const buckets = new Map();
 	for (const i of isl) {
@@ -589,14 +600,17 @@ async function bake(key, cfg, isTraffic) {
 		let I = Uint32Array.from(idx);
 		// Missing normals -> area-weighted smooth normals.
 		if (order.some(([p]) => !p.N)) computeNormals(P, I, N);
-		// Simplify.
-		const r = b.cls === 'interior' ? ratio * 0.4 : ratio;
+		// Simplify. Body paint is what the camera sees most: it keeps up to 1.8x the average ratio
+		// (and normals are part of the error metric so reflections stay smooth); the cabin, seen
+		// through tinted glass, is cut hardest.
+		const CLASS_WEIGHT = { paint: 1.8, glass: 1.4, interior: 0.4, other: 0.8 };
+		const r = Math.min(1, ratio * (CLASS_WEIGHT[b.cls] || 1));
 		if (r < 0.98 && I.length > 300) {
 			const target = Math.max(36, Math.floor((I.length / 3) * r) * 3);
 			// Start with a tight error bound and relax it until the budget is met (max 8x).
 			let err = b.cls === 'interior' ? 0.03 : 0.006;
 			for (let attempt = 0; attempt < 4; attempt++, err *= 2) {
-				const [si] = MeshoptSimplifier.simplify(I, P, 3, target, err, []);
+				const [si] = MeshoptSimplifier.simplifyWithAttributes(I, P, 3, N, 3, [0.5, 0.5, 0.5], null, target, err, attempt > 0 ? ['Prune'] : []);
 				if (si.length >= 3) I = si;
 				if (I.length <= target * 1.1) break;
 			}
@@ -746,6 +760,140 @@ async function bake(key, cfg, isTraffic) {
 		cls[c] = (cls[c] || 0) + 1;
 	}
 	console.log('    classes', JSON.stringify(cls));
+}
+
+// ---- Traffic "lite" output ------------------------------------------------------------------------
+// Ambient traffic is drawn with one MultiMesh per model, so every material is a draw call per
+// model. Collapse to a handful of surfaces: paint (instance colour), glass, head lamps, tail lamps
+// and "body" (every other material baked into vertex colours by sampling its texture). Wheel
+// vertices carry their hub (z, y) in UV2 so the traffic shader can spin them from the odometer;
+// other vertices get UV2 = (0, -100).
+const LITE_SURFACES = ['body', 'paint', 'glass', 'light_head', 'light_tail'];
+
+async function textureSampler(mat) {
+	const tex = mat && mat.getBaseColorTexture();
+	if (!tex || !tex.getImage()) return null;
+	try {
+		const { data, info } = await sharp(tex.getImage()).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+		return (u, v) => {
+			const x = ((Math.floor((u - Math.floor(u)) * info.width) % info.width) + info.width) % info.width;
+			const y = ((Math.floor((v - Math.floor(v)) * info.height) % info.height) + info.height) % info.height;
+			const o = (y * info.width + x) * 4;
+			const lin = (c) => Math.pow(c / 255, 2.2);
+			return [lin(data[o]), lin(data[o + 1]), lin(data[o + 2])];
+		};
+	} catch {
+		return null;
+	}
+}
+
+async function writeTrafficLite(key, suffix, budget, credit, parts, isl, wheels, log) {
+	const samplers = new Map();
+	for (const p of parts) if (p.mat && !samplers.has(p.mat)) samplers.set(p.mat, await textureSampler(p.mat));
+	const surf = {};
+	for (const s of LITE_SURFACES) surf[s] = { P: [], N: [], C: [], U2: [], I: [] };
+	for (const i of isl) {
+		const cls = i.part.cls;
+		let s = 'body';
+		if (cls === 'paint') s = 'paint';
+		else if (cls === 'glass') s = 'glass';
+		else if (cls === 'light_head' || cls === 'light_reverse') s = 'light_head';
+		else if (cls === 'light_tail' || cls === 'light_signal') s = 'light_tail';
+		const S = surf[s];
+		const p = i.part;
+		const base = p.mat ? p.mat.getBaseColorFactor() : [0.5, 0.5, 0.5, 1];
+		const sample = samplers.get(p.mat);
+		const hub = i.wheel !== undefined ? wheels[i.wheel].c : null;
+		const remap = new Map();
+		if (!S.weld) S.weld = new Map();
+		for (const v of i.verts) {
+			// Weld equal position+normal(+hub) so the simplifier has shared edges to collapse.
+			const q5 = (x) => Math.round(x * 1e4), q2 = (x) => Math.round(x * 50);
+			const wk = `${q5(p.P[v * 3])},${q5(p.P[v * 3 + 1])},${q5(p.P[v * 3 + 2])}|${p.N ? `${q2(p.N[v * 3])},${q2(p.N[v * 3 + 1])},${q2(p.N[v * 3 + 2])}` : ''}|${hub ? i.wheel : -1}`;
+			if (S.weld.has(wk)) {
+				remap.set(v, S.weld.get(wk));
+				continue;
+			}
+			S.weld.set(wk, S.P.length / 3);
+			remap.set(v, S.P.length / 3);
+			S.P.push(p.P[v * 3], p.P[v * 3 + 1], p.P[v * 3 + 2]);
+			S.N.push(p.N ? p.N[v * 3] : 0, p.N ? p.N[v * 3 + 1] : 1, p.N ? p.N[v * 3 + 2] : 0);
+			let c = [base[0], base[1], base[2]];
+			if (sample && p.UV0) {
+				const t = sample(p.UV0[v * 2], p.UV0[v * 2 + 1]);
+				c = [c[0] * t[0], c[1] * t[1], c[2] * t[2]];
+			}
+			if (p.C) c = [c[0] * p.C[v * 4], c[1] * p.C[v * 4 + 1], c[2] * p.C[v * 4 + 2]];
+			S.C.push(c[0], c[1], c[2], 1);
+			if (hub) S.U2.push(hub[2], hub[1]);
+			else S.U2.push(0, -100);
+		}
+		for (const t of i.tris) for (let k = 0; k < 3; k++) S.I.push(remap.get(p.idx[t * 3 + k]));
+	}
+	// Decimate each surface to the model budget share.
+	const total = LITE_SURFACES.reduce((a, s) => a + surf[s].I.length / 3, 0);
+	const ratio = Math.min(1, budget / Math.max(total, 1));
+	const { Document } = await import('@gltf-transform/core');
+	const doc = new Document();
+	const buf = doc.createBuffer();
+	const mesh = doc.createMesh('Body');
+	let tris = 0;
+	for (const s of LITE_SURFACES) {
+		const S = surf[s];
+		if (!S.I.length) continue;
+		const P = Float32Array.from(S.P), N = Float32Array.from(S.N);
+		let I = Uint32Array.from(S.I);
+		if (ratio < 0.98 && I.length > 300) {
+			const target = Math.max(36, Math.floor((I.length / 3) * ratio) * 3);
+			let err = 0.008;
+			for (let attempt = 0; attempt < 4; attempt++, err *= 2) {
+				const [si] = MeshoptSimplifier.simplifyWithAttributes(I, P, 3, N, 3, [0.5, 0.5, 0.5], null, target, err, attempt > 0 ? ['Prune'] : []);
+				if (si.length >= 3) I = si;
+				if (I.length <= target * 1.1) break;
+			}
+		}
+		const nv = P.length / 3;
+		const rm = new Int32Array(nv).fill(-1);
+		let cnt = 0;
+		for (const v of I) if (rm[v] < 0) rm[v] = cnt++;
+		const pack = (src, sz) => {
+			const out = new Float32Array(cnt * sz);
+			for (let v = 0; v < nv; v++) if (rm[v] >= 0) for (let k = 0; k < sz; k++) out[rm[v] * sz + k] = src[v * sz + k];
+			return out;
+		};
+		const Ic = cnt > 65535 ? new Uint32Array(I.length) : new Uint16Array(I.length);
+		for (let k = 0; k < I.length; k++) Ic[k] = rm[I[k]];
+		tris += Ic.length / 3;
+		const mat = doc.createMaterial(`${s}:lite`).setBaseColorFactor([1, 1, 1, 1]).setRoughnessFactor(s === 'glass' ? 0.05 : 0.5).setMetallicFactor(0);
+		mesh.addPrimitive(
+			doc.createPrimitive()
+				.setAttribute('POSITION', doc.createAccessor().setType('VEC3').setArray(pack(P, 3)).setBuffer(buf))
+				.setAttribute('NORMAL', doc.createAccessor().setType('VEC3').setArray(pack(N, 3)).setBuffer(buf))
+				.setAttribute('COLOR_0', doc.createAccessor().setType('VEC4').setArray(pack(Float32Array.from(S.C), 4)).setBuffer(buf))
+				.setAttribute('TEXCOORD_1', doc.createAccessor().setType('VEC2').setArray(pack(Float32Array.from(S.U2), 2)).setBuffer(buf))
+				.setIndices(doc.createAccessor().setType('SCALAR').setArray(Ic).setBuffer(buf))
+				.setMaterial(mat),
+		);
+	}
+	const node = doc.createNode('Body').setMesh(mesh);
+	doc.createScene('Scene').addChild(node);
+	const outDir = path.join(OUT, key);
+	buf.setURI(`${key}${suffix}.bin`);
+	await io.write(path.join(outDir, `${key}${suffix}.gltf`), doc);
+	if (suffix) return;
+	const fin = unionBox(parts.map((p) => bboxOf(p.P)));
+	const meta = {
+		key, traffic: true, credit,
+		length: +size(fin)[2].toFixed(3), width: +size(fin)[0].toFixed(3), height: +size(fin)[1].toFixed(3),
+		bounds: { min: fin.mn.map((v) => +v.toFixed(3)), max: fin.mx.map((v) => +v.toFixed(3)) },
+		wheels: wheels ? wheels.map((w) => ({ pos: w.c.map((v) => +v.toFixed(4)), radius: +w.r.toFixed(4), width: +w.w.toFixed(4) })) : null,
+		wheel_radius: wheels ? +(wheels.reduce((a, w) => a + w.r, 0) / 4).toFixed(4) : 0.32,
+		surfaces: LITE_SURFACES.filter((s) => surf[s].I.length),
+		triangles: Math.round(tris),
+	};
+	fs.writeFileSync(path.join(outDir, `${key}.json`), JSON.stringify(meta, null, 1));
+	console.log(`${key} (traffic lite): ${Math.round(total)} -> ${Math.round(tris)} tris, surfaces ${meta.surfaces.join(',')}`);
+	for (const l of log) console.log('   ', l);
 }
 
 const partIds = new WeakMap();

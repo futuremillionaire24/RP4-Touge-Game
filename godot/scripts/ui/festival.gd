@@ -272,8 +272,8 @@ func drive(extra := {}) -> void:
 func _run_ui_shots(dir: String) -> void:
 	DirAccess.make_dir_recursive_absolute(dir)
 	if Profile.data.garage.is_empty():
-		Profile.choose_starter("sylph_s2")
-		Profile.add_car("rotora_fd", "test", false)
+		Profile.choose_starter("bmw_m3_e30")
+		Profile.add_car("porsche_930", "test", false)
 		Profile.data.omikuji = 2
 	var shots := [
 		["title", func(): push(TitleScreen.new())],

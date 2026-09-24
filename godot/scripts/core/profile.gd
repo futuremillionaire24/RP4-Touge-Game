@@ -7,9 +7,9 @@ signal changed
 signal level_up(level: int)
 
 var PATH := "user://profile.json" # "-- profile=<name>" isolates test runs
-const VERSION := 2
+const VERSION := 3
 const BACKUPS := 3
-const STARTERS := ["mame_k", "hachi_gt", "sylph_s2"]
+const STARTERS := ["abarth_500", "golf_gti", "bmw_m3_e30"]
 const SELL_RATE := 0.6 # of purchase price + installed parts
 
 var data := {}
@@ -96,7 +96,11 @@ func _migrate() -> void:
 	for c in data.garage:
 		if typeof(c) == TYPE_DICTIONARY and c.has("key") and typeof(c.key) == TYPE_STRING:
 			if not CarData.CARS.has(c.key):
-				c.key = "sylph_s2"
+				# v3: the JDM roster became the European one; engine swaps pointed at JDM donors.
+				c.key = CarData.resolve(c.key)
+				if typeof(c.get("upgrades")) == TYPE_DICTIONARY:
+					c.upgrades.erase("swap")
+				c["pi"] = -1
 			if not c.has("upgrades") or typeof(c.upgrades) != TYPE_DICTIONARY:
 				c["upgrades"] = {}
 			if not c.has("tune") or typeof(c.tune) != TYPE_DICTIONARY:
@@ -235,12 +239,12 @@ func overrides_for(entry: Dictionary) -> Dictionary:
 	return UpgradeData.overrides_for(entry)
 
 func compute_pi(entry: Dictionary) -> int:
-	return int(NTSim.benchmark(entry.get("key", "sylph_s2"), overrides_for(entry)).pi)
+	return int(NTSim.benchmark(entry.get("key", CarData.DEFAULT_KEY), overrides_for(entry)).pi)
 
 func paint_for(entry: Dictionary) -> ShaderMaterial:
 	var p: Array = entry.get("paint", [])
 	var col = Color(p[0], p[1], p[2]) if p.size() >= 3 else null
-	var m := CarBuilder.paint_material(entry.get("key", "sylph_s2"), col, entry.get("finish", ""))
+	var m := CarBuilder.paint_material(entry.get("key", CarData.DEFAULT_KEY), col, entry.get("finish", ""))
 	return m
 
 ## Onboarding: first car is free.
@@ -256,7 +260,7 @@ func choose_starter(key: String) -> void:
 func drive_args() -> Dictionary:
 	var e := current_car()
 	if e.is_empty():
-		return {"car": "sylph_s2"}
+		return {"car": CarData.DEFAULT_KEY}
 	return {"car": e.key, "garage_index": current_index()}
 
 # ---- Prize Spins (Festival level rewards) ----------------------------------------------------

@@ -107,7 +107,7 @@ func _pick_rival_cars(n: int) -> Array:
 	if n == 1 and not rival.is_empty():
 		return [rival.car]
 	var pool := CarData.cars_up_to_class(int(event.get("class_max", 6)))
-	pool.erase("kurogane_hyper") # the hypercar is the championship prize, never a rival
+	pool.erase("ferrari_laferrari") # the championship prize, never a rival
 	if player != null:
 		var p_car := Profile.current_car()
 		var player_pi: int = int(p_car.get("pi", CarData.STOCK_PI.get(player.key, 500)))

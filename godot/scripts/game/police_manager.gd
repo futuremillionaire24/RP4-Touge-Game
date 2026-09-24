@@ -178,13 +178,13 @@ func _spawn_cruiser() -> void:
 	var road_pos: Vector3 = road.position + Vector3(0, 1.0, 0)
 	var dir: Vector3 = road.tangent
 
-	var car_key := "tatsu_ix"
+	var car_key := "bmw_m4" # Polizei M4
 	var overrides := {"paint": [0.08, 0.08, 0.09], "finish": "gloss", "two_tone": true, "paint2": [0.95, 0.95, 0.95]}
 	if heat_tier >= HeatTier.HYPER_PURSUIT:
-		car_key = "kurogane_hyper"
+		car_key = "lambo_svj" # Polizia di Stato Lamborghini
 		overrides = {"paint": [0.02, 0.02, 0.03], "finish": "matte"}
 	elif heat_tier >= HeatTier.INTERCEPTOR and randf() > 0.5:
-		car_key = "raijin_r"
+		car_key = "porsche_992" # Porsche interceptor
 		overrides = {"paint": [0.95, 0.95, 0.95], "finish": "gloss", "two_tone": true, "paint2": [0.05, 0.05, 0.06]}
 
 	var cop_id := sim.add_car(car_key, overrides, true, randi())

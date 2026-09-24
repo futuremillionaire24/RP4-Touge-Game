@@ -62,56 +62,13 @@
    "width": 0.2125
   }
  ],
- "wheelbase": 2.7575,
- "track_front": 1.566,
- "track_rear": 1.566,
- "headlights": [
-  [
-   -0.527,
-   0.847,
-   -0.433
-  ],
-  [
-   0.659,
-   0.72,
-   -1.126
-  ]
+ "wheel_radius": 0.3159,
+ "surfaces": [
+  "body",
+  "paint",
+  "glass",
+  "light_head",
+  "light_tail"
  ],
- "taillights": [],
- "exhausts": [],
- "classes": [
-  "chrome:body_chrome",
-  "disc:disc:disk_brake",
-  "disc:disc:disk_brake_tr.",
-  "disc:disc:wheel_disk",
-  "disc:disk_brake",
-  "disc:disk_brake_tr.",
-  "disc:wheel_disk",
-  "glass:win_glass",
-  "light_head:headlight_backglass",
-  "light_head:headlight_chrome",
-  "light_head:headlight_dso",
-  "light_head:hl_front",
-  "light_signal:headlight_signalglass",
-  "other:body_black",
-  "other:body_door_fr",
-  "other:body_focus",
-  "other:body_plastic",
-  "other:frame_tex",
-  "other:hl_goback",
-  "other:mirror",
-  "other:plate_tex",
-  "other:volvo_logo.tex",
-  "other:win_frame",
-  "paint:body_paint",
-  "rim:other:volvo_logo.tex",
-  "rim:rim:wheel_black",
-  "rim:rim:wheel_metal",
-  "rim:wheel_black",
-  "rim:wheel_metal",
-  "tyre:tyre:wheel_tire",
-  "tyre:wheel_tire"
- ],
- "triangles": 40344,
- "source_triangles": 53130
+ "triangles": 24040
 }

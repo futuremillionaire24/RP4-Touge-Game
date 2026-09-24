@@ -36,8 +36,8 @@ func build(p_world: NTWorld) -> void:
 			omamori.append({"id": p.id, "pos": p.position + Vector3(0, 1.5, 0), "node": node})
 	# Barn Finds
 	barns = [
-		{"id": "barn_satoyama", "name": "Satoyama Bamboo Shed", "car": "kaido_van", "pos": Vector3(-1250, 22, 1420), "level": 2},
-		{"id": "barn_akina", "name": "Mt. Akina Mountain Lodge", "car": "mugen_proto", "pos": Vector3(1820, 145, -2080), "level": 4}
+		{"id": "barn_satoyama", "name": "Satoyama Bamboo Shed", "car": "mb_300sl", "pos": Vector3(-1250, 22, 1420), "level": 2},
+		{"id": "barn_akina", "name": "Mt. Akina Mountain Lodge", "car": "jaguar_etype", "pos": Vector3(1820, 145, -2080), "level": 4}
 	]
 	for b in barns:
 		if not Profile.data.get("barns", []).has(b.id):

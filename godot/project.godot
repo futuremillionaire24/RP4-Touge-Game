@@ -5,8 +5,8 @@ config_version=5
 
 [application]
 
-config/name="Neon Touge RP4"
-config/description="Japan open-world street racing, built for the Retroid Pocket 4 Pro."
+config/name="Euro GT Festival"
+config/description="European open-world street racing, built for the Retroid Pocket 4 Pro."
 config/version="0.5.0"
 run/main_scene="res://scenes/boot.tscn"
 config/features=PackedStringArray("4.7", "Mobile")

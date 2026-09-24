@@ -67,17 +67,19 @@ void TrafficSystem::spawn_one(const Vec3 &focus) {
 		real w = std::min(sx.rs.width_left, sx.rs.width_right);
 		real lane_w = w / lpd;
 		int k = rng_.irange(0, lpd - 1);
-		// Japan drives on the left: travel lanes are left of the travel direction.
-		c.lane = -(k + 0.5) * lane_w;
+		// Europe drives on the right: travel lanes are right of the travel direction.
+		c.lane = (k + 0.5) * lane_w;
 		real r_model = rng_.next();
-		c.model = r_model < 0.28 ? TM_KEI : r_model < 0.58 ? TM_SEDAN : r_model < 0.72 ? TM_TAXI : r_model < 0.86 ? TM_VAN : r_model < 0.96 ? TM_TRUCK : TM_BUS;
+		c.model = r_model < 0.30 ? TM_KEI : r_model < 0.56 ? TM_SEDAN : r_model < 0.72 ? TM_TAXI : r_model < 0.86 ? TM_VAN : r_model < 0.96 ? TM_TRUCK : TM_BUS;
 		if (r.def.kind == RK_DOCK && rng_.chance(0.6)) c.model = TM_TRUCK;
 		switch (c.model) {
-			case TM_KEI: c.half = {0.74, 0.8, 1.7}; break;
-			case TM_VAN: c.half = {0.85, 0.98, 2.35}; break;
-			case TM_TRUCK: c.half = {1.05, 1.4, 3.8}; break;
-			case TM_BUS: c.half = {1.25, 1.5, 5.5}; break;
-			default: c.half = {0.86, 0.72, 2.3}; break;
+			case TM_KEI: c.half = {0.84, 0.73, 1.99}; break; // Polo
+			case TM_SEDAN: c.half = {0.93, 0.73, 2.43}; break; // Superb
+			case TM_TAXI: c.half = {0.93, 0.74, 2.31}; break; // V60
+			case TM_VAN: c.half = {0.95, 1.0, 2.45}; break; // T6
+			case TM_TRUCK: c.half = {1.0, 1.35, 3.47}; break; // Sprinter
+			case TM_BUS: c.half = {1.28, 1.52, 6.0}; break;
+			default: c.half = {0.9, 0.73, 2.3}; break;
 		}
 		real limit = r.def.speed_limit / 3.6;
 		c.desired = limit * rng_.range(0.9, 1.25) * (c.model == TM_TRUCK || c.model == TM_BUS ? 0.85 : 1.0);
@@ -126,7 +128,7 @@ bool TrafficSystem::pick_next_road(TrafficCar &c) {
 	c.s = at_start[k] ? 0.0 : n.length;
 	int lpd = lanes_per_dir(n.samples[at_start[k] ? 0 : n.samples.size() - 1].rs);
 	real w = std::min(n.samples.front().rs.width_left, n.samples.front().rs.width_right);
-	c.lane = -0.5 * (w / lpd) - (lpd > 1 && c.lane < -(w / lpd) ? w / lpd : 0.0);
+	c.lane = 0.5 * (w / lpd) + (lpd > 1 && c.lane > (w / lpd) ? w / lpd : 0.0);
 	c.desired = n.def.speed_limit / 3.6 * rng_.range(0.9, 1.25);
 	return true;
 }
@@ -242,6 +244,7 @@ void TrafficSystem::step(real dt, const Vec3 &focus, real time_s, const std::vec
 		acc = clampr(acc, -8.0, a_max);
 		c.speed = std::max(0.0, c.speed + acc * dt);
 		c.s += c.speed * dt * c.dir;
+		c.odo += c.speed * dt;
 		const Road &r = world->roads[c.road];
 		if (c.s > r.length || c.s < 0.0) {
 			if (!pick_next_road(c)) {

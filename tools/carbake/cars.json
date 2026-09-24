@@ -40,11 +40,11 @@
 			"paint": "\\|Body$", "tail": "break_lights|tail_lights|red_light", "drop": "wireframe_color" }
 	},
 	"traffic": {
-		"vw_polo": { "uid": "bab77902c638427bb85e68b6762a481f", "length": 3.972, "width": 1.682, "height": 1.453, "wheelbase": 2.470, "paint": "\\|primary", "budget": 40000 },
-		"skoda_superb": { "uid": "2da5059c3068448b9541eafb930a45a0", "length": 4.861, "width": 1.864, "height": 1.468, "wheelbase": 2.841, "paint": "\\|primary", "budget": 40000 },
-		"volvo_v60": { "uid": "504ce39150fe49c7979f702d5f0f8580", "length": 4.628, "width": 1.865, "height": 1.484, "wheelbase": 2.776, "paint": "body_paint", "budget": 40000 },
-		"mb_sprinter": { "uid": "f69de1315bb049c8946d57f6006acd73", "length": 6.940, "width": 1.993, "height": 2.700, "wheelbase": 4.325, "paint": "Carrosserie", "budget": 35000 },
-		"vw_t6": { "uid": "b36c0e9bf97b479f9193cce337f4d4c2", "length": 4.904, "width": 1.904, "height": 1.990, "wheelbase": 3.000, "paint": "metal_blanc", "budget": 40000, "flip": true },
-		"town_bus": { "uid": "14fe03d792914d51b6c6250b393c44fd", "length": 12.0, "width": 2.550, "height": 3.050, "wheelbase": 6.000, "budget": 45000 }
+		"vw_polo": { "uid": "bab77902c638427bb85e68b6762a481f", "length": 3.972, "width": 1.682, "height": 1.453, "wheelbase": 2.470, "paint": "\\|primary", "budget": 24000 },
+		"skoda_superb": { "uid": "2da5059c3068448b9541eafb930a45a0", "length": 4.861, "width": 1.864, "height": 1.468, "wheelbase": 2.841, "paint": "\\|primary", "budget": 24000 },
+		"volvo_v60": { "uid": "504ce39150fe49c7979f702d5f0f8580", "length": 4.628, "width": 1.865, "height": 1.484, "wheelbase": 2.776, "paint": "body_paint", "budget": 24000 },
+		"mb_sprinter": { "uid": "f69de1315bb049c8946d57f6006acd73", "length": 6.940, "width": 1.993, "height": 2.700, "wheelbase": 4.325, "paint": "Carrosserie", "budget": 22000 },
+		"vw_t6": { "uid": "b36c0e9bf97b479f9193cce337f4d4c2", "length": 4.904, "width": 1.904, "height": 1.990, "wheelbase": 3.000, "paint": "metal_blanc", "budget": 24000, "flip": true },
+		"town_bus": { "uid": "14fe03d792914d51b6c6250b393c44fd", "length": 12.0, "width": 2.550, "height": 3.050, "wheelbase": 6.000, "budget": 24000 }
 	}
 }

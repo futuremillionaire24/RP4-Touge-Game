@@ -62,36 +62,12 @@
    "width": 0.2281
   }
  ],
- "wheelbase": 2.9758,
- "track_front": 1.6285,
- "track_rear": 1.6285,
- "headlights": [
-  [
-   -0.635,
-   0.971,
-   -0.05
-  ],
-  [
-   0.635,
-   0.987,
-   0.152
-  ]
+ "wheel_radius": 0.3521,
+ "surfaces": [
+  "body",
+  "paint",
+  "glass",
+  "light_head"
  ],
- "taillights": [],
- "exhausts": [],
- "classes": [
-  "glass:verre",
-  "glass:verre_noir",
-  "light_head:phare",
-  "other:metal_gris",
-  "other:mirroir",
-  "other:other:metal_gris",
-  "other:plastique_noir",
-  "other:tissu",
-  "paint:metal_blanc",
-  "tyre:pneu",
-  "tyre:tyre:pneu"
- ],
- "triangles": 41008,
- "source_triangles": 336838
+ "triangles": 23083
 }

@@ -51,7 +51,7 @@
     {
       "type": "SCALAR",
       "componentType": 5123,
-      "count": 52170,
+      "count": 52167,
       "bufferView": 1,
       "byteOffset": 302724
     },
@@ -60,47 +60,47 @@
       "componentType": 5123,
       "count": 2778,
       "bufferView": 1,
-      "byteOffset": 407064
+      "byteOffset": 407060
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
       "count": 2304,
       "bufferView": 1,
-      "byteOffset": 412620
+      "byteOffset": 412616
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
       "count": 96,
       "bufferView": 1,
-      "byteOffset": 417228
+      "byteOffset": 417224
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
       "count": 6,
       "bufferView": 1,
-      "byteOffset": 417420
+      "byteOffset": 417416
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
       "count": 12,
       "bufferView": 1,
-      "byteOffset": 417432
+      "byteOffset": 417428
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
       "count": 36,
       "bufferView": 1,
-      "byteOffset": 417456
+      "byteOffset": 417452
     },
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 14336,
+      "count": 13915,
       "max": [
         0.8680116534233093,
         1.2429076433181763,
@@ -109,7 +109,7 @@
       "min": [
         -0.843273401260376,
         0.22333009541034698,
-        -0.38499024510383606
+        -0.3847568929195404
       ],
       "bufferView": 2,
       "byteOffset": 0
@@ -117,14 +117,14 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 14336,
+      "count": 13915,
       "bufferView": 2,
       "byteOffset": 12
     },
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 14336,
+      "count": 13915,
       "bufferView": 2,
       "byteOffset": 24
     },
@@ -357,61 +357,61 @@
     {
       "buffer": 0,
       "byteOffset": 1393696,
-      "byteLength": 417528,
+      "byteLength": 417524,
       "target": 34963
     },
     {
       "buffer": 0,
-      "byteOffset": 1811224,
-      "byteLength": 458752,
+      "byteOffset": 1811220,
+      "byteLength": 445280,
       "byteStride": 32,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 2269976,
+      "byteOffset": 2256500,
       "byteLength": 19584,
       "byteStride": 32,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 2289560,
+      "byteOffset": 2276084,
       "byteLength": 15232,
       "byteStride": 32,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 2304792,
+      "byteOffset": 2291316,
       "byteLength": 1088,
       "byteStride": 32,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 2305880,
+      "byteOffset": 2292404,
       "byteLength": 128,
       "byteStride": 32,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 2306008,
+      "byteOffset": 2292532,
       "byteLength": 256,
       "byteStride": 32,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 2306264,
+      "byteOffset": 2292788,
       "byteLength": 128,
       "byteStride": 32,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 2306392,
+      "byteOffset": 2292916,
       "byteLength": 512,
       "byteStride": 32,
       "target": 34962
@@ -520,7 +520,7 @@
   "buffers": [
     {
       "uri": "jaguar_etype.bin",
-      "byteLength": 2306904
+      "byteLength": 2293428
     }
   ],
   "materials": [

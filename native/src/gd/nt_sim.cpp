@@ -479,7 +479,8 @@ PackedFloat32Array NTSim::traffic_buffer(int model) const {
 		o[0] = b.rows[0].x; o[1] = b.rows[0].y; o[2] = b.rows[0].z; o[3] = (float)c.pos.x;
 		o[4] = b.rows[1].x; o[5] = b.rows[1].y; o[6] = b.rows[1].z; o[7] = (float)c.pos.y;
 		o[8] = b.rows[2].x; o[9] = b.rows[2].y; o[10] = b.rows[2].z; o[11] = (float)c.pos.z;
-		o[12] = c.color; o[13] = c.loose ? 1.0f : 0.0f; o[14] = (float)std::min(c.speed / 30.0, 1.0); o[15] = 0.0f;
+		o[12] = c.color; o[13] = c.loose ? 1.0f : 0.0f; o[14] = (float)std::min(c.speed / 30.0, 1.0);
+		o[15] = (float)std::fmod(c.odo, 1000.0); // wheel phase (metres)
 		k++;
 	}
 	return out;

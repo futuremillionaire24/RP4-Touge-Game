@@ -12,7 +12,7 @@ func build() -> void:
 	stage.frame_offset = 0.0
 	var e := Profile.current_car()
 	if e.is_empty():
-		stage.show_key("sylph_s2", true)
+		stage.show_key("ferrari_f40", true)
 	else:
 		stage.show_entry(e, true)
 	var name_box := VBoxContainer.new()

@@ -62,18 +62,25 @@ const CATEGORIES := [
 
 ## Engine swap options per car (donor keys). Level 0 = original engine.
 const SWAPS := {
-	"mame_k": ["hachi_gt", "kyudo_type_s", "sylph_s2"],
-	"hachi_gt": ["kyudo_type_s", "sylph_s2", "rotora_fd"],
-	"kyudo_type_s": ["sylph_s2", "tatsu_ix", "senko"],
-	"sylph_s2": ["titan_rz", "rotora_fd", "raijin_r"],
-	"rotora_fd": ["titan_rz", "senko", "raijin_r"],
-	"tatsu_ix": ["raijin_r", "titan_rz", "sylph_s2"],
-	"senko": ["titan_rz", "raijin_r", "rotora_fd"],
-	"titan_rz": ["raijin_r", "senko", "kurogane_hyper"],
-	"raijin_r": ["titan_rz", "senko", "kurogane_hyper"],
-	"kaido_van": ["titan_rz", "raijin_r", "tatsu_ix"],
-	"mugen_proto": ["kyudo_type_s", "senko", "rotora_fd"],
-	"kurogane_hyper": ["raijin_r", "titan_rz", "senko"],
+	"abarth_500": ["golf_gti", "bmw_m3_e30", "audi_quattro"],
+	"golf_gti": ["audi_quattro", "bmw_m4", "audi_r8"],
+	"bmw_m3_e30": ["bmw_m4", "porsche_930", "lambo_svj"],
+	"porsche_930": ["porsche_992", "ferrari_f40", "porsche_918"],
+	"jaguar_etype": ["jaguar_ftype", "jaguar_xj220", "ferrari_testarossa"],
+	"mb_300sl": ["mb_g63", "bmw_m4", "ferrari_testarossa"],
+	"defender_90": ["mb_g63", "jaguar_ftype", "bmw_m4"],
+	"audi_quattro": ["audi_r8", "porsche_992", "jaguar_xj220"],
+	"jaguar_ftype": ["jaguar_xj220", "audi_r8", "lambo_svj"],
+	"mb_g63": ["jaguar_ftype", "lambo_svj", "audi_r8"],
+	"bmw_m4": ["audi_r8", "jaguar_ftype", "ferrari_f40"],
+	"audi_r8": ["lambo_svj", "porsche_992", "ferrari_laferrari"],
+	"porsche_992": ["porsche_918", "ferrari_f40", "audi_r8"],
+	"ferrari_testarossa": ["ferrari_f40", "lambo_svj", "ferrari_laferrari"],
+	"ferrari_f40": ["ferrari_laferrari", "lambo_svj", "porsche_918"],
+	"lambo_svj": ["ferrari_laferrari", "porsche_918", "audi_r8"],
+	"jaguar_xj220": ["ferrari_f40", "lambo_svj", "porsche_992"],
+	"porsche_918": ["ferrari_laferrari", "lambo_svj", "porsche_992"],
+	"ferrari_laferrari": ["lambo_svj", "porsche_918", "ferrari_f40"],
 }
 const SWAP_PRICE := [0, 30000, 45000, 65000]
 
@@ -148,7 +155,7 @@ static func _is_boosted(engine_key: String) -> bool:
 
 ## Profile garage entry -> overrides (entry: {key, upgrades, tune, ...}).
 static func overrides_for(entry: Dictionary) -> Dictionary:
-	return build_overrides(entry.get("key", "mame_k"), entry.get("upgrades", {}), entry.get("tune", {}))
+	return build_overrides(entry.get("key", CarData.DEFAULT_KEY), entry.get("upgrades", {}), entry.get("tune", {}))
 
 static func price_of(cat_id: String, level: int) -> int:
 	for cat in CATEGORIES:

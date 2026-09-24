@@ -56,7 +56,7 @@ static func all() -> Array:
 			"rivals": 1, "class_max": 6, "time": 1.5, "weather": 0, "credits": 45000, "xp": 2000, "level": 5, "district": "A8 Autoroute", "rival": "blackbird"},
 		# ---- Euro GT Festival Grand Prix (Championship Finale) ----
 		{"id": "touge_crown_championship", "name": "Euro GT Festival Grand Prix", "type": Type.SHOWCASE, "roads": ["shuto_loop"], "closed": true, "laps": 3,
-			"rivals": 1, "class_max": 6, "time": 0.0, "weather": 0, "credits": 100000, "xp": 5000, "level": 6, "district": "Monaco & Riviera", "rival": "champion", "reward_car": "kurogane_hyper"},
+			"rivals": 1, "class_max": 6, "time": 0.0, "weather": 0, "credits": 100000, "xp": 5000, "level": 6, "district": "Monaco & Riviera", "rival": "champion", "reward_car": "ferrari_laferrari"},
 		# ---- Time Attack & Other Runs ----
 		{"id": "akina_north", "name": "Col de la Madone Descent", "type": Type.SPRINT, "roads": ["touge_descent"], "closed": false,
 			"rivals": 3, "class_max": 4, "time": 18.0, "weather": 3, "credits": 14000, "xp": 700, "level": 3, "district": "Grande Corniche"},

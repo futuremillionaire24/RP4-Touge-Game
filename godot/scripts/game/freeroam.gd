@@ -124,7 +124,7 @@ func _begin_streaming() -> void:
 
 func _on_initial_load() -> void:
 	# The festival passes a garage index (upgrades, tune, paint); dev/test runs pass car=<key>.
-	var key: String = args.get("car", "sylph_s2")
+	var key: String = args.get("car", CarData.DEFAULT_KEY)
 	_entry = {}
 	if args.has("garage_index") and int(args.garage_index) < Profile.data.garage.size():
 		_entry = Profile.data.garage[int(args.garage_index)]

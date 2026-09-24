@@ -50,7 +50,7 @@ func setup(p_sim: NTSim, p_id: int, p_key: String, player: bool, paint: Material
 
 ## Garage build: paint, finish and engine-swap audio from a Profile garage entry.
 func setup_entry(p_sim: NTSim, p_id: int, entry: Dictionary, player: bool) -> void:
-	var k: String = entry.get("key", "sylph_s2")
+	var k: String = entry.get("key", CarData.DEFAULT_KEY)
 	audio_key = UpgradeData.swap_donor_key(k, int(entry.get("upgrades", {}).get("swap", 0)))
 	setup(p_sim, p_id, k, player, Profile.paint_for(entry))
 

@@ -1,4 +1,4 @@
-// Ambient traffic: kinematic cars that drive on the left (Japan) along world roads, follow the
+// Ambient traffic: kinematic cars that drive on the right (continental Europe) along world roads, follow the
 // car ahead (IDM), stop at red lights in the city grid, pick new roads at junctions, and get
 // knocked about (then fade) when the player hits them. Designed for 50-80 cars at ~0.1 ms.
 #pragma once
@@ -11,15 +11,18 @@
 
 namespace nt {
 
+// Model slots (see godot/scripts/world/traffic_view.gd): VW Polo, Skoda Superb, Volvo V60 (taxi),
+// VW Transporter T6, Mercedes Sprinter, town bus.
 enum TrafficModel : uint8_t { TM_KEI = 0, TM_SEDAN, TM_TAXI, TM_VAN, TM_TRUCK, TM_BUS, TM_COUNT };
 
 struct TrafficCar {
 	int road = -1;
 	real s = 0.0; // arc length along the road
 	int dir = 1; // +1 along the road, -1 against it
-	real lane = -1.8; // lateral offset (negative = left of travel direction)
+	real lane = 1.8; // lateral offset (positive = right of travel direction)
 	real speed = 0.0;
 	real desired = 12.0;
+	real odo = 0.0; // metres driven (wheel spin phase for the renderer)
 	uint8_t model = TM_SEDAN;
 	float color = 0.0f;
 	Vec3 pos;
