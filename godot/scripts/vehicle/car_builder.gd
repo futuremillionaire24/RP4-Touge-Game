@@ -57,13 +57,28 @@ static func build(key: String, spec: Dictionary, wheels: PackedFloat32Array, pai
 					elif n_name.contains("head"):
 						headlights.append(n)
 					if n is MeshInstance3D:
-						var aabb: AABB = (n as MeshInstance3D).get_aabb()
+						var mi := n as MeshInstance3D
+						var aabb: AABB = mi.get_aabb()
 						min_v.x = minf(min_v.x, aabb.position.x)
 						min_v.y = minf(min_v.y, aabb.position.y)
 						min_v.z = minf(min_v.z, aabb.position.z)
 						max_v.x = maxf(max_v.x, aabb.end.x)
 						max_v.y = maxf(max_v.y, aabb.end.y)
 						max_v.z = maxf(max_v.z, aabb.end.z)
+						# Enhance model with PBR automotive paint and material shaders
+						if mi.mesh != null:
+							for s in range(mi.mesh.get_surface_count()):
+								var mat = mi.get_surface_override_material(s)
+								if mat == null: mat = mi.mesh.surface_get_material(s)
+								var m_name: String = mat.resource_name.to_lower() if mat != null else ""
+								if m_name.contains("paint") or m_name.contains("body") or m_name.contains("color") or m_name.contains("lospec"):
+									mi.set_surface_override_material(s, paint)
+								elif m_name.contains("glass") or m_name.contains("window"):
+									mi.set_surface_override_material(s, CarMaterials.shared("glass"))
+								elif m_name.contains("chrome") or m_name.contains("mirror"):
+									mi.set_surface_override_material(s, CarMaterials.shared("chrome"))
+								elif m_name.contains("trim") or m_name.contains("plastic") or m_name.contains("black"):
+									mi.set_surface_override_material(s, CarMaterials.shared("trim"))
 					for c in n.get_children():
 						stack.push_back(c)
 
@@ -76,6 +91,9 @@ static func build(key: String, spec: Dictionary, wheels: PackedFloat32Array, pai
 					var center := (min_v + max_v) * 0.5 * s_factor
 					model_inst.position = Vector3(-center.x, -cg + 0.12, -center.z)
 
+				# Add full functional GT/Forza details (plates, exhausts, mirrors, lights)
+				CarDetails.add(root, b, dims, paint, car)
+
 				var wheel_nodes := []
 				for i in range(4):
 					var w := CarWheels.make_wheel(i, dims.wheels[i], car)
@@ -84,9 +102,10 @@ static func build(key: String, spec: Dictionary, wheels: PackedFloat32Array, pai
 
 				root.set_meta("wheels", wheel_nodes)
 				root.set_meta("paint", paint)
-				root.set_meta("brake_lights", brake_lights)
-				root.set_meta("headlights", headlights)
-				root.set_meta("exhaust_local", Vector3(he.x * 0.45, -cg + 0.1, he.z + 0.05))
+				if not root.has_meta("brake_lights") or (root.get_meta("brake_lights") as Array).is_empty():
+					root.set_meta("brake_lights", brake_lights)
+				if not root.has_meta("headlights") or (root.get_meta("headlights") as Array).is_empty():
+					root.set_meta("headlights", headlights)
 				return root
 
 	var body := CarBody.build_body(b, dims, lod)

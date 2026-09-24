@@ -59,11 +59,15 @@ static func add(root: Node3D, b: Dictionary, dims: Dictionary, paint: Material, 
 	for side in [-1.0, 1.0]:
 		var x: float = side * hx * 0.62
 		if popups:
-			# Popup lid on hood with subtle panel outline
-			_box(lights, "PopupLid", Vector3(0.35, 0.025, 0.22), Vector3(x, front.top - cg + 0.006, -hz + 0.28), paint)
-			# Front light housing beneath
-			_box(lights, "HeadlightHousing", Vector3(0.31, 0.075, 0.06), Vector3(x, hl_y + 0.02, -hz + 0.05), CarMaterials.shared("trim"))
-			_box(lights, "Headlight", Vector3(0.27, 0.06, 0.02), Vector3(x, hl_y + 0.02, -hz + 0.025), CarMaterials.shared("headlight"))
+			# Popup headlight assembly with animated pivot
+			var pivot := Node3D.new()
+			pivot.name = "PopupPivot"
+			pivot.position = Vector3(x, front.top - cg, -hz + 0.38)
+			lights.add_child(pivot)
+			# Coordinates relative to pivot
+			_box(pivot, "PopupLid", Vector3(0.35, 0.025, 0.22), Vector3(0, 0.006, -0.10), paint)
+			_box(pivot, "HeadlightHousing", Vector3(0.31, 0.075, 0.06), Vector3(0, -0.05, -0.19), CarMaterials.shared("trim"))
+			_box(pivot, "Headlight", Vector3(0.27, 0.06, 0.02), Vector3(0, -0.05, -0.215), CarMaterials.shared("headlight"))
 		else:
 			# Aerodynamic contoured headlight bucket
 			_box(lights, "HeadlightBezel", Vector3(0.36, 0.10, 0.07), Vector3(x, hl_y, -hz + 0.06), CarMaterials.shared("trim"))
@@ -221,9 +225,22 @@ static func add(root: Node3D, b: Dictionary, dims: Dictionary, paint: Material, 
 		_cyl(root, "ExhaustBore", 0.038, 0.038, 0.02, 14, tip_pos + Vector3(0, 0, 0.085), Vector3(PI * 0.5, 0, 0), CarMaterials.shared("trim"))
 
 	root.set_meta("exhaust_local", Vector3(ex_x_base + 0.055, ex_y, ex_z + 0.10))
-	root.set_meta("brake_lights", lights.get_children().filter(func(n): return n.name.begins_with("Taillight")))
+	var brake_nodes: Array = lights.get_children().filter(func(n): return n.name.begins_with("Taillight") and not n.name.contains("Bezel"))
+	var head_nodes: Array = []
+	var popup_nodes: Array = []
+	for c in lights.get_children():
+		if (c.name == "Headlight" or c.name.begins_with("DRL")) and not c.name.contains("Bezel"):
+			head_nodes.append(c)
+		elif c.name.begins_with("PopupPivot"):
+			popup_nodes.append(c)
+			for pc in c.get_children():
+				if pc.name == "Headlight":
+					head_nodes.append(pc)
+	root.set_meta("brake_lights", brake_nodes)
+	root.set_meta("headlights", head_nodes)
+	root.set_meta("popups", popup_nodes)
 
-## Called by CarView every physics tick: brake lights and headlight emissive.
+## Called by CarView every physics tick: brake lights, headlights emissive, and popups.
 static func set_light_state(root: Node3D, braking: bool, lights_on: bool) -> void:
 	for m in root.get_meta("brake_lights", []):
 		if m == null:
@@ -235,4 +252,21 @@ static func set_light_state(root: Node3D, braking: bool, lights_on: bool) -> voi
 				m.material_override = mat.duplicate()
 				mat = m.material_override
 		if mat is StandardMaterial3D:
-			mat.emission_energy_multiplier = 4.8 if braking else (1.4 if lights_on else 0.5)
+			mat.emission_energy_multiplier = 5.2 if braking else (1.5 if lights_on else 0.3)
+
+	for m in root.get_meta("headlights", []):
+		if m == null:
+			continue
+		var mat: Material = m.material_override
+		if mat == null and m is MeshInstance3D:
+			mat = m.get_active_material(0)
+			if mat != null:
+				m.material_override = mat.duplicate()
+				mat = m.material_override
+		if mat is StandardMaterial3D:
+			mat.emission_energy_multiplier = 3.6 if lights_on else 0.15
+
+	for p in root.get_meta("popups", []):
+		if p != null and p is Node3D:
+			var target_rot: float = deg_to_rad(-24.0) if lights_on else 0.0
+			p.rotation.x = lerpf(p.rotation.x, target_rot, 0.22)

@@ -91,8 +91,8 @@ struct VehicleParams {
 	real redline_rpm = 7600.0;
 	real limiter_rpm = 7800.0;
 	real engine_inertia = 0.16;
-	real engine_brake = 0.018; // Nm per rpm at closed throttle
-	real friction_torque = 18.0;
+	real engine_brake = 0.006; // Nm per rpm at closed throttle (progressive coast)
+	real friction_torque = 14.0;
 	real max_boost = 0.0; // bar; torque multiplier = 1 + boost * boost_gain
 	real boost_gain = 0.8;
 	real spool_rpm = 3200.0; // rpm where turbo produces full boost

@@ -13,27 +13,27 @@ TireSpec TireSpec::compound(TireCompound c) {
 	TireSpec t;
 	switch (c) {
 		case TIRE_STREET:
-			t.grip = 0.98; t.slide_ratio = 0.80; t.peak_slip_ratio = 0.11; t.peak_slip_angle = 0.15;
+			t.grip = 1.02; t.slide_ratio = 0.86; t.peak_slip_ratio = 0.12; t.peak_slip_angle = 0.16;
 			t.opt_temp = 70; t.temp_window = 45; t.heat_rate = 0.9; t.wet_bonus = 0.04; t.rolling = 1.0;
 			break;
 		case TIRE_SPORT:
-			t.grip = 1.08; t.slide_ratio = 0.78; t.peak_slip_ratio = 0.10; t.peak_slip_angle = 0.13;
+			t.grip = 1.14; t.slide_ratio = 0.85; t.peak_slip_ratio = 0.11; t.peak_slip_angle = 0.14;
 			t.opt_temp = 82; t.temp_window = 38; t.heat_rate = 1.0; t.rolling = 1.0;
 			break;
 		case TIRE_SEMI_SLICK:
-			t.grip = 1.22; t.slide_ratio = 0.72; t.peak_slip_ratio = 0.09; t.peak_slip_angle = 0.11;
+			t.grip = 1.25; t.slide_ratio = 0.82; t.peak_slip_ratio = 0.10; t.peak_slip_angle = 0.12;
 			t.opt_temp = 92; t.temp_window = 28; t.heat_rate = 1.15; t.wet_bonus = -0.10; t.rolling = 0.95;
 			break;
 		case TIRE_DRIFT:
-			t.grip = 1.00; t.slide_ratio = 0.90; t.peak_slip_ratio = 0.12; t.peak_slip_angle = 0.17;
+			t.grip = 1.05; t.slide_ratio = 0.92; t.peak_slip_ratio = 0.14; t.peak_slip_angle = 0.18;
 			t.opt_temp = 95; t.temp_window = 45; t.heat_rate = 1.3; t.rolling = 1.0;
 			break;
 		case TIRE_RALLY:
-			t.grip = 0.94; t.slide_ratio = 0.86; t.peak_slip_ratio = 0.14; t.peak_slip_angle = 0.19;
+			t.grip = 0.98; t.slide_ratio = 0.88; t.peak_slip_ratio = 0.15; t.peak_slip_angle = 0.20;
 			t.opt_temp = 70; t.temp_window = 50; t.heat_rate = 0.85; t.loose_bonus = 0.28; t.wet_bonus = 0.06; t.rolling = 1.1;
 			break;
 		case TIRE_SNOW:
-			t.grip = 0.88; t.slide_ratio = 0.85; t.peak_slip_ratio = 0.15; t.peak_slip_angle = 0.18;
+			t.grip = 0.92; t.slide_ratio = 0.88; t.peak_slip_ratio = 0.16; t.peak_slip_angle = 0.20;
 			t.opt_temp = 40; t.temp_window = 60; t.heat_rate = 0.7; t.loose_bonus = 0.12; t.snow_bonus = 0.75; t.wet_bonus = 0.10; t.rolling = 1.15;
 			break;
 		default:
@@ -228,9 +228,6 @@ void Vehicle::update_inputs(real dt) {
 	real speed = s.speed();
 	real fwd_speed = s.forward_speed();
 
-	// Steering: speed-sensitive range, rate limit, countersteer assist.
-	real target = input.steer * params.max_steer * steer_range(speed);
-
 	// Drift angle: heading vs velocity, positive when sliding with the tail out to the left.
 	if (speed > 2.0) {
 		Vec3 v_local = s.rot.inv_rotate(s.vel);
@@ -238,6 +235,12 @@ void Vehicle::update_inputs(real dt) {
 	} else {
 		s.drift_angle = 0.0;
 	}
+
+	// Steering: speed-sensitive range, dynamically relaxed during slides for countersteer authority
+	real drift_k = smoothstep(0.04, 0.22, std::fabs(s.drift_angle));
+	real steer_k = lerpr(steer_range(speed), 1.0, drift_k);
+	real target = input.steer * params.max_steer * steer_k;
+
 	if (assists.steering != STEER_SIMULATION || assists.countersteer > 0.0) {
 		real cs = assists.countersteer * (assists.steering == STEER_SIMULATION ? 0.5 : 1.0);
 		if (speed > 4.0 && fwd_speed > 0.0) {
@@ -247,7 +250,7 @@ void Vehicle::update_inputs(real dt) {
 		}
 	}
 	target = clampr(target, -params.max_steer, params.max_steer);
-	real rate = params.steer_speed * (std::fabs(target) < std::fabs(s.steer_angle) ? 1.6 : 1.0);
+	real rate = params.steer_speed * (std::fabs(target) < std::fabs(s.steer_angle) ? 1.8 : 1.1);
 	s.steer_angle = move_toward(s.steer_angle, target, rate * dt);
 	s.steer_input_filtered = s.steer_angle / params.max_steer;
 
@@ -563,6 +566,10 @@ void Vehicle::substep(const CollisionGrid &world, real h) {
 		real denom = h * (1.0 / I_e + ratio * ratio / (I_w * std::max(1, n_driven)));
 		real want = 0.6 * delta / denom;
 		real cap = P.clutch_torque * engage;
+		real launch_rpm = P.idle_rpm + (P.redline_rpm * 0.45 - P.idle_rpm) * throttle;
+		if (s.engine_rpm < launch_rpm && throttle > 0.08) {
+			cap = std::min(cap, std::max(0.0, engine_t * 0.90));
+		}
 		clutch_t = clampr(want, -cap, cap);
 	}
 	real diff_in = clutch_t * ratio * P.drivetrain_efficiency;
@@ -707,8 +714,9 @@ void Vehicle::substep(const CollisionGrid &world, real h) {
 			fy = -F * (sy / rho);
 		};
 
-		// ABS: modulate brake torque when the wheel approaches lock.
-		if (assists.abs && Tb > 0.0 && std::fabs(vx) > 2.0) {
+		// ABS: modulate service brake torque when the wheel approaches lock (handbrake bypasses ABS for drift entry).
+		bool is_handbraking = (i == RL || i == RR) && (input.handbrake > 0.05);
+		if (assists.abs && !is_handbraking && Tb > 0.0 && std::fabs(vx) > 2.0) {
 			real kappa = (w.omega * R - vx) / denom;
 			if (kappa * signr(vx) < -pk_x * 1.1) {
 				Tb *= 0.35;
@@ -737,11 +745,16 @@ void Vehicle::substep(const CollisionGrid &world, real h) {
 		// Rolling resistance and loose-surface sinkage drag.
 		fx -= signr(vx) * (si.rolling * T.rolling * Fz + si.drag * Fz * 0.08 * smoothstep(0.0, 5.0, std::fabs(vx)));
 
-		// Low-speed lateral damping keeps parked cars from creeping on slopes.
+		// Low-speed lateral and longitudinal damping keeps parked cars from creeping on slopes.
 		if (std::fabs(vx) < 2.0) {
 			real lat_hold = -vy * P.mass * 0.25 / h * 0.1;
 			real cap = mu * Fz;
 			fy = clampr(lerpr(lat_hold, fy, std::fabs(vx) / 2.0), -cap, cap);
+		}
+		if (Tb > 40.0 && std::fabs(vx) < 0.25 && throttle < 0.05) {
+			real long_hold = -vx * P.mass * 0.25 / h * 0.2;
+			real cap = mu * Fz;
+			fx = clampr(long_hold, -cap, cap);
 		}
 
 		w.fx = fx;
@@ -789,7 +802,7 @@ void Vehicle::substep(const CollisionGrid &world, real h) {
 	if (grounded >= 2 && speed > 4.0) {
 		if (s.drift_angle * w_b.y < 0.0) {
 			real snap_intensity = clampr(std::fabs(w_b.y) * 0.45, 0.0, 1.0);
-			w_b.y *= 1.0 - (1.2 * snap_intensity) * h;
+			w_b.y *= 1.0 - (2.4 * snap_intensity) * h;
 		}
 	}
 	// Tiny angular damping for numerical calm (air + bushings).
