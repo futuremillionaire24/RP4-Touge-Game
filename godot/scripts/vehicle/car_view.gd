@@ -133,23 +133,18 @@ func _physics_process(delta: float) -> void:
 		var squat := thr * clampf(spd / 12.0, 0.0, 1.0) * 0.04
 		var pitch_weight := dive_curve + decel_dive - squat
 
-		# ---- Lateral G-force based body roll (FH5 style) ----
+		# ---- Real suspension & lateral load roll (Forza 4 sim-driven) ----
+		# Remove fake steer-driven roll; let body attitude come directly from physical wheel travel
 		var lat_g := clampf((_prev_lat_vel - lat_vel) / maxf(delta, 0.001) / 9.81, -2.5, 2.5)
 		_prev_lat_vel = lat_vel
-		var spd_ratio := clampf(spd / 15.0, 0.0, 1.5)
-		# Speed-dependent roll stiffness: stiffer at high speed (aero downforce)
-		var roll_stiffness := lerpf(1.0, 0.65, clampf(spd / 60.0, 0.0, 1.0))
-		# Steering-based roll + lateral G-force contribution
-		var steer_roll := -str_in * spd_ratio * 0.09 * roll_stiffness
-		var g_roll := clampf(-lat_g * 0.04, -0.08, 0.08)
-		var body_roll := steer_roll + g_roll
+		var g_roll := clampf(-lat_g * 0.035, -0.06, 0.06)
 
 		# ---- Heave: road surface following + bump absorption ----
 		var target_heave := susp_heave * 0.012
 
-		# ---- Combine suspension geometry with weight transfer ----
-		var target_roll := clampf(susp_roll * 0.6 + body_roll, -0.18, 0.18)
-		var target_pitch := clampf(susp_pitch * 0.5 + pitch_weight, -0.12, 0.12)
+		# ---- Combine physical suspension geometry with weight transfer ----
+		var target_roll := clampf(susp_roll * 0.9 + g_roll, -0.15, 0.15)
+		var target_pitch := clampf(susp_pitch * 0.85 + pitch_weight * 0.4, -0.10, 0.10)
 
 		# ---- Critically damped spring interpolation (natural frequency ~4 Hz) ----
 		var omega := 25.0  # Natural angular frequency

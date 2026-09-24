@@ -64,7 +64,7 @@ var _note: Label
 
 func build() -> void:
 	var col := make_column(640)
-	col.add_child(UIKit.header("Settings", "設", ""))
+	col.add_child(UIKit.header("Settings", "", "Audio, Graphics & Controls"))
 	_tabs = make_tabs(col, PAGES.keys())
 	_list = make_list(col, 470)
 	_note = UIKit.label("", 16, UIKit.DIM)

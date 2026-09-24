@@ -36,8 +36,8 @@ uniform bool use_livery = false;
 // Extras (safe defaults; CarMaterials sets them per car).
 uniform vec3 two_tone_color : source_color = vec3(0.02, 0.02, 0.022);
 uniform float two_tone_y = -10.0; // car-local Y below which two_tone_color applies (<= -9 = off)
-uniform float flake_size : hint_range(0.25, 4.0) = 1.0;
-uniform float glint_gain : hint_range(0.0, 400.0) = 60.0;
+uniform float flake_size : hint_range(0.25, 4.0) = 0.75;
+uniform float glint_gain : hint_range(0.0, 100.0) = 8.0;
 uniform float panel_gap_width : hint_range(0.0, 0.01) = 0.0022; // half width, metres
 uniform float orange_peel : hint_range(0.0, 2.0) = 1.0;
 uniform sampler2D thin_film_lut : hint_default_black, filter_linear, repeat_disable;
@@ -240,8 +240,8 @@ void light() {
 	vec3 spec = (car_d_ggx(ndh, a) * car_v_smith(ndv, cndl, a) * trans) * car_schlick3(f0, ldh);
 	float ac = max(v_coat_rough * v_coat_rough, 0.0012);
 	spec += vec3(car_d_ggx(ndh, ac) * (0.25 / (ldh * ldh)) * fc);
-	float g0 = smoothstep(0.9965, 0.9993, dot(v_fl0.xyz, H)) * v_fl0.w;
-	float g1 = smoothstep(0.9965, 0.9993, dot(v_fl1.xyz, H)) * v_fl1.w;
-	spec += v_glint_tint * ((g0 + g1) * flake_amount * glint_gain * trans * clamp(METALLIC * 1.5, 0.3, 1.0));
+	float g0 = smoothstep(0.998, 0.9996, dot(v_fl0.xyz, H)) * v_fl0.w;
+	float g1 = smoothstep(0.998, 0.9996, dot(v_fl1.xyz, H)) * v_fl1.w;
+	spec += v_glint_tint * ((g0 + g1) * flake_amount * glint_gain * trans * clamp(METALLIC * 1.0, 0.1, 0.6));
 	SPECULAR_LIGHT += rad * cndl * spec * SPECULAR_AMOUNT;
 }

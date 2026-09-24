@@ -76,13 +76,13 @@ static func build(key: String, spec: Dictionary, wheels: PackedFloat32Array, pai
 								var mat = mi.get_surface_override_material(s)
 								if mat == null: mat = mi.mesh.surface_get_material(s)
 								var m_name: String = mat.resource_name.to_lower() if mat != null else ""
-								if m_name.contains("paint 1") or (key == "kurogane_hyper" and m_name.contains("paint")):
+								if m_name.contains("paint") or m_name.contains("body") or m_name.contains("exterior"):
 									mi.set_surface_override_material(s, paint)
 								elif m_name.contains("glass") or m_name.contains("window"):
 									mi.set_surface_override_material(s, CarMaterials.shared("glass"))
 								elif m_name.contains("chrome") or m_name.contains("mirror"):
 									mi.set_surface_override_material(s, CarMaterials.shared("chrome"))
-								elif m_name.contains("trim") or m_name.contains("plastic") or m_name.contains("black") or m_name.contains("paint 2"):
+								elif m_name.contains("trim") or m_name.contains("plastic") or m_name.contains("black") or m_name.contains("interior"):
 									mi.set_surface_override_material(s, CarMaterials.shared("trim"))
 								elif m_name.contains("headlight") or m_name.contains("head"):
 									var hl_mat = CarMaterials.shared("headlight").duplicate()
@@ -93,15 +93,14 @@ static func build(key: String, spec: Dictionary, wheels: PackedFloat32Array, pai
 									mi.set_surface_override_material(s, bl_mat)
 									brake_lights.append(mi)
 								elif mat is StandardMaterial3D and (mat as StandardMaterial3D).albedo_texture != null:
-									# Retain palette texture (windows, grilles, lights, decals) with PBR clearcoat
+									# Retain palette texture with crisp un-tinted PBR clearcoat
 									var pbr_mat: StandardMaterial3D = (mat as StandardMaterial3D).duplicate()
-									pbr_mat.roughness = 0.28
-									pbr_mat.metallic = 0.2
+									pbr_mat.roughness = 0.32
+									pbr_mat.metallic = 0.15
 									pbr_mat.clearcoat_enabled = true
-									pbr_mat.clearcoat = 0.85
+									pbr_mat.clearcoat = 0.8
 									pbr_mat.clearcoat_roughness = 0.06
-									var p_col: Color = car.get("paint", Color.WHITE)
-									pbr_mat.albedo_color = Color(1, 1, 1).lerp(p_col, 0.42)
+									pbr_mat.albedo_color = Color.WHITE
 									mi.set_surface_override_material(s, pbr_mat)
 					for c in n.get_children():
 						stack.push_back(c)

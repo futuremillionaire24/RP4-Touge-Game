@@ -9,7 +9,7 @@ var _blurb: Label
 
 func build() -> void:
 	var col := make_column(560)
-	col.add_child(UIKit.header("Dealership", "販", "Japanese performance, new and used"))
+	col.add_child(UIKit.header("Auto Show & Dealership", "", "European grand tourers, rally legends and supercars"))
 	_list = make_list(col, 440)
 	_blurb = UIKit.label("", 17, UIKit.DIM)
 	_blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -37,7 +37,7 @@ func refresh() -> void:
 			"barn":
 				row.set_sub("BARN FIND" if not owned else "OWNED", UIKit.DIM if not owned else UIKit.GREEN)
 			"championship":
-				row.set_sub("CROWN PRIZE" if not owned else "OWNED", UIKit.NEON if not owned else UIKit.GREEN)
+				row.set_sub("CHAMPIONSHIP PRIZE" if not owned else "OWNED", UIKit.NEON if not owned else UIKit.GREEN)
 			_:
 				var price := int(car.price)
 				row.set_sub(("OWNED · " if owned else "") + UIKit.money(price), UIKit.GREEN if int(Profile.data.credits) >= price else UIKit.RED)
@@ -55,8 +55,8 @@ func _preview(key: String) -> void:
 	_stats.show_build(key, {})
 	var how := ""
 	match car.unlock:
-		"barn": how = "  Find it in one of the barns hidden around the map."
-		"championship": how = "  Win the Neon Touge Crown championship to earn it."
+		"barn": how = "  Find it in one of the barns hidden across the European map."
+		"championship": how = "  Win the Euro GT Festival Grand Finale to earn it."
 	_blurb.text = car.blurb + how
 
 func _buy(key: String) -> void:

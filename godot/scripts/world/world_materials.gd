@@ -52,8 +52,8 @@ static func get_material(group: int) -> Material:
 			m = _shader("res://shaders/facade.gdshader")
 		Group.ROOF:
 			var s := StandardMaterial3D.new()
-			s.albedo_color = Color(0.36, 0.36, 0.37)
-			s.roughness = 0.9
+			s.albedo_color = Color(0.74, 0.35, 0.22)
+			s.roughness = 0.82
 			m = s
 		Group.NEON:
 			m = _shader("res://shaders/neon.gdshader")

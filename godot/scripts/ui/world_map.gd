@@ -105,7 +105,7 @@ func _build_ui() -> void:
 	_district_lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.95))
 	_district_lbl.add_theme_constant_override("outline_size", 8)
 	_district_lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
-	_district_lbl.text = "DAIKOKU PA · YOKOHAMA"
+	_district_lbl.text = "PORT HERCULE · MONACO"
 	top_bar.add_child(_district_lbl)
 
 	# Filter Tabs (Forza Horizon style L1/R1)
@@ -230,23 +230,23 @@ func _build_road_graph() -> void:
 		for idx in range(c.size()):
 			poly2d[idx] = Vector2(c[idx].x, c[idx].z)
 
-		var col := Color(0.65, 0.7, 0.8, 0.8)
-		var width := 2.5
+		var col := Color(0.68, 0.74, 0.86, 0.85)
+		var width := 2.6
 		match kind:
-			1: # RK_EXPRESSWAY
-				col = Color(1.0, 0.22, 0.55, 0.95)
-				width = 4.0
+			1: # RK_EXPRESSWAY / AUTOROUTE
+				col = Color(0.96, 0.48, 0.16, 0.95)
+				width = 4.2
 			2: # RK_RAMP
-				col = Color(0.85, 0.35, 0.95, 0.85)
-				width = 2.5
-			3: # RK_AVENUE
-				col = Color(0.88, 0.92, 1.0, 0.9)
-				width = 3.2
-			4: # RK_TOUGE
-				col = Color(1.0, 0.75, 0.15, 0.95)
-				width = 3.5
-			5: # RK_FARM
-				col = Color(0.75, 0.55, 0.35, 0.75)
+				col = Color(0.88, 0.6, 0.3, 0.85)
+				width = 2.6
+			3: # RK_AVENUE / COASTAL BOULEVARD
+				col = Color(0.92, 0.96, 1.0, 0.95)
+				width = 3.4
+			4: # RK_TOUGE / CORNICHE PASS
+				col = Color(1.0, 0.82, 0.22, 0.95)
+				width = 3.6
+			5: # RK_FARM / HILLSIDE LANE
+				col = Color(0.72, 0.62, 0.48, 0.8)
 				width = 2.2
 			_:
 				col = Color(0.7, 0.75, 0.85, 0.8)
@@ -437,7 +437,14 @@ func _update_hover(cursor_world: Vector2) -> void:
 				var time_str := "None" if best_t <= 0.0 else "%d:%05.2f" % [int(best_t / 60.0), fmod(best_t, 60.0)]
 				var c_idx: int = int(ev.get("class_max", 6))
 				var c_name: String = CarData.CLASS_NAMES[c_idx] if c_idx < CarData.CLASS_NAMES.size() else "X"
-				_stats_lbl.text = "Wins: %d   Best: %s\nClass Max: %s   Rivals: %d" % [wins, time_str, c_name, int(ev.get("rivals", 1))]
+				var r_info: Dictionary = RaceRoutes.get_route(ev.get("id", ""))
+				var len_km: float = float(r_info.get("length_m", 0)) / 1000.0
+				var turns_n: int = int(r_info.get("turns_count", 0))
+				var elev_g: int = int(r_info.get("elev_gain", 0))
+				_stats_lbl.text = "%.2f km · %d turns · ▲%dm\nClass: ≤%s · Rivals: %d · Wins: %d%s" % [
+					len_km, turns_n, elev_g, c_name, int(ev.get("rivals", 1)), wins,
+					(" · Best: " + time_str) if time_str != "None" else ""
+				]
 				_prompt_lbl.text = "A: Set GPS Waypoint   X: Fast Travel"
 			"activity":
 				var it: Dictionary = found.data
@@ -462,7 +469,7 @@ func _update_hover(cursor_world: Vector2) -> void:
 	else:
 		_title_lbl.text = "FREE NAVIGATION"
 		_type_lbl.text = "COORDINATES: %d, %d" % [int(cursor_world.x), int(cursor_world.y)]
-		_stats_lbl.text = "Explore the passes of Hakone, Daikoku PA, and the Shuto Expressway."
+		_stats_lbl.text = "Explore the coastal avenues of Port Hercule, Monaco GP circuit, and the Grande Corniche hillclimb."
 		_prompt_lbl.text = "A: Set GPS Waypoint   X: Fast Travel to Road"
 
 func _handle_select(cursor_world: Vector2) -> void:
@@ -595,6 +602,67 @@ func _on_view_draw() -> void:
 		_view.draw_polyline(screen_pts, Color(0.0, 0.9, 1.0, 0.4), 9.0 * _zoom + 4.0, true)
 		# Core bright pulse
 		_view.draw_polyline(screen_pts, Color(0.1, 1.0, 0.85, 0.95), 4.5 * _zoom + 2.0, true)
+
+	# 4b. Live Race Course Vector Preview (Forza Horizon style course highlight)
+	var active_ev_id := ""
+	if not _hovered_item.is_empty() and _hovered_item.get("type", "") == "event":
+		active_ev_id = _hovered_item.data.event.get("id", "")
+	if not active_ev_id.is_empty():
+		var r_data: Dictionary = RaceRoutes.get_route(active_ev_id)
+		var raw_pts: Array = r_data.get("points", [])
+		if raw_pts.size() > 1:
+			var pts := PackedVector2Array()
+			pts.resize(raw_pts.size())
+			for i in range(raw_pts.size()):
+				pts[i] = _world_to_screen(Vector2(raw_pts[i][0], raw_pts[i][1]))
+
+			var is_closed: bool = bool(r_data.get("closed", false))
+			var col_glow := Color(0.96, 0.65, 0.12, 0.45) if is_closed else Color(0.12, 0.88, 1.0, 0.45)
+			var col_line := Color(1.0, 0.84, 0.24, 0.95) if is_closed else Color(0.35, 0.95, 1.0, 0.95)
+
+			# Outer glow casing
+			_view.draw_polyline(pts, col_glow, 11.0 * _zoom + 5.0, true)
+			# Crisp track surface
+			_view.draw_polyline(pts, col_line, 4.8 * _zoom + 2.0, true)
+			if is_closed and pts.size() > 2:
+				_view.draw_line(pts[pts.size() - 1], pts[0], col_line, 4.8 * _zoom + 2.0, true)
+
+			# Animated directional chevrons along course
+			var pulse := fmod(Time.get_ticks_msec() * 0.0025, 1.0)
+			var step := maxi(2, pts.size() / 12)
+			for i in range(0, pts.size() - 1, step):
+				var p0: Vector2 = pts[i]
+				var p1: Vector2 = pts[i + 1]
+				var d := (p1 - p0).normalized()
+				if d.length_squared() > 0.01:
+					var mid := p0.lerp(p1, pulse)
+					var perp := d.orthogonal() * (3.8 * _zoom + 1.8)
+					var tri := PackedVector2Array([
+						mid + d * (5.5 * _zoom + 2.0),
+						mid - d * (3.5 * _zoom + 1.2) + perp,
+						mid - d * (3.5 * _zoom + 1.2) - perp
+					])
+					_view.draw_colored_polygon(tri, Color.WHITE)
+
+			# Hairpin badges on world map
+			var turns: Array = r_data.get("turns", [])
+			var c_num := 1
+			for t in turns:
+				if bool(t.get("hairpin", false)):
+					var hp_scr := _world_to_screen(Vector2(t.pos[0], t.pos[1]))
+					_view.draw_circle(hp_scr, 7.5, Color(0.88, 0.16, 0.16, 0.95))
+					_view.draw_arc(hp_scr, 7.5, 0, TAU, 16, Color.WHITE, 1.2)
+					_view.draw_string(ThemeDB.fallback_font, hp_scr + Vector2(-3.5, 3.5), "%d" % c_num, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color.WHITE)
+					c_num += 1
+
+			# Start / Finish indicators
+			var start_p: Vector2 = pts[0]
+			_view.draw_circle(start_p, 8.5 * _zoom + 3.0, Color.BLACK)
+			_view.draw_circle(start_p, 6.5 * _zoom + 2.0, Color(0.2, 0.95, 0.35))
+			if not is_closed:
+				var finish_p: Vector2 = pts[pts.size() - 1]
+				_view.draw_circle(finish_p, 8.5 * _zoom + 3.0, Color.BLACK)
+				_view.draw_circle(finish_p, 6.5 * _zoom + 2.0, Color(0.95, 0.25, 0.25))
 
 	# 5. Events (Filter: ALL or RACES)
 	if markers and (_active_tab == FilterTab.ALL or _active_tab == FilterTab.RACES):

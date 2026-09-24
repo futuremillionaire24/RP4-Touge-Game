@@ -3,16 +3,16 @@ extends RefCounted
 ## Neon JDM UI kit: theme, palette, text helpers and small widgets shared by every menu.
 ## Tuned for the RP4's 4.7" 1334x750 panel: 20 px minimum body text, 48 px row height.
 
-const BG := Color(0.03, 0.012, 0.06)
-const PANEL := Color(0.05, 0.025, 0.1, 0.9)
-const PANEL_LIGHT := Color(1, 1, 1, 0.06)
-const NEON := Color(1.0, 0.18, 0.53)
-const CYAN := Color(0.15, 0.91, 1.0)
-const AMBER := Color(1.0, 0.76, 0.22)
-const GREEN := Color(0.35, 1.0, 0.55)
-const RED := Color(1.0, 0.3, 0.3)
-const TEXT := Color(0.96, 0.95, 1.0)
-const DIM := Color(1, 1, 1, 0.55)
+const BG := Color(0.08, 0.08, 0.11)
+const PANEL := Color(0.10, 0.10, 0.15, 0.94)
+const PANEL_LIGHT := Color(1, 1, 1, 0.07)
+const NEON := Color(0.91, 0.64, 0.09) # Forza Horizon warm amber-gold accent
+const CYAN := Color(0.92, 0.93, 0.96) # Clean European silver/white secondary
+const AMBER := Color(0.95, 0.68, 0.12)
+const GREEN := Color(0.18, 0.55, 0.32) # British racing green
+const RED := Color(0.86, 0.16, 0.16) # Ferrari/Brembo racing red
+const TEXT := Color(0.95, 0.95, 0.97)
+const DIM := Color(0.72, 0.72, 0.76)
 
 static var _theme: Theme
 
@@ -23,10 +23,10 @@ static func theme() -> Theme:
 	t.default_font_size = 20
 	var scale := float(Settings.get_value("gameplay", "text_scale", 1.0))
 	t.default_font_size = int(20 * scale)
-	# Buttons: flat translucent bar, neon outline + glow tint when focused.
+	# Buttons: Forza Horizon 4 flat design with amber-gold focus indicator
 	var normal := _box(PANEL_LIGHT, Color(0, 0, 0, 0), 0)
-	var focus := _box(Color(NEON, 0.24), NEON, 2)
-	var pressed := _box(Color(NEON, 0.4), NEON, 2)
+	var focus := _box(Color(0.15, 0.14, 0.12, 0.95), NEON, 2)
+	var pressed := _box(Color(0.25, 0.20, 0.08, 0.95), NEON, 2)
 	var disabled := _box(Color(1, 1, 1, 0.025), Color(0, 0, 0, 0), 0)
 	for sb in [normal, focus, pressed, disabled]:
 		sb.content_margin_left = 18
@@ -50,7 +50,7 @@ static func theme() -> Theme:
 	t.set_stylebox("panel", "PanelContainer", panel)
 	t.set_stylebox("panel", "Panel", panel)
 	var bar_bg := _box(Color(1, 1, 1, 0.1), Color(0, 0, 0, 0), 0)
-	var bar_fill := _box(CYAN, Color(0, 0, 0, 0), 0)
+	var bar_fill := _box(NEON, Color(0, 0, 0, 0), 0)
 	t.set_stylebox("background", "ProgressBar", bar_bg)
 	t.set_stylebox("fill", "ProgressBar", bar_fill)
 	t.set_constant("separation", "VBoxContainer", 6)
@@ -69,7 +69,7 @@ static func _box(bg: Color, border: Color, width: int) -> StyleBoxFlat:
 	sb.bg_color = bg
 	sb.border_color = border
 	sb.set_border_width_all(width)
-	sb.set_corner_radius_all(4)
+	sb.set_corner_radius_all(3)
 	sb.anti_aliasing = true
 	return sb
 
@@ -82,20 +82,18 @@ static func label(text: String, size := 20, color := TEXT, align := HORIZONTAL_A
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return l
 
-static func header(title: String, kanji: String, subtitle := "") -> VBoxContainer:
+static func header(title: String, _kanji: String = "", subtitle := "") -> VBoxContainer:
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 0)
+	v.add_theme_constant_override("separation", 2)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 14)
-	if kanji != "":
-		row.add_child(label(kanji, 40, NEON))
-	row.add_child(label(title.to_upper(), 36, TEXT))
+	row.add_child(label(title.to_upper(), 34, TEXT))
 	v.add_child(row)
 	if subtitle != "":
-		v.add_child(label(subtitle, 18, DIM))
+		v.add_child(label(subtitle, 17, DIM))
 	var line := ColorRect.new()
 	line.color = NEON
-	line.custom_minimum_size = Vector2(120, 3)
+	line.custom_minimum_size = Vector2(140, 3)
 	line.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	v.add_child(line)
 	return v
@@ -135,7 +133,7 @@ static func glyph(name: String) -> PanelContainer:
 static func class_badge(pi: int, size := 20) -> PanelContainer:
 	var c := CarData.pi_class(pi)
 	var p := PanelContainer.new()
-	var sb := _box(Color(0.02, 0.02, 0.04, 0.9), CarData.CLASS_COLORS[c], 2)
+	var sb := _box(Color(0.05, 0.05, 0.08, 0.92), CarData.CLASS_COLORS[c], 2)
 	sb.content_margin_left = 8
 	sb.content_margin_right = 8
 	sb.content_margin_top = 1
@@ -155,7 +153,7 @@ static func money(n: int) -> String:
 	while s.length() > 3:
 		out = "," + s.substr(s.length() - 3) + out
 		s = s.substr(0, s.length() - 3)
-	return ("-" if n < 0 else "") + "¥" + s + out
+	return ("-" if n < 0 else "") + "CR " + s + out
 
 static func time_str(t: float) -> String:
 	if t < 0.0:

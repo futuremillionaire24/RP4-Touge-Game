@@ -24,7 +24,7 @@ func _entry() -> Dictionary:
 func build() -> void:
 	var e := _entry()
 	var col := make_column(560)
-	col.add_child(UIKit.header("Upgrades", "改", CarData.get_car(e.key).name))
+	col.add_child(UIKit.header("Performance Upgrades", "", CarData.get_car(e.key).name))
 	_tabs = make_tabs(col, GROUPS)
 	_list = make_list(col, 440)
 	_desc = UIKit.label("", 17, UIKit.DIM)

@@ -142,7 +142,7 @@ func _draw_results(vp: Vector2, s: float) -> void:
 		draw_string(_font, Vector2(x0 + 380 * s, y), fmt_time(r.time) if r.time > 0.0 else "DNF", HORIZONTAL_ALIGNMENT_LEFT, -1, int(20 * s), col)
 		y += 30 * s
 	y += 20 * s
-	_center_text("+ ¥%s     + %d XP" % [_group(_result.credits), _result.xp], y, int(28 * s), Color(1.0, 0.85, 0.3))
+	_center_text("+ %s CR     + %d XP" % [_group(_result.credits), _result.xp], y, int(28 * s), Color(1.0, 0.85, 0.3))
 	_center_text("Press A to continue", vp.y - 50 * s, int(20 * s), Color(1, 1, 1, 0.6))
 
 static func _group(n: int) -> String:

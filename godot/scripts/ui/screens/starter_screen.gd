@@ -8,7 +8,7 @@ var _blurb: Label
 
 func build() -> void:
 	var col := make_column(520)
-	col.add_child(UIKit.header("Choose your first car", "始", "Welcome to the Neon Touge Festival. Your first ride is on us."))
+	col.add_child(UIKit.header("Choose your first car", "", "Welcome to the Euro GT Festival. Your first ride is on us."))
 	var spacer := Control.new()
 	spacer.custom_minimum_size = Vector2(0, 16)
 	col.add_child(spacer)

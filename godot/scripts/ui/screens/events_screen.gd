@@ -12,18 +12,47 @@ var _tabs: HBoxContainer
 var _list: VBoxContainer
 var _detail: PanelContainer
 var _detail_box: VBoxContainer
+var _route_card: RaceRouteCard
 
 func build() -> void:
 	var col := make_column(560)
-	col.add_child(UIKit.header("Events", "競", "Race the festival. Win to earn credits, XP and rival respect."))
+	col.add_child(UIKit.header("Festival Events", "", "Compete across Europe. Win to earn credits, XP, and trophies."))
 	_tabs = make_tabs(col, TABS.map(func(t): return t[0]))
 	_list = make_list(col, 470)
+	
 	_detail = PanelContainer.new()
-	_detail.position = Vector2(700, 90)
-	_detail.custom_minimum_size = Vector2(590, 0)
+	_detail.position = Vector2(620, 80)
+	_detail.custom_minimum_size = Vector2(670, 620)
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.04, 0.05, 0.08, 0.88)
+	sb.border_width_left = 2
+	sb.border_width_top = 2
+	sb.border_width_right = 2
+	sb.border_width_bottom = 2
+	sb.border_color = Color(0.91, 0.64, 0.09, 0.5)
+	sb.corner_radius_top_left = 8
+	sb.corner_radius_top_right = 8
+	sb.corner_radius_bottom_left = 8
+	sb.corner_radius_bottom_right = 8
+	sb.content_margin_left = 18
+	sb.content_margin_top = 14
+	sb.content_margin_right = 18
+	sb.content_margin_bottom = 14
+	_detail.add_theme_stylebox_override("panel", sb)
 	add_child(_detail)
+
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 10)
+	_detail.add_child(vb)
+
 	_detail_box = VBoxContainer.new()
-	_detail.add_child(_detail_box)
+	_detail_box.add_theme_constant_override("separation", 4)
+	vb.add_child(_detail_box)
+
+	_route_card = RaceRouteCard.new()
+	_route_card.custom_minimum_size = Vector2(634, 250)
+	vb.add_child(_route_card)
+
 	set_hints([["A", "Start event"], ["L1", ""], ["R1", "Filter"], ["B", "Back"]])
 
 func refresh() -> void:
@@ -65,36 +94,38 @@ func tab(dir: int) -> void:
 func _show_detail(ev: Dictionary) -> void:
 	for c in _detail_box.get_children():
 		c.queue_free()
-	_detail_box.add_child(UIKit.label(ev.name.to_upper(), 26, Color.WHITE))
-	_detail_box.add_child(UIKit.label("%s  ·  %s" % [EventData.TYPE_NAMES[ev.type], ev.district], 18, UIKit.CYAN))
+	_detail_box.add_child(UIKit.label(ev.name.to_upper(), 24, Color.WHITE))
+	_detail_box.add_child(UIKit.label("%s  ·  %s" % [EventData.TYPE_NAMES[ev.type], ev.district], 16, UIKit.CYAN))
+	
 	var hh := int(ev.time)
 	var cond := "%02d:%02d  ·  %s" % [hh, int((float(ev.time) - hh) * 60.0), SkyWeather.W_NAMES[int(ev.weather)]]
-	_detail_box.add_child(UIKit.label(cond, 18, UIKit.DIM))
 	var laps := int(ev.get("laps", 1))
 	var length_m := _route_length(ev)
-	var info := "%s  ·  %.1f km%s" % ["%d rivals" % int(ev.rivals) if int(ev.rivals) > 0 else "Solo vs clock",
-		length_m / 1000.0, ("  ·  %d laps" % laps) if bool(ev.closed) else ""]
-	_detail_box.add_child(UIKit.label(info, 18, UIKit.TEXT))
-	var cls := UIKit.label("Class limit: %s (PI ≤ %d)" % [CarData.CLASS_NAMES[int(ev.class_max)], CarData.CLASS_MAX_PI[int(ev.class_max)]], 18, UIKit.TEXT)
-	_detail_box.add_child(cls)
-	_detail_box.add_child(UIKit.label("Reward: %s  ·  %d XP" % [UIKit.money(int(ev.credits)), int(ev.xp)], 18, UIKit.GREEN))
+	var rivals_str := "%d rivals" % int(ev.rivals) if int(ev.rivals) > 0 else "Solo vs clock"
+	var laps_str := ("  ·  %d laps" % laps) if bool(ev.closed) else ""
+	var class_str := "%s (PI ≤ %d)" % [CarData.CLASS_NAMES[int(ev.class_max)], CarData.CLASS_MAX_PI[int(ev.class_max)]]
+	
+	var sub_info := "%s  ·  %s%s  ·  Class %s" % [cond, rivals_str, laps_str, class_str]
+	_detail_box.add_child(UIKit.label(sub_info, 15, UIKit.TEXT))
+	
+	var rec: Dictionary = Profile.data.records.get(ev.id, {})
+	var rec_str := ""
+	if not rec.is_empty():
+		rec_str = "   ·   Best: P%d (%s)" % [int(rec.best_pos), UIKit.time_str(float(rec.best_time))]
+	_detail_box.add_child(UIKit.label("Reward: %s  ·  %d XP%s" % [UIKit.money(int(ev.credits)), int(ev.xp), rec_str], 15, UIKit.GREEN))
+
 	if ev.has("rival"):
 		var r := RivalData.get_rival(ev.rival)
 		if not r.is_empty():
-			_detail_box.add_child(UIKit.label("Rival: %s \"%s\" — %s" % [r.name, r.title, CarData.get_car(r.car).name], 18, UIKit.NEON))
-			var intro := UIKit.label("“%s”" % r.intro, 17, UIKit.DIM)
-			intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			intro.custom_minimum_size = Vector2(556, 0)
-			_detail_box.add_child(intro)
-	var rec: Dictionary = Profile.data.records.get(ev.id, {})
-	if not rec.is_empty():
-		_detail_box.add_child(UIKit.label("Best: P%d  ·  %s  ·  %d win%s" % [int(rec.best_pos), UIKit.time_str(float(rec.best_time)), int(rec.wins), "" if int(rec.wins) == 1 else "s"], 18, UIKit.AMBER))
+			_detail_box.add_child(UIKit.label("Rival: %s \"%s\" — %s" % [r.name, r.title, CarData.get_car(r.car).name], 15, UIKit.NEON))
+
 	var pi := int(Profile.current_car().get("pi", 500))
 	if CarData.pi_class(pi) > int(ev.class_max):
-		var warn := UIKit.label("Your car is %s — choose a car in class %s or lower in the Garage." % [CarData.class_label(pi), CarData.CLASS_NAMES[int(ev.class_max)]], 18, UIKit.RED)
-		warn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		warn.custom_minimum_size = Vector2(556, 0)
+		var warn := UIKit.label("⚠ Your car is %s — select class %s or lower." % [CarData.class_label(pi), CarData.CLASS_NAMES[int(ev.class_max)]], 15, UIKit.RED)
 		_detail_box.add_child(warn)
+
+	if _route_card:
+		_route_card.set_event_id(ev.id)
 
 func _route_length(ev: Dictionary) -> float:
 	# Measured from the generated world by tools/event_lengths.gd (world seed 1).

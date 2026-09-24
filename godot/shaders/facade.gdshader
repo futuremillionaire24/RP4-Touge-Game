@@ -10,8 +10,15 @@ global uniform float nt_night;
 global uniform float nt_wetness;
 
 const vec3 BASES[8] = vec3[](
-	vec3(0.28, 0.33, 0.38), vec3(0.62, 0.6, 0.56), vec3(0.45, 0.42, 0.4), vec3(0.2, 0.22, 0.26),
-	vec3(0.55, 0.5, 0.46), vec3(0.72, 0.7, 0.66), vec3(0.6, 0.55, 0.5), vec3(0.5, 0.52, 0.55));
+	vec3(0.85, 0.68, 0.45), // Warm Mediterranean Ochre
+	vec3(0.88, 0.84, 0.76), // Cream Limestone
+	vec3(0.78, 0.48, 0.35), // Tuscan Terracotta / Sienna
+	vec3(0.82, 0.64, 0.58), // Riviera Pastel Rose
+	vec3(0.80, 0.73, 0.60), // Golden Sandstone
+	vec3(0.66, 0.68, 0.58), // Olive Stucco
+	vec3(0.48, 0.52, 0.58), // Heritage Slate
+	vec3(0.70, 0.45, 0.36)  // Heritage Brick
+);
 
 void fragment() {
 	int style = int(round(UV2.x));

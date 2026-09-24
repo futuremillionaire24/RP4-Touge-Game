@@ -36,8 +36,8 @@ func _ready() -> void:
 	var grad := TextureRect.new()
 	var gt := GradientTexture2D.new()
 	var g := Gradient.new()
-	g.set_color(0, Color(0.02, 0.01, 0.05, 0.92))
-	g.set_color(1, Color(0.02, 0.01, 0.05, 0.0))
+	g.set_color(0, Color(0.08, 0.08, 0.11, 0.94))
+	g.set_color(1, Color(0.08, 0.08, 0.11, 0.0))
 	gt.gradient = g
 	gt.fill_from = Vector2(0.0, 0.5)
 	gt.fill_to = Vector2(1.0, 0.5)
@@ -53,7 +53,7 @@ func _ready() -> void:
 	_toast.size = Vector2(1334, 40)
 	root.add_child(_toast)
 	Profile.changed.connect(_refresh_top_bar)
-	Profile.level_up.connect(func(lv): toast("FESTIVAL LEVEL %d  ·  +1 OMIKUJI DRAW" % lv))
+	Profile.level_up.connect(func(lv): toast("FESTIVAL LEVEL %d  ·  +1 WHEELSPIN" % lv))
 	_refresh_top_bar()
 	AudioMix.set_tunnel(false)
 	var start: String = get_tree().root.get_meta("festival_screen", "title")
@@ -103,7 +103,7 @@ func _refresh_top_bar() -> void:
 	_xp_bar.max_value = Profile.xp_for_level(lv)
 	_xp_bar.value = int(Profile.data.xp)
 	var draws := int(Profile.data.omikuji)
-	_draws_label.text = "御神籤 ×%d" % draws if draws > 0 else ""
+	_draws_label.text = "WHEELSPINS ×%d" % draws if draws > 0 else ""
 	_credits_label.text = UIKit.money(int(Profile.data.credits))
 
 func set_top_bar_visible(v: bool) -> void:

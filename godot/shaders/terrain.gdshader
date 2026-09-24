@@ -19,15 +19,15 @@ void vertex() {
 }
 
 vec3 season_grass(vec2 p) {
-	vec3 spring = vec3(0.22, 0.34, 0.11);
-	vec3 summer = vec3(0.15, 0.26, 0.07);
-	vec3 autumn = vec3(0.36, 0.28, 0.1);
-	vec3 winter = vec3(0.3, 0.28, 0.2);
+	vec3 spring = vec3(0.28, 0.40, 0.14);
+	vec3 summer = vec3(0.25, 0.35, 0.12);
+	vec3 autumn = vec3(0.44, 0.35, 0.16);
+	vec3 winter = vec3(0.35, 0.32, 0.22);
 	float s = nt_season;
 	vec3 c = s < 1.0 ? mix(spring, summer, s) : (s < 2.0 ? mix(summer, autumn, s - 1.0) : mix(autumn, winter, s - 2.0));
 	float n = nt_fbm(p * 0.02, 3);
 	float fine = nt_value_noise(p * 1.7);
-	return c * (0.7 + n * 0.55) * (0.88 + fine * 0.24);
+	return c * (0.75 + n * 0.50) * (0.88 + fine * 0.24);
 }
 
 void fragment() {
@@ -37,12 +37,12 @@ void fragment() {
 	vec4 w = COLOR;
 	float dirt = UV2.x;
 	vec3 grass = season_grass(p);
-	// Weathered granite: brown-grey strata, darker in the cracks.
-	vec3 rock = mix(vec3(0.16, 0.15, 0.14), vec3(0.3, 0.28, 0.25), nt_fbm(p * vec2(0.08, 0.02) + world_pos.y * 0.05, 3));
+	// Warm Mediterranean limestone / sandstone strata
+	vec3 rock = mix(vec3(0.38, 0.36, 0.32), vec3(0.56, 0.52, 0.46), nt_fbm(p * vec2(0.08, 0.02) + world_pos.y * 0.05, 3));
 	rock *= 0.85 + 0.3 * nt_value_noise(p * 0.9) * detail;
-	vec3 sand = mix(vec3(0.62, 0.56, 0.43), vec3(0.75, 0.69, 0.55), nt_value_noise(p * 0.4));
-	vec3 urban = mix(vec3(0.3, 0.3, 0.31), vec3(0.4, 0.4, 0.41), nt_value_noise(p * 0.3));
-	vec3 dirt_c = mix(vec3(0.24, 0.19, 0.13), vec3(0.35, 0.28, 0.2), nt_value_noise(p * 0.6));
+	vec3 sand = mix(vec3(0.72, 0.65, 0.50), vec3(0.82, 0.75, 0.60), nt_value_noise(p * 0.4));
+	vec3 urban = mix(vec3(0.35, 0.35, 0.36), vec3(0.46, 0.46, 0.47), nt_value_noise(p * 0.3));
+	vec3 dirt_c = mix(vec3(0.32, 0.26, 0.18), vec3(0.42, 0.34, 0.24), nt_value_noise(p * 0.6));
 	// Paddies: flooded mirror in spring, green in summer, gold in autumn, stubble in winter.
 	float s = nt_season;
 	vec3 paddy = s < 0.7 ? vec3(0.08, 0.1, 0.1) : (s < 1.6 ? vec3(0.2, 0.36, 0.08) : (s < 2.6 ? vec3(0.62, 0.5, 0.18) : vec3(0.35, 0.3, 0.2)));

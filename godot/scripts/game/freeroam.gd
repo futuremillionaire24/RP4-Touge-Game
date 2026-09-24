@@ -64,25 +64,25 @@ func _make_loading_screen() -> void:
 	load_layer.layer = 10
 	add_child(load_layer)
 	_loading = ColorRect.new()
-	(_loading as ColorRect).color = Color(0.02, 0.01, 0.04)
+	(_loading as ColorRect).color = Color(0.08, 0.08, 0.11)
 	_loading.set_anchors_preset(Control.PRESET_FULL_RECT)
 	load_layer.add_child(_loading)
 	var title := Label.new()
-	title.text = "峠  NEON TOUGE"
-	title.add_theme_font_size_override("font_size", 48)
-	title.add_theme_color_override("font_color", Color(1, 0.18, 0.53))
+	title.text = "EURO GT FESTIVAL"
+	title.add_theme_font_size_override("font_size", 46)
+	title.add_theme_color_override("font_color", UIKit.NEON)
 	title.position = Vector2(80, 520)
 	_loading.add_child(title)
 	_load_label = Label.new()
 	_load_label.add_theme_font_size_override("font_size", 20)
-	_load_label.add_theme_color_override("font_color", Color(0.15, 0.91, 1.0))
+	_load_label.add_theme_color_override("font_color", UIKit.CYAN)
 	_load_label.position = Vector2(84, 590)
 	_loading.add_child(_load_label)
 
 func _process(delta: float) -> void:
 	match _state:
 		"building":
-			_load_label.text = "Generating Japan… terrain, roads, city"
+			_load_label.text = "Generating Europe… roads, coastal circuits, historic town"
 			if WorkerThreadPool.is_task_completed(_build_task):
 				WorkerThreadPool.wait_for_task_completion(_build_task)
 				_begin_streaming()
@@ -369,7 +369,9 @@ func start_event(ev: Dictionary) -> void:
 	sim.set_frozen(player.car_id, false)
 	_follow_player = true
 	race.start(ev)
-	minimap.route_line = race.route.polyline(4)
+	if minimap:
+		minimap.race = race
+		minimap.route_line = race.route.polyline(4)
 	if gps_ribbon:
 		gps_ribbon.set_route(race.route)
 	if args.has("autodrive"):
@@ -378,6 +380,9 @@ func start_event(ev: Dictionary) -> void:
 		sim.set_ai_difficulty(player.car_id, 5)
 
 func _on_race_over() -> void:
+	if minimap:
+		minimap.race = null
+		minimap.route_line = PackedVector2Array()
 	race = null
 	sky.time_of_day = _saved_conditions.get("time", sky.time_of_day)
 	sky.set_weather(int(_saved_conditions.get("weather", 0)), true)
@@ -390,7 +395,6 @@ func _on_race_over() -> void:
 		activities.enabled = true
 	if police:
 		police.enabled = true
-	minimap.route_line = PackedVector2Array()
 	if gps_ribbon:
 		gps_ribbon.clear()
 

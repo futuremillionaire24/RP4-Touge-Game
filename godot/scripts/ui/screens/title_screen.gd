@@ -3,11 +3,9 @@ extends MenuScreen
 ## Title: flickering neon logo over the car stage; "PRESS A" then Continue / New Festival /
 ## Dev tools / Quit. New players go to the starter-car choice.
 
-var _logo: Label
 var _press: Label
 var _menu: VBoxContainer
 var _t := 0.0
-var _flicker := 0.0
 
 func build() -> void:
 	festival.set_top_bar_visible(false)
@@ -17,16 +15,24 @@ func build() -> void:
 		stage.show_key("sylph_s2", true)
 	else:
 		stage.show_entry(e, true)
-	_logo = UIKit.label("峠", 150, UIKit.NEON)
-	_logo.position = Vector2(84, 70)
-	add_child(_logo)
-	var name_l := UIKit.label("NEON TOUGE", 68, Color.WHITE)
-	name_l.position = Vector2(270, 108)
-	add_child(name_l)
-	var sub := UIKit.label("JAPAN STREET FESTIVAL  ·  RETROID POCKET 4 PRO", 20, UIKit.CYAN)
-	sub.position = Vector2(276, 196)
-	add_child(sub)
-	_press = UIKit.label("PRESS  A  TO  START", 28, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER)
+	var name_box := VBoxContainer.new()
+	name_box.position = Vector2(84, 80)
+	name_box.add_theme_constant_override("separation", 2)
+	add_child(name_box)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	row.add_child(UIKit.label("EURO GT", 62, Color.WHITE))
+	row.add_child(UIKit.label("FESTIVAL", 62, UIKit.NEON))
+	name_box.add_child(row)
+	var sub := UIKit.label("EUROPEAN GRAND TOURING  ·  RETROID POCKET 4 PRO", 18, UIKit.DIM)
+	name_box.add_child(sub)
+	var accent_line := ColorRect.new()
+	accent_line.color = UIKit.NEON
+	accent_line.custom_minimum_size = Vector2(280, 4)
+	accent_line.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	name_box.add_child(accent_line)
+
+	_press = UIKit.label("PRESS  A  TO  START", 26, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER)
 	_press.position = Vector2(0, 610)
 	_press.size = Vector2(1334, 40)
 	add_child(_press)
@@ -61,14 +67,7 @@ func focus_default() -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
-	_press.modulate.a = 0.55 + 0.45 * sin(_t * 3.0)
-	# Neon tube flicker: rare quick dropouts.
-	_flicker -= delta
-	if _flicker <= 0.0:
-		_flicker = randf_range(0.04, 0.09) if randf() < 0.25 else randf_range(1.5, 5.0)
-		_logo.modulate = Color(1, 1, 1, 0.35) if _flicker < 0.1 else Color.WHITE
-	elif _flicker > 0.1:
-		_logo.modulate = Color.WHITE
+	_press.modulate.a = 0.6 + 0.4 * sin(_t * 3.0)
 
 func _unhandled_input(event: InputEvent) -> void:
 	var start_pressed: bool = (

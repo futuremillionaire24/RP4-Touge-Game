@@ -38,22 +38,20 @@ static func mesh(t: int) -> Mesh:
 			b.blob(Vector3(0.9, 3.7, 0.5), Vector3(1.6, 1.4, 1.6), 1, Color(0.18, 0.33, 0.11, 1.0), 1, 12)
 			b.blob(Vector3(-0.8, 3.9, -0.6), Vector3(1.7, 1.5, 1.7), 1, Color(0.22, 0.38, 0.13, 1.0), 1, 13)
 		Type.TREE_CEDAR:
-			b.cylinder(Vector3.ZERO, 0.28, 0.2, 3.0, 7, Color(0.3, 0.2, 0.14), 0)
-			for k in range(5):
-				var y := 2.2 + k * 2.1
-				var r := 2.6 - k * 0.45
-				b.cone(Vector3(0, y, 0), r, 3.2, 9, Color(0.07, 0.17, 0.09, 0.6 + k * 0.1), 1)
+			# Italian Cypress: tall, slender columnar cypress tree with rich dark Mediterranean foliage
+			b.cylinder(Vector3.ZERO, 0.22, 0.16, 2.0, 7, Color(0.32, 0.22, 0.16), 0)
+			b.cylinder(Vector3(0, 1.8, 0), 0.65, 0.15, 8.5, 9, Color(0.10, 0.24, 0.12, 1.0), 1)
+			b.blob(Vector3(0, 5.0, 0), Vector3(1.1, 4.2, 1.1), 1, Color(0.12, 0.26, 0.14, 1.0), 1, 15)
 		Type.TREE_SAKURA:
-			b.cylinder(Vector3.ZERO, 0.24, 0.16, 2.4, 7, Color(0.25, 0.17, 0.14), 0)
-			b.cylinder(Vector3(0, 2.2, 0), 0.14, 0.08, 1.6, 6, Color(0.25, 0.17, 0.14), 0, Vector3(0.5, 1, 0).normalized())
-			b.blob(Vector3(0, 3.6, 0), Vector3(3.0, 1.8, 3.0), 2, Color(1, 1, 1, 1.0), 2, 21)
-			b.blob(Vector3(1.4, 3.2, 0.6), Vector3(1.6, 1.2, 1.6), 1, Color(1, 1, 1, 1.0), 2, 22)
+			# Mediterranean Olive Tree: weathered gnarled trunk with silver-green canopy
+			b.cylinder(Vector3.ZERO, 0.26, 0.18, 2.0, 7, Color(0.35, 0.32, 0.28), 0)
+			b.cylinder(Vector3(0, 1.8, 0), 0.16, 0.10, 1.6, 6, Color(0.35, 0.32, 0.28), 0, Vector3(0.4, 1, 0.2).normalized())
+			b.blob(Vector3(0, 3.4, 0), Vector3(2.8, 1.6, 2.8), 2, Color(0.32, 0.42, 0.28, 1.0), 1, 21)
+			b.blob(Vector3(1.2, 3.1, 0.5), Vector3(1.5, 1.1, 1.5), 1, Color(0.28, 0.38, 0.24, 1.0), 1, 22)
 		Type.BAMBOO:
-			for k in range(9):
-				var a := k * 2.39996
-				var p := Vector3(cos(a), 0, sin(a)) * (0.35 + 0.1 * k)
-				b.cylinder(p, 0.06, 0.05, 8.5 + (k % 3), 5, Color(0.36, 0.5, 0.2, 0.3), 1)
-			b.blob(Vector3(0, 8.0, 0), Vector3(1.8, 2.2, 1.8), 1, Color(0.3, 0.48, 0.16, 1.0), 1, 31)
+			# Umbrella Stone Pine (Pinus pinea): tall straight trunk with flat parasol canopy
+			b.cylinder(Vector3.ZERO, 0.35, 0.28, 7.5, 7, Color(0.32, 0.24, 0.18), 0)
+			b.blob(Vector3(0, 7.6, 0), Vector3(4.2, 1.4, 4.2), 2, Color(0.14, 0.28, 0.16, 1.0), 1, 31)
 		Type.STREET_LAMP:
 			b.cylinder(Vector3.ZERO, 0.09, 0.07, 7.8, 8, Color(0.35, 0.36, 0.38), 7)
 			b.box(Vector3(0, 7.7, 0.7), Vector3(0.1, 0.1, 1.5), Color(0.35, 0.36, 0.38), 7)
@@ -70,8 +68,10 @@ static func mesh(t: int) -> Mesh:
 			for x in [-1.0, -0.4, 0.4, 1.0]:
 				b.cylinder(Vector3(x, 10.26, 0), 0.05, 0.05, 0.18, 5, Color(0.8, 0.8, 0.78), 0)
 		Type.VENDING:
-			b.box(Vector3(0, 0.9, 0), Vector3(1.0, 1.8, 0.75), Color(1, 1, 1), 5)
-			b.box(Vector3(0, 1.1, 0.38), Vector3(0.85, 1.1, 0.02), Color(1, 1, 1), 4)
+			# European street newsstand / cafe kiosk
+			b.box(Vector3(0, 1.1, 0), Vector3(1.4, 2.2, 1.1), Color(0.22, 0.35, 0.25), 0)
+			b.box(Vector3(0, 2.25, 0), Vector3(1.6, 0.2, 1.3), Color(0.18, 0.20, 0.22), 7)
+			b.box(Vector3(0, 1.2, 0.56), Vector3(1.2, 1.0, 0.05), Color(0.9, 0.9, 0.92), 4)
 		Type.PIER:
 			b.box(Vector3(0, 0.5, 0), Vector3(2.2, 1.0, 1.4), Color(0.58, 0.57, 0.54), 0)
 		Type.CONTAINER:
@@ -98,10 +98,10 @@ static func mesh(t: int) -> Mesh:
 			for k in range(3):
 				b.box(Vector3(-0.28 + k * 0.28, 1.4, 0.025), Vector3(0.1, 0.4, 0.01), Color(0.05, 0.05, 0.05), 0)
 		Type.STONE_LANTERN:
-			b.box(Vector3(0, 0.3, 0), Vector3(0.6, 0.6, 0.6), Color(0.5, 0.5, 0.47), 0)
-			b.cylinder(Vector3(0, 0.6, 0), 0.15, 0.15, 0.6, 8, Color(0.5, 0.5, 0.47), 0)
-			b.box(Vector3(0, 1.4, 0), Vector3(0.5, 0.45, 0.5), Color(0.5, 0.5, 0.47), 0)
-			b.cone(Vector3(0, 1.62, 0), 0.55, 0.4, 6, Color(0.46, 0.46, 0.43), 0)
+			# European classical stone bollard / monument pedestal
+			b.box(Vector3(0, 0.2, 0), Vector3(0.55, 0.4, 0.55), Color(0.72, 0.70, 0.65), 0)
+			b.cylinder(Vector3(0, 0.4, 0), 0.22, 0.18, 0.8, 10, Color(0.75, 0.72, 0.68), 0)
+			b.sphere(Vector3(0, 1.3, 0), 0.22, 2, Color(0.75, 0.72, 0.68), 0)
 		Type.BUSH:
 			b.blob(Vector3(0, 0.6, 0), Vector3(1.2, 0.8, 1.2), 1, Color(0.18, 0.32, 0.1, 0.8), 1, 51)
 	st.generate_tangents()

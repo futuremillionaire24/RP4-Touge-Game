@@ -259,16 +259,15 @@ func drive_args() -> Dictionary:
 		return {"car": "sylph_s2"}
 	return {"car": e.key, "garage_index": current_index()}
 
-# ---- Omikuji (fortune draw) ------------------------------------------------------------------
+# ---- Prize Spins (Festival level rewards) ----------------------------------------------------
 
 const FORTUNES := [
-	# kanji, reading, weight, reward
-	{"kanji": "大吉", "name": "Great Blessing", "weight": 6, "kind": "car"},
-	{"kanji": "中吉", "name": "Middle Blessing", "weight": 14, "kind": "credits", "min": 60000, "max": 150000},
-	{"kanji": "小吉", "name": "Small Blessing", "weight": 24, "kind": "credits", "min": 25000, "max": 60000},
-	{"kanji": "吉", "name": "Blessing", "weight": 30, "kind": "credits", "min": 10000, "max": 25000},
-	{"kanji": "末吉", "name": "Future Blessing", "weight": 18, "kind": "xp", "min": 800, "max": 2000},
-	{"kanji": "凶", "name": "Curse", "weight": 8, "kind": "credits", "min": 2000, "max": 2000},
+	{"badge": "LEGENDARY", "name": "Grand Prize Car", "weight": 6, "kind": "car"},
+	{"badge": "EPIC", "name": "Super Jackpot", "weight": 14, "kind": "credits", "min": 60000, "max": 150000},
+	{"badge": "VERY RARE", "name": "Major Prize", "weight": 24, "kind": "credits", "min": 25000, "max": 60000},
+	{"badge": "RARE", "name": "Cash Reward", "weight": 30, "kind": "credits", "min": 10000, "max": 25000},
+	{"badge": "FESTIVAL XP", "name": "Bonus Festival XP", "weight": 18, "kind": "xp", "min": 800, "max": 2000},
+	{"badge": "STANDARD", "name": "Consolation Prize", "weight": 8, "kind": "credits", "min": 5000, "max": 5000},
 ]
 
 ## Draws one fortune (consumes a draw). Returns {fortune, kind, amount|car, index}.

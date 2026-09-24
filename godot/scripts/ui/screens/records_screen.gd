@@ -4,7 +4,7 @@ extends MenuScreen
 
 func build() -> void:
 	var col := make_column(600)
-	col.add_child(UIKit.header("Records", "記", "Festival level %d" % int(Profile.data.level)))
+	col.add_child(UIKit.header("Hall of Fame & Records", "", "Festival level %d" % int(Profile.data.level)))
 	var list := make_list(col, 540)
 	var s: Dictionary = Profile.data.stats
 	var km := float(s.get("distance_km", 0.0))
@@ -17,7 +17,7 @@ func build() -> void:
 	_stat(list, "Best drift score", str(int(s.get("drift_score", 0))))
 	_stat(list, "Near misses", str(int(s.get("near_misses", 0))))
 	_stat(list, "Cars owned", str(Profile.data.garage.size()))
-	_stat(list, "Omamori found", "%d / 30" % Profile.data.omamori.size())
+	_stat(list, "Festival collectibles", "%d / 30" % Profile.data.omamori.size())
 	_stat(list, "Rivals beaten", "%d / %d" % [Profile.data.rivals_beaten.size(), RivalData.RIVALS.size()])
 	_section(list, "Event records")
 	for ev in EventData.all():

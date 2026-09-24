@@ -94,7 +94,7 @@ const CARS := {
 	},
 	"kurogane_hyper": {
 		"name": "Kurogane Hyper GT-Concept", "maker": "Kurogane", "year": 2026, "price": 1_450_000, "unlock": "championship",
-		"blurb": "Twin-turbo V8, electric front axle, 1,000+ hp. The pinnacle of the Neon Touge Festival.",
+		"blurb": "Twin-turbo V8, electric front axle, 1,000+ hp. The pinnacle of the Euro GT Festival.",
 		"paint": Color(0.05, 0.05, 0.06), "finish": "candy", "pearl": Color(0.6, 0.05, 0.2), "wheel_design": "forged6",
 		"model_path": "res://assets/models/cars/car_concept.glb",
 		"body": {"style": "hyper", "roof_h": 1.14, "hood_h": 0.66, "nose_h": 0.40, "deck_h": 0.94, "tail_h": 0.95,
@@ -103,13 +103,13 @@ const CARS := {
 }
 
 const FINISHES := {
-	"gloss": {"metallic": 0.0, "roughness": 0.25, "flake": 0.0, "pearl": 0.0, "coat": 1.0, "gloss": 0.92, "candy": 0.0},
-	"metallic": {"metallic": 0.7, "roughness": 0.34, "flake": 0.8, "pearl": 0.0, "coat": 1.0, "gloss": 0.9, "candy": 0.0},
-	"pearl": {"metallic": 0.45, "roughness": 0.3, "flake": 0.5, "pearl": 0.8, "coat": 1.0, "gloss": 0.92, "candy": 0.0},
-	"matte": {"metallic": 0.0, "roughness": 0.75, "flake": 0.0, "pearl": 0.0, "coat": 0.0, "gloss": 0.2, "candy": 0.0},
-	"satin": {"metallic": 0.2, "roughness": 0.5, "flake": 0.2, "pearl": 0.0, "coat": 0.4, "gloss": 0.55, "candy": 0.0},
-	"chrome": {"metallic": 1.0, "roughness": 0.06, "flake": 0.0, "pearl": 0.0, "coat": 1.0, "gloss": 0.96, "candy": 0.0},
-	"candy": {"metallic": 0.8, "roughness": 0.2, "flake": 0.6, "pearl": 0.4, "coat": 1.0, "gloss": 0.96, "candy": 0.9},
+	"gloss": {"metallic": 0.0, "roughness": 0.18, "flake": 0.0, "pearl": 0.0, "coat": 1.0, "gloss": 0.95, "candy": 0.0},
+	"metallic": {"metallic": 0.72, "roughness": 0.26, "flake": 0.20, "pearl": 0.0, "coat": 1.0, "gloss": 0.94, "candy": 0.0},
+	"pearl": {"metallic": 0.40, "roughness": 0.24, "flake": 0.12, "pearl": 0.75, "coat": 1.0, "gloss": 0.94, "candy": 0.0},
+	"matte": {"metallic": 0.0, "roughness": 0.80, "flake": 0.0, "pearl": 0.0, "coat": 0.0, "gloss": 0.15, "candy": 0.0},
+	"satin": {"metallic": 0.25, "roughness": 0.44, "flake": 0.05, "pearl": 0.0, "coat": 0.35, "gloss": 0.50, "candy": 0.0},
+	"chrome": {"metallic": 1.0, "roughness": 0.04, "flake": 0.0, "pearl": 0.0, "coat": 1.0, "gloss": 0.98, "candy": 0.0},
+	"candy": {"metallic": 0.78, "roughness": 0.18, "flake": 0.15, "pearl": 0.20, "coat": 1.0, "gloss": 0.96, "candy": 0.85},
 }
 
 ## Stock performance index (from tools/benchmark via NTSim.benchmark, rounded). Used to pick

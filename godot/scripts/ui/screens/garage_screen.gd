@@ -10,7 +10,7 @@ var _focus_index := -1
 
 func build() -> void:
 	var col := make_column(540)
-	col.add_child(UIKit.header("Garage", "車庫", "%d cars" % Profile.data.garage.size()))
+	col.add_child(UIKit.header("My Garage", "", "%d vehicles" % Profile.data.garage.size()))
 	_list = make_list(col, 520)
 	_stats = CarStatsPanel.new()
 	_stats.position = Vector2(870, 470)

@@ -12,6 +12,7 @@ var player: CarView
 var markers: EventMarkers
 var activities: Activities
 var route_line := PackedVector2Array()
+var race: RaceManager = null
 
 var _tex: ImageTexture
 var _bounds: Rect2
@@ -140,9 +141,9 @@ func _draw() -> void:
 	var radius := SIZE * 0.5
 	var inner_radius := radius - 3.0
 
-	# 1. Bezel Ring (Frosted glass outer border with neon accent)
-	draw_arc(c, radius, 0, TAU, 64, Color(0.04, 0.06, 0.1, 0.95), 5.0, true)
-	draw_arc(c, radius - 1.5, 0, TAU, 64, Color(0.15, 0.85, 1.0, 0.8), 2.0, true)
+	# 1. Bezel Ring (Frosted glass outer border with Euro GT gold accent)
+	draw_arc(c, radius, 0, TAU, 64, Color(0.06, 0.07, 0.1, 0.96), 5.0, true)
+	draw_arc(c, radius - 1.5, 0, TAU, 64, Color(0.95, 0.68, 0.15, 0.85), 2.0, true)
 
 	# 2. Rotating North (N) Pip
 	var fwd := -player.global_basis.z
@@ -165,16 +166,43 @@ func _draw() -> void:
 			var w: float = maxf(road.width * (SIZE / _current_meters) * 1.5, 1.5)
 			draw_polyline(local_pts, road.color * Color(1, 1, 1, 0.65), w, true)
 
-	# 4. GPS Route Line
+	# 4. GPS / Race Route Line (Segment-clipped to avoid cross-map chords)
 	if route_line.size() > 1:
-		var pts := PackedVector2Array()
-		for q in route_line:
-			var lp := _to_local(Vector3(q.x, 0, q.y))
-			if lp.distance_to(c) < radius * 1.4:
-				pts.append(lp)
-		if pts.size() > 1:
-			draw_polyline(pts, Color(0.0, 0.95, 1.0, 0.45), 6.0, true)
-			draw_polyline(pts, Color(0.15, 1.0, 0.85, 0.95), 3.0, true)
+		var is_race: bool = (race != null)
+		var track_col := Color(1.0, 0.84, 0.22, 0.95) if is_race else Color(0.15, 1.0, 0.85, 0.95)
+		var glow_col := Color(0.96, 0.55, 0.1, 0.45) if is_race else Color(0.0, 0.85, 1.0, 0.45)
+		var max_dist := radius * 1.35
+		for i in range(route_line.size() - 1):
+			var lp0 := _to_local(Vector3(route_line[i].x, 0, route_line[i].y))
+			var lp1 := _to_local(Vector3(route_line[i + 1].x, 0, route_line[i + 1].y))
+			if lp0.distance_to(c) < max_dist or lp1.distance_to(c) < max_dist:
+				draw_line(lp0, lp1, glow_col, 5.5, true)
+				draw_line(lp0, lp1, track_col, 2.8, true)
+
+	# 4b. Rivals on Minimap (during active race)
+	if race != null and race.cars.size() > 1:
+		for i in range(1, race.cars.size()):
+			var r_car: CarView = race.cars[i]
+			if r_car == null or not is_instance_valid(r_car):
+				continue
+			var lp := _to_local(r_car.global_position)
+			var dist := lp.distance_to(c)
+			var r_fwd := -r_car.global_basis.z
+			var r_heading := atan2(r_fwd.x, -r_fwd.z) - heading
+			if dist < inner_radius - 4.0:
+				var tri := PackedVector2Array([
+					lp + Vector2(0, -6).rotated(r_heading),
+					lp + Vector2(4, 4).rotated(r_heading),
+					lp + Vector2(-4, 4).rotated(r_heading)
+				])
+				draw_circle(lp, 5.0, Color.BLACK)
+				draw_colored_polygon(tri, Color(1.0, 0.32, 0.12))
+				draw_polyline(tri, Color.WHITE, 1.0, true)
+			else:
+				var dir := (lp - c).normalized()
+				var bezel_pt := c + dir * (inner_radius - 5.0)
+				draw_circle(bezel_pt, 4.0, Color(1.0, 0.32, 0.12))
+				draw_line(bezel_pt, bezel_pt + dir * 3.5, Color.WHITE, 1.5)
 
 	# 5. Event Beacons (In-circle or Clamped to Bezel)
 	if markers:

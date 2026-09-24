@@ -41,7 +41,7 @@ func build() -> void:
 	_v = c.v
 	_finish = e.finish
 	var col := make_column(540)
-	col.add_child(UIKit.header("Paint", "塗", CarData.get_car(e.key).name))
+	col.add_child(UIKit.header("Paint & Finish", "", CarData.get_car(e.key).name))
 	_swatch = ColorRect.new()
 	_swatch.custom_minimum_size = Vector2(520, 26)
 	col.add_child(_swatch)

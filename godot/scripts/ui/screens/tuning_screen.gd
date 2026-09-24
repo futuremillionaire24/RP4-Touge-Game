@@ -72,7 +72,7 @@ func _entry() -> Dictionary:
 func build() -> void:
 	var e := _entry()
 	var col := make_column(580)
-	col.add_child(UIKit.header("Tuning", "調", CarData.get_car(e.key).name))
+	col.add_child(UIKit.header("Race Tuning", "", CarData.get_car(e.key).name))
 	_tabs = make_tabs(col, PAGES)
 	for c in _tabs.get_children():
 		for sub_lbl in c.get_children():

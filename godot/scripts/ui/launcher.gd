@@ -16,12 +16,12 @@ var _wet_btn: Button
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	var bg := ColorRect.new()
-	bg.color = Color(0.03, 0.015, 0.06)
+	bg.color = Color(0.08, 0.08, 0.11)
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 	var title := Label.new()
-	title.text = "NEON TOUGE  峠"
-	title.add_theme_font_size_override("font_size", 56)
+	title.text = "EURO GT FESTIVAL"
+	title.add_theme_font_size_override("font_size", 54)
 	title.add_theme_color_override("font_color", NEON)
 	title.position = Vector2(80, 60)
 	add_child(title)

@@ -24,7 +24,7 @@ var _rows_by_action: Dictionary = {}
 
 func build() -> void:
 	var col := make_column(580, 70.0)
-	col.add_child(UIKit.header("Controller Setup", "操", "RP4 Pro & Gamepad Remapper"))
+	col.add_child(UIKit.header("Controller Setup", "", "RP4 Pro & Gamepad Remapper"))
 
 	_status_lbl = UIKit.label("", 16, UIKit.CYAN)
 	col.add_child(_status_lbl)
