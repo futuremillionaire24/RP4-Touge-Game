@@ -73,6 +73,7 @@ private:
 	real gap_ahead(int idx, real &leader_speed, const std::vector<Obstacle> &obstacles) const;
 	real signal_stop_distance(const TrafficCar &c, real time_s) const;
 	std::vector<int> spawnable_; // roads traffic may use
+	std::vector<uint8_t> is_spawnable_;
 	Rng rng_;
 };
 

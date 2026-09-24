@@ -23,10 +23,40 @@ static const Vec3 TOUGE_PASS(-3300, 0, -250);
 
 static real coast_z(real x) { return 2150.0 + 250.0 * std::sin(x / 800.0) + 120.0 * std::sin(x / 300.0 + 1.0); }
 
-bool World::is_sea(real x, real z) const { return z > coast_z(x) || x > 3450.0 + 120.0 * std::sin(z / 400.0); }
+bool World::is_sea(real x, real z) const {
+	if (baked) return land_at(x, z) == LAND_SEA;
+	return z > coast_z(x) || x > 3450.0 + 120.0 * std::sin(z / 400.0);
+}
 
 real World::base_height(real x, real z, uint8_t &material) const {
 	material = 0;
+	if (baked) {
+		// Real terrain (bicubic from the 8 m bake) + metre-scale relief the DEM can't resolve,
+		// stronger on rocky/scrub hillsides than in town or on the beach.
+		real h = bake_height(x, z);
+		uint8_t lc = land_at(x, z);
+		// Sea (incl. the harbours, whose DEM sits at quay height): seabed below the water plane,
+		// deepening away from the quays.
+		if (lc == LAND_SEA) {
+			int seaN = 0;
+			for (int k = 0; k < 8; ++k) {
+				real a = k * (TAU / 8.0);
+				seaN += land_at(x + std::cos(a) * 24.0, z + std::sin(a) * 24.0) == LAND_SEA ? 1 : 0;
+			}
+			return std::min(h, -1.5 - 5.0 * (seaN / 8.0)) + (material = 3, 0.0);
+		}
+		real rough = lc == LAND_ROCK ? 1.4 : (lc == LAND_SCRUB || lc == LAND_FOREST) ? 0.8 : lc == LAND_FARM ? 0.3 : 0.1;
+		if (h > 1.0) h += rough * (fbm2(x / 23.0 + 5.0, z / 23.0 - 3.0, 3) - 0.5) * 2.0;
+		switch (lc) {
+			case LAND_ROCK: material = 2; break;
+			case LAND_SAND: case LAND_SEA: case LAND_WATER: material = 3; break;
+			case LAND_FARM: material = 4; break;
+			case LAND_URBAN: case LAND_PORT: material = 5; break;
+			case LAND_FOREST: material = 1; break;
+			default: material = 0; break;
+		}
+		return h;
+	}
 	// Rolling countryside.
 	real h = 9.0 + 12.0 * (fbm2(x / 700.0 + 13.0, z / 700.0 - 7.0, 4) - 0.5) * 2.0;
 	// Satoyama hills (north-west).
@@ -68,6 +98,12 @@ real World::base_height(real x, real z, uint8_t &material) const {
 }
 
 District World::district_at(real x, real z) const {
+	if (baked) {
+		if (bake_dist_.empty()) return (District)0;
+		int i = std::clamp((int)((x - bake_x0_) / dist_cell_), 0, dist_w_ - 1);
+		int j = std::clamp((int)((z - bake_z0_) / dist_cell_), 0, dist_h_ - 1);
+		return (District)bake_dist_[(size_t)j * dist_w_ + i];
+	}
 	if (x > -1000 && x < 1000 && z > -850 && z < 850) return DIST_CITY;
 	if (x > 2050 && x < 2700 && z > -650 && z < 0) return DIST_DAIKOKU;
 	if (x > 1600 && x < 3400 && z > -100 && z < 1350) return DIST_DOCKS;
@@ -484,6 +520,13 @@ void World::classify_and_furnish(Road &r, const std::vector<Vec3> &pts, const st
 	std::vector<uint8_t> type(n, ST_GROUND);
 	for (int i = 0; i < n; ++i) {
 		real diff = ys[i] - base[i];
+		if (baked) {
+			// Real map: structures come from OpenStreetMap; untagged roads high above the ground
+			// (viaduct approaches) still get a deck.
+			if (d.tunnel) type[i] = ST_TUNNEL;
+			else if (d.bridge || diff > 5.0 || (is_sea(pts[i].x, pts[i].z) && diff > 0.5)) type[i] = ST_BRIDGE;
+			continue;
+		}
 		// Shallow cover becomes a deep cutting with retaining walls; only real mountains get bored.
 		if (diff > 3.5) type[i] = ST_BRIDGE;
 		else if (diff < -12.0) type[i] = ST_TUNNEL;
@@ -501,6 +544,7 @@ void World::classify_and_furnish(Road &r, const std::vector<Vec3> &pts, const st
 				for (int q = j; q < k; ++q) type[q] = (uint8_t)t;
 			i = j;
 		}
+		if (baked && t == ST_TUNNEL) continue; // mapped tunnels keep their exact extent
 		int min_run = t == ST_TUNNEL ? 20 : 6; // tunnels shorter than 60 m become cuttings
 		for (int i = 0; i < n;) {
 			if (type[i] != t) { ++i; continue; }
@@ -603,6 +647,15 @@ void World::classify_and_furnish(Road &r, const std::vector<Vec3> &pts, const st
 			default:
 				break;
 		}
+		if (baked) {
+			// Mapped width / lanes; one-way roads have no centre line.
+			if (d.half_width > 0.0) s.width_left = s.width_right = d.half_width;
+			if (d.lanes > 0) s.lanes = (uint8_t)(d.oneway ? d.lanes * 2 : std::max<int>(d.lanes, 2));
+			if (d.oneway) s.marking = 5;
+			if (d.kind == RK_STREET && d.half_width < 3.0) s.marking = 0; // narrow old-town lanes
+			// Old towns: narrow pavements; hill roads: tight verges.
+			if (d.kind == RK_STREET) s.shoulder_left = s.shoulder_right = d.half_width < 3.0 ? 1.2 : 2.2;
+		}
 		if (sx.type == ST_BRIDGE) {
 			if (s.barrier_left != BARRIER_WALL) s.barrier_left = BARRIER_GUARDRAIL;
 			if (s.barrier_right != BARRIER_WALL) s.barrier_right = BARRIER_GUARDRAIL;
@@ -619,6 +672,27 @@ void World::classify_and_furnish(Road &r, const std::vector<Vec3> &pts, const st
 		r.bmin = Vec3(std::min(r.bmin.x, s.center.x), std::min(r.bmin.y, s.center.y), std::min(r.bmin.z, s.center.z));
 		r.bmax = Vec3(std::max(r.bmax.x, s.center.x), std::max(r.bmax.y, s.center.y), std::max(r.bmax.z, s.center.z));
 	}
+	// Tunnel mouths: samples within 25 m of either end of a tunnel run.
+	for (int i = 0; i < n;) {
+		if (r.samples[i].type != ST_TUNNEL) { ++i; continue; }
+		int j = i;
+		while (j < n && r.samples[j].type == ST_TUNNEL) ++j;
+		real d0 = r.samples[i].rs.distance, d1 = r.samples[j - 1].rs.distance;
+		for (int k = i; k < j; ++k) {
+			real dd = r.samples[k].rs.distance;
+			// Runs that start/end at the road's end continue into a neighbouring tunnel road: no mouth there.
+			bool open_start = i > 0 || !d.tunnel, open_end = j < n || !d.tunnel;
+			r.samples[k].portal = ((open_start && dd - d0 < 25.0) || (open_end && d1 - dd < 25.0)) ? 1 : 0;
+		}
+		i = j;
+	}
+	// Baked tunnel roads: mouths where the tunnel meets the ground at its ends.
+	if (baked && d.tunnel)
+		for (int k = 0; k < n; ++k) {
+			real dd = r.samples[k].rs.distance;
+			real ground_gap = r.samples[k].terrain_y - r.samples[k].rs.center.y;
+			if ((dd < 25.0 || dist - dd < 25.0) && ground_gap < 9.0) r.samples[k].portal = 1;
+		}
 	// Banking on fast curved roads (never on city grids).
 	if (d.kind == RK_EXPRESSWAY || d.kind == RK_TOUGE || d.kind == RK_COAST || d.kind == RK_RAMP) {
 		for (int i = 0; i < n; ++i) {
@@ -753,6 +827,17 @@ void World::carve_roads() {
 		}
 	}
 	for (const Intersection &j : junctions) {
+		if (!j.poly.empty()) {
+			// Polygon junction: flatten a fan of strips from the centre to every edge midpoint.
+			for (size_t k = 0; k < j.poly.size(); ++k) {
+				const Vec3 &a = j.poly[k], &b = j.poly[(k + 1) % j.poly.size()];
+				Vec3 mid = (a + b) * 0.5;
+				Vec3 c = j.center;
+				mid.y = j.center.y;
+				terrain.carve_segment(c, mid, std::max(2.5, distance(a, b) * 0.5), 6.0, 5);
+			}
+			continue;
+		}
 		// Rectangles: carve along the longer axis with the shorter half-extent as width.
 		bool along_x = j.half_x >= j.half_z;
 		Vec3 a = j.center + (along_x ? Vec3(-j.half_x, 0, 0) : Vec3(0, 0, -j.half_z));

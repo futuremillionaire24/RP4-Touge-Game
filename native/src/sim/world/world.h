@@ -5,6 +5,8 @@
 #include "heightfield.h"
 #include "world_types.h"
 
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace nt {
@@ -28,8 +30,20 @@ public:
 	std::vector<Block> blocks;
 	std::vector<Poi> pois;
 	uint64_t seed = 1;
+	// Baked map (tools/mapbake) data.
+	bool baked = false;
+	std::vector<Building> buildings;
+	std::vector<Tree> trees;
+	std::vector<Route> routes;
+	std::vector<std::string> district_names;
 
 	void build(uint64_t seed);
+	// Loads a tools/mapbake "NTMB" blob (heights, land, districts, roads, junctions, buildings,
+	// trees, POIs, routes) and builds the world from it. Returns false with `error` set on failure.
+	bool build_from_bake(const uint8_t *data, size_t size, std::string &error);
+	uint8_t land_at(real x, real z) const;
+	// Road indices meeting at a road-graph vertex (baked maps).
+	const std::vector<int> &roads_at_node(int64_t node) const;
 
 	real base_height(real x, real z, uint8_t &material) const; // pre-carve terrain function
 	real height(real x, real z) const { return terrain.sample(x, z); }
@@ -67,7 +81,15 @@ private:
 	void open_merges();
 	void weld_endpoints();
 	void make_touge(const Vec3 &base, const Vec3 &summit, int hairpins, real leg_len, uint64_t s, const char *name, bool descent_fast);
+	void index_nodes();
+	real bake_height(real x, real z) const;
 	std::vector<RoadDef> defs_;
+	// Baked grids.
+	std::vector<uint16_t> bake_h_;
+	std::vector<uint8_t> bake_land_, bake_dist_;
+	real bake_x0_ = 0, bake_z0_ = 0, bake_cell_ = 8, dist_cell_ = 32;
+	int bake_w_ = 0, bake_hgt_ = 0, dist_w_ = 0, dist_h_ = 0;
+	std::unordered_map<int64_t, std::vector<int>> node_roads_;
 };
 
 } // namespace nt

@@ -101,7 +101,7 @@ static func mesh(t: int) -> Mesh:
 			# European classical stone bollard / monument pedestal
 			b.box(Vector3(0, 0.2, 0), Vector3(0.55, 0.4, 0.55), Color(0.72, 0.70, 0.65), 0)
 			b.cylinder(Vector3(0, 0.4, 0), 0.22, 0.18, 0.8, 10, Color(0.75, 0.72, 0.68), 0)
-			b.sphere(Vector3(0, 1.3, 0), 0.22, 2, Color(0.75, 0.72, 0.68), 0)
+			b.blob(Vector3(0, 1.3, 0), Vector3(0.22, 0.22, 0.22), 2, Color(0.75, 0.72, 0.68), 0, 61, 0.0)
 		Type.BUSH:
 			b.blob(Vector3(0, 0.6, 0), Vector3(1.2, 0.8, 1.2), 1, Color(0.18, 0.32, 0.1, 0.8), 1, 51)
 	st.generate_tangents()

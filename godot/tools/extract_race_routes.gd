@@ -3,7 +3,7 @@ extends SceneTree
 func _init() -> void:
 	print("--- EXTRACTING RACE ROUTE MAPS ---")
 	var world: NTWorld = NTWorld.new()
-	world.build(42)
+	MapData.build(world)
 	print("NTWorld built successfully.")
 
 	var all_events := EventData.all()

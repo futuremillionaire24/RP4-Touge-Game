@@ -129,7 +129,7 @@ func _show_detail(ev: Dictionary) -> void:
 
 func _route_length(ev: Dictionary) -> float:
 	# Measured from the generated world by tools/event_lengths.gd (world seed 1).
-	return float(EventData.LENGTHS.get(ev.id, 0.0)) * (int(ev.get("laps", 1)) if bool(ev.closed) else 1)
+	return EventData.length_of(ev.id) * (int(ev.get("laps", 1)) if bool(ev.closed) else 1)
 
 func _start(ev: Dictionary, locked: bool, over: bool) -> void:
 	if locked:

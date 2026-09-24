@@ -60,6 +60,8 @@ uint8_t terrain_surface(int mat) {
 
 bool tunnel_hole(const Ctx &c, real x, real z, real h) {
 	for (const RoadSampleX *s : c.tunnels) {
+		// Real map: the ground only opens at tunnel mouths (city streets run over shallow tunnels).
+		if (c.w.baked && !s->portal) continue;
 		real hw = std::max(s->rs.width_left, s->rs.width_right) + 3.0;
 		real d2 = sqr(s->rs.center.x - x) + sqr(s->rs.center.z - z);
 		if (d2 < hw * hw && h < s->rs.center.y + 11.0) return true;
@@ -254,14 +256,25 @@ void build_roads(Ctx &c) {
 							add_light(c, p + Vec3(0, 7.5, 0) - right * side * 1.4, 1.0, 0.1);
 						}
 					}
-					if (r.def.kind == RK_STREET && s.distance - last_pole > 31.0) {
+					// European towns bury their cables; the generated (legacy) map keeps Japanese poles.
+					if (!w.baked && r.def.kind == RK_STREET && s.distance - last_pole > 31.0) {
 						last_pole = s.distance;
 						Vec3 p = s.center - right * (out_l - 0.3);
 						add_prop(c, PROP_UTILITY_POLE, p, yaw, Vec3(1, rng.range(0.95, 1.1), 1), rng.next());
 					}
-					if (rng.chance(0.02)) {
+					// Avenue trees: plane trees / palms between the lamps on wide streets.
+					if (w.baked && r.def.kind == RK_AVENUE && sx.type == ST_GROUND && s.distance - last_pole > 14.0 && s.shoulder_left > 3.0) {
+						last_pole = s.distance;
+						for (real side : {-1.0, 1.0}) {
+							real off = side < 0 ? out_l - 1.4 : out_r - 1.4;
+							Vec3 p = s.center + right * (side * off);
+							bool palm = w.district_at(p.x, p.z) % 3 == 0;
+							add_prop(c, palm ? PROP_TREE_PALM : PROP_TREE_PLANE, p, rng.range(0, TAU), Vec3(1, 1, 1) * rng.range(0.85, 1.1), rng.next());
+						}
+					}
+					if (!w.baked && rng.chance(0.02)) {
 						Vec3 p = s.center + right * (out_r - 0.5);
-						add_prop(c, PROP_VENDING, p, yaw - PI * 0.5, Vec3(1, 1, 1), rng.next());
+						add_prop(c, PROP_KIOSK, p, yaw - PI * 0.5, Vec3(1, 1, 1), rng.next());
 						add_light(c, p + Vec3(0, 1.2, 0) - right * 0.6, 0.25, rng.next());
 					}
 					break;
@@ -279,7 +292,7 @@ void build_roads(Ctx &c) {
 				case RK_COAST:
 				case RK_TOUGE:
 				case RK_FARM:
-					if (s.distance - last_pole > 36.0 && sx.type == ST_GROUND) {
+					if (s.distance - last_pole > 36.0 && sx.type == ST_GROUND && (!w.baked || r.def.kind == RK_RURAL)) {
 						last_pole = s.distance;
 						Vec3 p = s.center - right * (out_l + 1.2);
 						p.y = w.terrain.sample(p.x, p.z);
@@ -428,7 +441,7 @@ void build_blocks(Ctx &c) {
 			for (int k = 0; k < 24; ++k) {
 				Vec3 p(rng.range(b.min.x + 3, b.max.x - 3), y, rng.range(b.min.z + 3, b.max.z - 3));
 				if (!c.in_chunk(p.x, p.z)) continue;
-				add_prop(c, rng.chance(0.5) ? PROP_TREE_SAKURA : PROP_TREE_BROADLEAF, p, rng.range(0, TAU), Vec3(1, 1, 1) * rng.range(0.8, 1.3), rng.next());
+				add_prop(c, rng.chance(0.5) ? PROP_TREE_PALM : PROP_TREE_PLANE, p, rng.range(0, TAU), Vec3(1, 1, 1) * rng.range(0.8, 1.3), rng.next());
 			}
 			continue;
 		}
@@ -558,11 +571,246 @@ void scatter(Ctx &c) {
 				continue;
 			}
 			PropType t;
-			if (forest) t = rng.chance(0.75) ? PROP_TREE_CEDAR : PROP_TREE_BROADLEAF;
-			else if (d == DIST_RURAL && density_noise > 0.62) t = PROP_BAMBOO;
-			else t = rng.chance(0.15) ? PROP_TREE_SAKURA : (rng.chance(0.3) ? PROP_BUSH : PROP_TREE_BROADLEAF);
+			if (forest) t = rng.chance(0.75) ? PROP_TREE_PINE : PROP_TREE_PLANE;
+			else if (d == DIST_RURAL && density_noise > 0.62) t = PROP_TREE_CYPRESS;
+			else t = rng.chance(0.15) ? PROP_TREE_PALM : (rng.chance(0.3) ? PROP_BUSH : PROP_TREE_PLANE);
 			real s = rng.range(0.75, 1.35);
 			add_prop(c, t, Vec3(px, h - 0.1, pz), rng.range(0, TAU), Vec3(s, s * rng.range(0.9, 1.15), s), rng.next());
+		}
+}
+
+// ---- Baked (real) map: junction polygons, buildings, vegetation ------------------------------------
+
+// Junction polygon as a fan around its centre (road shader junction code 80 + style; UV in metres
+// so the asphalt texture continues from the roads). Traffic lights stand at the corners of big ones.
+void build_junction_polys(Ctx &c) {
+	for (const Intersection &j : c.w.junctions) {
+		if (j.poly.size() < 3 || !c.in_chunk(j.center.x, j.center.z)) continue;
+		MeshData &m = c.out.groups[WG_JUNCTION];
+		Vec3 up(0, 1, 0);
+		real code = 80.0 + j.style;
+		real span = std::max(j.half_x * 2.0, 2.0);
+		int base = m.vertex_count();
+		m.add_vertex(j.center, up, 0.5, 0.5, code, span, 1.0, 0, 0, span);
+		for (const Vec3 &p : j.poly) {
+			Vec3 q(p.x, j.center.y, p.z);
+			real u = 0.5 + (p.x - j.center.x) / span, v = 0.5 + (p.z - j.center.z) / span;
+			m.add_vertex(q, up, u, v, code, span, 1.0, 0, 0, span);
+		}
+		int n = (int)j.poly.size();
+		for (int k = 0; k < n; ++k) {
+			int a = base + 1 + k, b = base + 1 + (k + 1) % n;
+			// Counter-clockwise seen from above.
+			Vec3 pa = j.poly[k], pb = j.poly[(k + 1) % n];
+			real cross = (pa.x - j.center.x) * (pb.z - j.center.z) - (pa.z - j.center.z) * (pb.x - j.center.x);
+			if (cross < 0) {
+				m.indices.insert(m.indices.end(), {base, a, b});
+			} else {
+				m.indices.insert(m.indices.end(), {base, b, a});
+			}
+			if (c.opt.collision) c.out.collision.add_tri(j.center, Vec3(pa.x, j.center.y, pa.z), Vec3(pb.x, j.center.y, pb.z), j.surface, COL_ALL);
+		}
+		if (j.style == 1) {
+			for (int k = 1; k < n; k += 2) {
+				Vec3 p = j.poly[k];
+				Vec3 out = (p - j.center).flat().normalized();
+				Vec3 q = p + out * 1.8;
+				q.y = c.w.height(q.x, q.z);
+				add_prop(c, PROP_TRAFFIC_LIGHT, q, std::atan2(-out.x, -out.z), Vec3(1, 1, 1), (real)k / n);
+			}
+		}
+	}
+}
+
+// Ear clipping of a simple polygon (x/z), any winding. Appends triangle index triples.
+void triangulate(const std::vector<Vec3> &ring, std::vector<int> &tris) {
+	int n = (int)ring.size();
+	if (n < 3) return;
+	std::vector<int> idx(n);
+	for (int i = 0; i < n; ++i) idx[i] = i;
+	real area = 0;
+	for (int i = 0; i < n; ++i) area += ring[i].x * ring[(i + 1) % n].z - ring[(i + 1) % n].x * ring[i].z;
+	real sgn = area >= 0 ? 1.0 : -1.0;
+	auto cross = [&](const Vec3 &a, const Vec3 &b, const Vec3 &p) { return (b.x - a.x) * (p.z - a.z) - (b.z - a.z) * (p.x - a.x); };
+	int guard = 0;
+	while ((int)idx.size() > 3 && guard++ < 4 * n) {
+		bool clipped = false;
+		int m = (int)idx.size();
+		for (int k = 0; k < m; ++k) {
+			int ia = idx[(k + m - 1) % m], ib = idx[k], ic = idx[(k + 1) % m];
+			const Vec3 &a = ring[ia], &b = ring[ib], &cc = ring[ic];
+			if (cross(a, b, cc) * sgn <= 1e-9) continue; // reflex
+			bool empty = true;
+			for (int q = 0; q < m && empty; ++q) {
+				int iq = idx[q];
+				if (iq == ia || iq == ib || iq == ic) continue;
+				const Vec3 &p = ring[iq];
+				if (cross(a, b, p) * sgn >= 0 && cross(b, cc, p) * sgn >= 0 && cross(cc, a, p) * sgn >= 0) empty = false;
+			}
+			if (!empty) continue;
+			tris.insert(tris.end(), {ia, ib, ic});
+			idx.erase(idx.begin() + k);
+			clipped = true;
+			break;
+		}
+		if (!clipped) break;
+	}
+	if (idx.size() == 3) tris.insert(tris.end(), {idx[0], idx[1], idx[2]});
+}
+
+// Buildings from real footprints: walls (facade shader: UV = perimeter metres / height metres,
+// UV2 = style, seed; COLOR = wall colour), flat or hipped terracotta roofs, wall collision.
+void build_buildings(Ctx &c) {
+	const World &w = c.w;
+	for (size_t bi = 0; bi < w.buildings.size(); ++bi) {
+		const Building &b = w.buildings[bi];
+		if (!c.in_chunk(b.center.x, b.center.z)) continue;
+		int n = (int)b.ring.size();
+		if (n < 3) continue;
+		// Far rings: only buildings tall enough to read on the skyline.
+		if (c.opt.lod >= 3 && b.top - b.base < 12.0) continue;
+		MeshData &m = c.out.groups[WG_BUILDING];
+		real seedf = (real)((bi * 2654435761u) % 997) / 997.0;
+		real cr = b.r / 255.0, cg = b.g / 255.0, cb = b.b / 255.0;
+		real area = 0;
+		for (int k = 0; k < n; ++k) area += b.ring[k].x * b.ring[(k + 1) % n].z - b.ring[(k + 1) % n].x * b.ring[k].z;
+		real sgn = area >= 0 ? 1.0 : -1.0; // outward normal side
+		real h = b.top - b.base;
+		real u = 0.0;
+		for (int k = 0; k < n; ++k) {
+			Vec3 a(b.ring[k].x, b.base, b.ring[k].z), bb(b.ring[(k + 1) % n].x, b.base, b.ring[(k + 1) % n].z);
+			real len = distance(a, bb);
+			if (len < 0.05) continue;
+			Vec3 dir = (bb - a) / len;
+			Vec3 nrm = Vec3(dir.z, 0, -dir.x) * sgn;
+			Vec3 top(0, h, 0);
+			int i = m.vertex_count();
+			m.add_vertex(a, nrm, u, 0.0, b.style, seedf, cr, cg, cb, 1.0);
+			m.add_vertex(bb, nrm, u + len, 0.0, b.style, seedf, cr, cg, cb, 1.0);
+			m.add_vertex(bb + top, nrm, u + len, h, b.style, seedf, cr, cg, cb, 1.0);
+			m.add_vertex(a + top, nrm, u, h, b.style, seedf, cr, cg, cb, 1.0);
+			Vec3 fn = (bb - a).cross(top);
+			if (fn.dot(nrm) >= 0) m.add_quad(i, i + 1, i + 2, i + 3);
+			else m.add_quad(i, i + 3, i + 2, i + 1);
+			u += len;
+			if (c.opt.collision && c.opt.lod == 0) {
+				c.out.collision.add_tri(a, bb, bb + top, SURF_BUILDING, COL_SOLID);
+				c.out.collision.add_tri(a, bb + top, a + top, SURF_BUILDING, COL_SOLID);
+			}
+		}
+		// Roof. UV2.x: 0 flat (gravel/concrete), 1 clay tiles.
+		MeshData &rm = c.out.groups[WG_ROOF];
+		if (b.roof == 0 || n > 24) {
+			std::vector<int> tris;
+			triangulate(b.ring, tris);
+			int i0 = rm.vertex_count();
+			for (int k = 0; k < n; ++k) rm.add_vertex(Vec3(b.ring[k].x, b.top, b.ring[k].z), Vec3(0, 1, 0), b.ring[k].x / 2.0, b.ring[k].z / 2.0, 0.0, seedf);
+			for (size_t t = 0; t + 2 < tris.size(); t += 3) {
+				// Face up: order by the polygon winding.
+				if (sgn > 0) rm.indices.insert(rm.indices.end(), {i0 + tris[t], i0 + tris[t + 2], i0 + tris[t + 1]});
+				else rm.indices.insert(rm.indices.end(), {i0 + tris[t], i0 + tris[t + 1], i0 + tris[t + 2]});
+			}
+		} else {
+			// Hipped: every eave edge slopes up to a ridge point above the centroid (~30 degrees).
+			real minside = 1e9;
+			for (int k = 0; k < n; ++k) minside = std::min(minside, (b.ring[k] - b.center).length());
+			real rise = clampr(minside * 0.55, 1.2, 4.5);
+			Vec3 apex(b.center.x, b.top + rise, b.center.z);
+			for (int k = 0; k < n; ++k) {
+				Vec3 a(b.ring[k].x, b.top, b.ring[k].z), bb(b.ring[(k + 1) % n].x, b.top, b.ring[(k + 1) % n].z);
+				Vec3 fnrm = (bb - a).cross(apex - a).normalized();
+				if (fnrm.y < 0) fnrm = -fnrm;
+				int i = rm.vertex_count();
+				// UV along the eave (m) and up the slope (m) so tile rows run along the eave.
+				real el = distance(a, bb), sl = distance((a + bb) * 0.5, apex);
+				rm.add_vertex(a, fnrm, 0.0, 0.0, 1.0, seedf);
+				rm.add_vertex(bb, fnrm, el / 2.0, 0.0, 1.0, seedf);
+				rm.add_vertex(apex, fnrm, el / 4.0, sl / 2.0, 1.0, seedf);
+				Vec3 fc = (bb - a).cross(apex - a);
+				if (fc.y >= 0) rm.indices.insert(rm.indices.end(), {i, i + 2, i + 1});
+				else rm.indices.insert(rm.indices.end(), {i, i + 1, i + 2});
+			}
+		}
+		// Rooftop details on flat roofs: AC units / water tanks.
+		if (b.roof == 0 && h > 9.0) {
+			Rng rng(bi * 7919 + 17);
+			int k = rng.irange(0, 2);
+			for (int q = 0; q < k; ++q) {
+				const Vec3 &p = b.ring[rng.irange(0, n - 1)];
+				Vec3 pos = lerp(p, b.center, rng.range(0.3, 0.7));
+				add_prop(c, PROP_AC_UNIT, Vec3(pos.x, b.top, pos.z), rng.range(0, TAU), Vec3(1, 1, 1), rng.next());
+			}
+		}
+	}
+}
+
+// Vegetation from real land cover + every mapped tree. Mediterranean mix: umbrella / Aleppo pines,
+// cypresses, palms, olives, plane trees and scrub.
+void scatter_baked(Ctx &c) {
+	const World &w = c.w;
+	// Mapped trees first (exact positions from OpenStreetMap).
+	static const PropType TREE_PROP[6] = {PROP_TREE_PINE, PROP_TREE_CYPRESS, PROP_TREE_PALM, PROP_TREE_OLIVE, PROP_TREE_PLANE, PROP_TREE_PLANE};
+	for (const Tree &t : w.trees) {
+		if (!c.in_chunk(t.x, t.z)) continue;
+		real s = t.height_dm ? clampr(t.height_dm / 100.0, 0.5, 2.2) : 1.0;
+		uint64_t hs = (uint64_t)(t.x * 13.0) * 31 + (uint64_t)(t.z * 7.0);
+		add_prop(c, TREE_PROP[std::min<int>(t.kind, 5)], Vec3(t.x, w.height(t.x, t.z) - 0.1, t.z), (hs % 628) / 100.0, Vec3(s, s, s), (hs % 97) / 97.0);
+	}
+	if (c.opt.prop_density <= 0.0) return;
+	// Buildings in/near this chunk (so trees don't grow through walls).
+	std::vector<const Building *> near;
+	for (const Building &b : w.buildings)
+		if (b.center.x > c.mn.x - 40 && b.center.x < c.mx.x + 40 && b.center.z > c.mn.z - 40 && b.center.z < c.mx.z + 40) near.push_back(&b);
+	Rng rng(w.seed * 7 + (uint64_t)(c.out.cx * 92821 + c.out.cz * 68917));
+	real cell = 9.0 / std::sqrt(c.opt.prop_density);
+	for (real z = c.mn.z; z < c.mx.z; z += cell)
+		for (real x = c.mn.x; x < c.mx.x; x += cell) {
+			real px = x + rng.range(0.0, cell), pz = z + rng.range(0.0, cell);
+			uint8_t lc = w.land_at(px, pz);
+			real r = rng.next();
+			PropType t;
+			real scale = rng.range(0.8, 1.25);
+			switch (lc) {
+				case LAND_FOREST:
+					if (r > 0.8) continue;
+					t = r < 0.5 ? PROP_TREE_PINE : r < 0.62 ? PROP_TREE_CYPRESS : PROP_TREE_PLANE;
+					break;
+				case LAND_SCRUB:
+					if (r > 0.34) continue;
+					t = r < 0.2 ? PROP_BUSH : r < 0.26 ? PROP_TREE_PINE : r < 0.3 ? PROP_TREE_OLIVE : PROP_ROCK;
+					break;
+				case LAND_PARK:
+					if (r > 0.3) continue;
+					t = r < 0.09 ? PROP_TREE_PALM : r < 0.17 ? PROP_TREE_PLANE : r < 0.22 ? PROP_TREE_PINE : r < 0.26 ? PROP_TREE_CYPRESS : PROP_BUSH;
+					break;
+				case LAND_FARM:
+					if (r > 0.22) continue;
+					t = r < 0.16 ? PROP_TREE_OLIVE : PROP_TREE_CYPRESS;
+					break;
+				case LAND_ROCK:
+					if (r > 0.12) continue;
+					t = r < 0.08 ? PROP_ROCK : PROP_BUSH;
+					scale = rng.range(0.7, 2.2);
+					break;
+				default:
+					continue;
+			}
+			real h = w.terrain.sample(px, pz);
+			if (h < 0.5 || w.terrain.normal(px, pz).y < (t == PROP_ROCK ? 0.4 : 0.66)) continue;
+			bool blocked = false;
+			for (const RoadSampleX *s : c.nearby) {
+				real hw = std::max(s->rs.width_left + s->rs.shoulder_left, s->rs.width_right + s->rs.shoulder_right) + 2.5;
+				if (sqr(s->rs.center.x - px) + sqr(s->rs.center.z - pz) < hw * hw) {
+					blocked = true;
+					break;
+				}
+			}
+			for (const Building *b : near) {
+				if (blocked) break;
+				if (sqr(b->center.x - px) + sqr(b->center.z - pz) < sqr(b->radius + 3.0)) blocked = true;
+			}
+			if (blocked) continue;
+			add_prop(c, t, Vec3(px, h - 0.1, pz), rng.range(0, TAU), Vec3(scale, scale * rng.range(0.9, 1.15), scale), rng.next());
 		}
 }
 
@@ -587,6 +835,12 @@ void build_chunk(const World &w, int cx, int cz, const ChunkOptions &opt, ChunkO
 	}
 	build_terrain(c);
 	build_roads(c);
+	if (w.baked) {
+		build_junction_polys(c);
+		build_buildings(c);
+		if (opt.props) scatter_baked(c);
+		return;
+	}
 	build_junctions(c);
 	if (opt.lod <= 2) build_blocks(c);
 	if (opt.props) scatter(c);

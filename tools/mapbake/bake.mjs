@@ -913,7 +913,7 @@ class W {
 	u32(v) { this.grow(4); this.buf.writeUInt32LE(v >>> 0, this.o); this.o += 4; }
 	f32(v) { this.grow(4); this.buf.writeFloatLE(v, this.o); this.o += 4; }
 	str(s) { const b = Buffer.from(s || '', 'utf8'); this.u16(b.length); this.grow(b.length); b.copy(this.buf, this.o); this.o += b.length; }
-	bytes(b) { this.grow(b.length); Buffer.from(b.buffer, b.byteOffset, b.byteLength).copy(this.buf, this.o); this.o += b.length; }
+	bytes(b) { this.grow(b.byteLength); Buffer.from(b.buffer, b.byteOffset, b.byteLength).copy(this.buf, this.o); this.o += b.byteLength; }
 	tag(t) { for (const c of t) this.u8(c.charCodeAt(0)); }
 }
 const KIND = { street: 0, avenue: 1, expressway: 2, ramp: 3, rural: 4, touge: 6, coast: 7 };

@@ -20,6 +20,28 @@ void NTWorld::build(int64_t seed) {
 	built_.store(true);
 }
 
+String NTWorld::build_from_bake(const PackedByteArray &data) {
+	std::string err;
+	if (!world_.build_from_bake(data.ptr(), (size_t)data.size(), err)) return String(err.c_str());
+	built_.store(true);
+	return String();
+}
+
+Array NTWorld::routes() const {
+	Array out;
+	for (const nt::Route &r : world_.routes) {
+		Dictionary d;
+		d["id"] = String(r.id.c_str());
+		d["name"] = String::utf8(r.name.c_str());
+		d["closed"] = r.closed;
+		PackedStringArray names;
+		for (const std::string &n : r.roads) names.push_back(String(n.c_str()));
+		d["roads"] = names;
+		out.push_back(d);
+	}
+	return out;
+}
+
 static Dictionary mesh_group_dict(const nt::MeshData &m, int group) {
 	Dictionary gd;
 	int vc = m.vertex_count();
@@ -134,7 +156,10 @@ Vector3 NTWorld::normal_at(double x, double z) const { return gv(world_.terrain.
 
 int NTWorld::district_at(double x, double z) const { return (int)world_.district_at(x, z); }
 
-String NTWorld::district_name(int d) const { return String(nt::district_name((nt::District)d)); }
+String NTWorld::district_name(int d) const {
+	if (world_.baked) return d >= 0 && d < (int)world_.district_names.size() ? String::utf8(world_.district_names[d].c_str()) : String();
+	return String(nt::district_name((nt::District)d));
+}
 
 bool NTWorld::is_sea(double x, double z) const { return world_.is_sea(x, z); }
 
@@ -145,7 +170,9 @@ Dictionary NTWorld::nearest_road(const Vector3 &p, double max_dist) const {
 	const nt::Road &r = world_.roads[nr.road];
 	const nt::RoadSampleX &s = r.samples[nr.sample];
 	d["road"] = String(r.def.name.c_str());
+	d["label"] = String::utf8(r.def.label.c_str());
 	d["kind"] = (int)r.def.kind;
+	d["oneway"] = (int)r.def.oneway;
 	d["sample"] = nr.sample;
 	d["distance"] = nr.distance;
 	d["lateral"] = nr.lateral;
@@ -280,7 +307,10 @@ Ref<Image> NTWorld::minimap(int size) const {
 
 void NTWorld::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("build", "seed"), &NTWorld::build);
+	ClassDB::bind_method(D_METHOD("build_from_bake", "data"), &NTWorld::build_from_bake);
 	ClassDB::bind_method(D_METHOD("is_built"), &NTWorld::is_built);
+	ClassDB::bind_method(D_METHOD("is_baked"), &NTWorld::is_baked);
+	ClassDB::bind_method(D_METHOD("routes"), &NTWorld::routes);
 	ClassDB::bind_method(D_METHOD("build_chunk", "cx", "cz", "lod", "collision", "props", "prop_density"), &NTWorld::build_chunk);
 	ClassDB::bind_static_method("NTWorld", D_METHOD("make_mesh", "chunk"), &NTWorld::make_mesh);
 	ClassDB::bind_method(D_METHOD("height_at", "x", "z"), &NTWorld::height_at);

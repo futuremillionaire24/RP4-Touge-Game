@@ -20,7 +20,11 @@ class NTWorld : public RefCounted {
 
 public:
 	void build(int64_t seed);
+	// Real map from a tools/mapbake blob (res://assets/map/riviera.bin). Returns "" or an error.
+	String build_from_bake(const PackedByteArray &data);
 	bool is_built() const { return built_.load(); }
+	bool is_baked() const { return world_.baked; }
+	Array routes() const;
 
 	Dictionary build_chunk(int cx, int cz, int lod, bool collision, bool props, double prop_density) const;
 	static Ref<ArrayMesh> make_mesh(const Dictionary &chunk);

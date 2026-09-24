@@ -57,11 +57,20 @@ struct RoadDef {
 	real trim_start = 0.0; // meters removed at the ends (intersection clearance)
 	real trim_end = 0.0;
 	real speed_limit = 40.0; // km/h (signage, traffic)
+	// Baked (OpenStreetMap) roads only.
+	std::string label; // street name shown in the HUD / map
+	real half_width = 0.0; // 0 = default for the kind
+	uint8_t lanes = 0; // 0 = default for the kind
+	int8_t oneway = 0; // 1 along the polyline, -1 against it
+	bool bridge = false, tunnel = false, roundabout = false;
+	bool race_only = false; // circuit links closed to traffic
+	int64_t node_a = -1, node_b = -1; // road-graph vertex ids at the start / end
 };
 
 struct RoadSampleX { // processed sample (extends RoadSample for world use)
 	RoadSample rs;
 	uint8_t type = ST_GROUND;
+	uint8_t portal = 0; // tunnel sample within 25 m of a tunnel mouth (terrain opens only here)
 	real terrain_y = 0.0;
 	District district = DIST_CITY;
 };
@@ -86,7 +95,37 @@ struct Intersection {
 	uint8_t style = 0; // 0 plain, 1 zebra crossings, 2 scramble crossing, 3 parking bays, 4 dock
 	uint8_t surface = SURF_ASPHALT;
 	District district = DIST_CITY;
+	// Baked junctions: polygon (fan around `center`) and the roads that meet here.
+	std::vector<Vec3> poly;
+	std::vector<int> legs;
 };
+
+// Baked building footprint (clockwise seen from above), walls from `base` to `top`.
+struct Building {
+	std::vector<Vec3> ring; // y unused
+	real base = 0.0, top = 10.0;
+	uint8_t style = 0; // 0 stucco, 1 modern block, 2 belle epoque, 3 villa, 4 tower, 5 church/stone, 6 industrial
+	uint8_t roof = 0; // 0 flat, 1 hipped, 2 gabled
+	uint8_t r = 230, g = 220, b = 200;
+	Vec3 center;
+	real radius = 0.0;
+};
+
+struct Tree {
+	real x, z;
+	uint8_t kind; // 0 pine, 1 cypress, 2 palm, 3 olive, 4 plane, 5 broadleaf
+	uint8_t height_dm; // 0 = unknown
+};
+
+// Event route: road names in driving order ("~name" = reversed).
+struct Route {
+	std::string id, name;
+	bool closed = false;
+	std::vector<std::string> roads;
+};
+
+// Land classes of the baked map (tools/mapbake LAND).
+enum LandClass : uint8_t { LAND_SCRUB = 0, LAND_FOREST, LAND_PARK, LAND_FARM, LAND_URBAN, LAND_SAND, LAND_ROCK, LAND_SEA, LAND_PORT, LAND_WATER };
 
 enum PoiType : uint8_t {
 	POI_FESTIVAL = 0, POI_GARAGE, POI_EVENT_START, POI_DRIFT_ZONE, POI_SPEED_TRAP, POI_SPEED_ZONE,

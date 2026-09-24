@@ -57,7 +57,7 @@ func _ready() -> void:
 	sim.running = false
 	add_child(sim)
 	world = NTWorld.new()
-	_build_task = WorkerThreadPool.add_task(func(): world.build(int(args.get("seed", "1"))), true, "world build")
+	_build_task = WorkerThreadPool.add_task(func(): MapData.build(world, int(args.get("seed", "1"))), true, "world build")
 
 func _make_loading_screen() -> void:
 	var load_layer := CanvasLayer.new()
@@ -82,7 +82,7 @@ func _make_loading_screen() -> void:
 func _process(delta: float) -> void:
 	match _state:
 		"building":
-			_load_label.text = "Generating Europe… roads, coastal circuits, historic town"
+			_load_label.text = "Loading the Riviera… Monaco, the Corniches and La Turbie"
 			if WorkerThreadPool.is_task_completed(_build_task):
 				WorkerThreadPool.wait_for_task_completion(_build_task)
 				_begin_streaming()

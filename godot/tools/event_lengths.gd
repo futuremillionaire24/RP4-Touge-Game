@@ -1,10 +1,10 @@
-﻿extends SceneTree
+extends SceneTree
 ## Prints each event route's length (m, one lap) in the seed-1 world, formatted for
 ## EventData.LENGTHS. Usage: godot --headless --path . --script res://tools/event_lengths.gd
 
 func _init() -> void:
 	var world := NTWorld.new()
-	world.build(1)
+	MapData.build(world)
 	var out := []
 	for ev in EventData.all():
 		var route := Route.from_roads(world, ev.roads, ev.closed)

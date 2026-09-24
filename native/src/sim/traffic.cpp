@@ -4,7 +4,10 @@
 
 namespace nt {
 
-static bool traffic_kind(RoadKind k) {
+static bool traffic_road(const World &w, const RoadDef &d) {
+	if (d.race_only) return false;
+	RoadKind k = d.kind;
+	if (w.baked) return k != RK_FARM; // real roads all carry traffic (ramps and mountain roads too)
 	return k == RK_STREET || k == RK_AVENUE || k == RK_EXPRESSWAY || k == RK_RURAL || k == RK_COAST || k == RK_DOCK;
 }
 
@@ -13,9 +16,29 @@ void TrafficSystem::init(const World *w, int max_cars, uint64_t seed) {
 	rng_.reseed(seed);
 	cars.assign(max_cars, TrafficCar());
 	spawnable_.clear();
+	is_spawnable_.clear();
 	if (!world) return;
+	is_spawnable_.assign(world->roads.size(), 0);
 	for (int i = 0; i < (int)world->roads.size(); ++i)
-		if (traffic_kind(world->roads[i].def.kind)) spawnable_.push_back(i);
+		if (traffic_road(*world, world->roads[i].def)) {
+			spawnable_.push_back(i);
+			is_spawnable_[i] = 1;
+		}
+}
+
+// Lane centre offset (+ = right of travel). Two-way roads use the right half; one-way roads (and
+// dual carriageways) spread their lanes across the whole width.
+static real lane_offset(const Road &r, const RoadSample &s, int k, int &lanes_out) {
+	if (r.def.oneway) {
+		int lanes = std::max(1, (int)s.lanes / 2);
+		real lw = (s.width_left + s.width_right) / lanes;
+		lanes_out = lanes;
+		return -s.width_left + (std::min(k, lanes - 1) + 0.5) * lw;
+	}
+	int lpd = std::max(1, (int)s.lanes / 2);
+	real w = std::min(s.width_left, s.width_right);
+	lanes_out = lpd;
+	return (std::min(k, lpd - 1) + 0.5) * (w / lpd);
 }
 
 bool TrafficSystem::ns_green(real t, int junction_index) {
@@ -62,13 +85,11 @@ void TrafficSystem::spawn_one(const Vec3 &focus) {
 		TrafficCar c;
 		c.road = ri;
 		c.s = sx.rs.distance;
-		c.dir = rng_.chance(0.5) ? 1 : -1;
-		int lpd = lanes_per_dir(sx.rs);
-		real w = std::min(sx.rs.width_left, sx.rs.width_right);
-		real lane_w = w / lpd;
-		int k = rng_.irange(0, lpd - 1);
+		c.dir = r.def.oneway ? r.def.oneway : (rng_.chance(0.5) ? 1 : -1);
 		// Europe drives on the right: travel lanes are right of the travel direction.
-		c.lane = (k + 0.5) * lane_w;
+		int lanes = 1;
+		lane_offset(r, sx.rs, 0, lanes);
+		c.lane = lane_offset(r, sx.rs, rng_.irange(0, lanes - 1), lanes);
 		real r_model = rng_.next();
 		c.model = r_model < 0.30 ? TM_KEI : r_model < 0.56 ? TM_SEDAN : r_model < 0.72 ? TM_TAXI : r_model < 0.86 ? TM_VAN : r_model < 0.96 ? TM_TRUCK : TM_BUS;
 		if (r.def.kind == RK_DOCK && rng_.chance(0.6)) c.model = TM_TRUCK;
@@ -104,6 +125,42 @@ void TrafficSystem::spawn_one(const Vec3 &focus) {
 
 bool TrafficSystem::pick_next_road(TrafficCar &c) {
 	const Road &r = world->roads[c.road];
+	if (world->baked) {
+		// Road graph: continue onto any road at this junction that may be entered here.
+		int64_t node = c.dir > 0 ? r.def.node_b : r.def.node_a;
+		int cand[16];
+		bool from_start[16];
+		int count = 0, uturn = -1;
+		for (int ri : world->roads_at_node(node)) {
+			if (!is_spawnable_[ri] || count >= 16) continue;
+			const RoadDef &o = world->roads[ri].def;
+			bool at_start = o.node_a == node;
+			if (o.oneway == 1 && !at_start) continue;
+			if (o.oneway == -1 && at_start) continue;
+			if (ri == c.road) {
+				uturn = at_start ? 1 : 0;
+				continue;
+			}
+			cand[count] = ri;
+			from_start[count++] = at_start;
+		}
+		if (count == 0) {
+			if (uturn < 0) return false;
+			cand[0] = c.road;
+			from_start[0] = uturn == 1;
+			count = 1;
+		}
+		int k = rng_.irange(0, count - 1);
+		c.road = cand[k];
+		const Road &n = world->roads[c.road];
+		c.dir = from_start[k] ? 1 : -1;
+		c.s = from_start[k] ? 0.0 : n.length;
+		int lanes = 1;
+		const RoadSample &s0 = n.samples[from_start[k] ? 0 : n.samples.size() - 1].rs;
+		c.lane = lane_offset(n, s0, 0, lanes);
+		c.desired = n.def.speed_limit / 3.6 * rng_.range(0.9, 1.2);
+		return true;
+	}
 	Vec3 end = c.dir > 0 ? r.samples.back().rs.center : r.samples.front().rs.center;
 	int candidates[16];
 	bool at_start[16];
