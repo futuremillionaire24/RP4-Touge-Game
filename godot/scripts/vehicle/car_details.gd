@@ -125,16 +125,28 @@ static func add(root: Node3D, b: Dictionary, dims: Dictionary, paint: Material, 
 	var cowl_p := CarBody.profile(b, mirror_t)
 	for side in [-1.0, 1.0]:
 		var mx: float = side * (hx * cowl_p.w * 0.96 + 0.055)
-		var my: float = cowl_p.top + 0.065 - cg
+		var my: float = cowl_p.top + 0.045 - cg
 		var mz: float = lerpf(-hz, hz, mirror_t)
-		# Mirror stalk / mounting base
-		_box(root, "MirrorStalk", Vector3(0.04, 0.03, 0.04), Vector3(mx - side * 0.025, my - 0.02, mz), CarMaterials.shared("trim"))
-		# Sculpted aerodynamic mirror shell
-		_box(root, "MirrorShell", Vector3(0.12, 0.08, 0.13), Vector3(mx, my, mz), paint)
+		# Aerodynamic mounting stalk
+		_box(root, "MirrorStalk", Vector3(0.035, 0.025, 0.035), Vector3(mx - side * 0.022, my - 0.015, mz), CarMaterials.shared("trim"))
+		# Sculpted aerodynamic teardrop shell
+		var shell_mi := MeshInstance3D.new()
+		shell_mi.name = "MirrorShell"
+		var sm := SphereMesh.new()
+		sm.radius = 0.048
+		sm.height = 0.11
+		sm.radial_segments = 12
+		sm.rings = 6
+		shell_mi.mesh = sm
+		shell_mi.position = Vector3(mx, my, mz)
+		shell_mi.rotation = Vector3(0, side * -0.15, 0)
+		shell_mi.scale = Vector3(1.0, 0.72, 1.3)
+		shell_mi.material_override = paint
+		root.add_child(shell_mi)
 		# Tilted chrome mirror glass
-		var glass_inst := _box(root, "MirrorGlass", Vector3(0.10, 0.068, 0.01), Vector3(mx, my, mz + 0.066), CarMaterials.shared("chrome"))
+		var glass_inst := _box(root, "MirrorGlass", Vector3(0.085, 0.058, 0.01), Vector3(mx, my, mz + 0.055), CarMaterials.shared("chrome"))
 		# Slight angle towards driver
-		glass_inst.rotation = Vector3(0, side * -0.15, 0)
+		glass_inst.rotation = Vector3(0, side * -0.18, 0)
 
 	# =========================================================================
 	# 6. INTERIOR COCKPIT SILHOUETTE (Visible through windshield & windows)
@@ -146,28 +158,39 @@ static func add(root: Node3D, b: Dictionary, dims: Dictionary, paint: Material, 
 	var cabin_mid_z: float = lerpf(-hz, hz, (roof_front + roof_back) * 0.5)
 
 	# Dark dashboard top cowl under windshield
-	_box(root, "Interior_Dash", Vector3(hx * 1.35, 0.10, 0.38), Vector3(0, cowl_p.top - 0.04 - cg, cowl_pos_z + 0.22), CarMaterials.shared("trim"))
+	_box(root, "Interior_Dash", Vector3(hx * 1.35, 0.09, 0.36), Vector3(0, cowl_p.top - 0.05 - cg, cowl_pos_z + 0.22), CarMaterials.shared("trim"))
 	# Instrument binnacle hump (driver side on right for JDM RHD cars)
-	_box(root, "Interior_Binnacle", Vector3(0.24, 0.06, 0.18), Vector3(hx * 0.42, cowl_p.top + 0.01 - cg, cowl_pos_z + 0.24), CarMaterials.shared("trim"))
+	_box(root, "Interior_Binnacle", Vector3(0.22, 0.055, 0.16), Vector3(hx * 0.42, cowl_p.top - 0.005 - cg, cowl_pos_z + 0.24), CarMaterials.shared("trim"))
 
 	# Sport 3-spoke steering wheel
-	var sw_z: float = cowl_pos_z + 0.38
-	var sw_y: float = cowl_p.top - 0.02 - cg
-	_cyl(root, "Interior_SteeringRim", 0.16, 0.16, 0.025, 14, Vector3(hx * 0.42, sw_y, sw_z), Vector3(PI * 0.4, 0, 0), CarMaterials.shared("trim"))
-	_cyl(root, "Interior_SteeringHub", 0.05, 0.05, 0.035, 10, Vector3(hx * 0.42, sw_y, sw_z - 0.01), Vector3(PI * 0.4, 0, 0), CarMaterials.shared("rim_dark"))
+	var sw_z: float = cowl_pos_z + 0.36
+	var sw_y: float = cowl_p.top - 0.04 - cg
+	_cyl(root, "Interior_SteeringRim", 0.15, 0.15, 0.022, 16, Vector3(hx * 0.42, sw_y, sw_z), Vector3(PI * 0.38, 0, 0), CarMaterials.shared("trim"))
+	_cyl(root, "Interior_SteeringHub", 0.045, 0.045, 0.03, 10, Vector3(hx * 0.42, sw_y, sw_z - 0.01), Vector3(PI * 0.38, 0, 0), CarMaterials.shared("rim_dark"))
 
-	# Twin sports bucket seats (driver & passenger)
+	# Twin sculpted sports bucket seats (proportioned cleanly for coupes & open roadsters)
+	var is_open: bool = b.get("open_top", false)
 	var seat_z: float = cabin_mid_z - 0.05
-	var seat_y: float = cowl_p.top - 0.12 - cg
+	var seat_y: float = cowl_p.top - (0.24 if is_open else 0.14) - cg
+	var seat_h: float = 0.28 if is_open else 0.40
+	var seat_w: float = 0.32 if is_open else 0.36
+	var hr_h: float = 0.09 if is_open else 0.12
+	var hr_w: float = 0.16 if is_open else 0.19
 	for side in [-1.0, 1.0]:
 		var sx: float = side * hx * 0.45
-		# Bolstered seatback
-		_box(root, "Interior_SeatBack", Vector3(0.38, 0.46, 0.14), Vector3(sx, seat_y + 0.12, seat_z), CarMaterials.shared("trim"))
-		# Headrest
-		_box(root, "Interior_Headrest", Vector3(0.20, 0.14, 0.10), Vector3(sx, seat_y + 0.40, seat_z + 0.02), CarMaterials.shared("trim"))
+		# Contoured seat bottom cushion
+		_box(root, "Interior_SeatBottom", Vector3(seat_w, 0.08, 0.32), Vector3(sx, seat_y - 0.04, seat_z - 0.12), CarMaterials.shared("trim"))
+		# Bolstered main seatback
+		_box(root, "Interior_SeatBack", Vector3(seat_w, seat_h, 0.11), Vector3(sx, seat_y + seat_h * 0.5, seat_z), CarMaterials.shared("trim"))
+		# Sculpted shoulder bolsters
+		_box(root, "Interior_BolsterL", Vector3(0.04, seat_h * 0.65, 0.08), Vector3(sx - seat_w * 0.48, seat_y + seat_h * 0.45, seat_z - 0.02), CarMaterials.shared("trim"))
+		_box(root, "Interior_BolsterR", Vector3(0.04, seat_h * 0.65, 0.08), Vector3(sx + seat_w * 0.48, seat_y + seat_h * 0.45, seat_z - 0.02), CarMaterials.shared("trim"))
+		# Tapered contoured headrest
+		_box(root, "Interior_Headrest", Vector3(hr_w, hr_h, 0.08), Vector3(sx, seat_y + seat_h + hr_h * 0.45, seat_z + 0.01), CarMaterials.shared("trim"))
 
 	# Interior rearview mirror on windshield
-	_box(root, "Interior_RearviewMirror", Vector3(0.14, 0.04, 0.02), Vector3(0, cowl_p.top + 0.28 - cg, cowl_pos_z + 0.35), CarMaterials.shared("chrome"))
+	if not is_open:
+		_box(root, "Interior_RearviewMirror", Vector3(0.14, 0.04, 0.02), Vector3(0, cowl_p.top + 0.28 - cg, cowl_pos_z + 0.35), CarMaterials.shared("chrome"))
 
 	# =========================================================================
 	# 7. REAR SPOILER / WING (If car has wing spec)

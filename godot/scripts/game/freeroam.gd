@@ -40,6 +40,7 @@ var _play_s := 0.0
 var _car_probe: ReflectionProbe
 var _probe_tick := 0
 var _cas_rect: ColorRect
+var gps_ribbon: GPSRibbon
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
@@ -205,6 +206,9 @@ func _on_initial_load() -> void:
 	markers = EventMarkers.new()
 	add_child(markers)
 	markers.build(world)
+	gps_ribbon = GPSRibbon.new()
+	gps_ribbon.name = "GPSRibbon"
+	add_child(gps_ribbon)
 	# Ambient traffic (drives on the left), skill chains, PR stunts, collectibles, minimap.
 	sim.set_world(world)
 	sim.set_traffic_density(float(Settings.get_value("graphics", "traffic_density", 1.0)))
@@ -295,8 +299,13 @@ func _play_update(delta: float) -> void:
 		_prompt_event = markers.event_at(pos, float(t.get("speed", 0.0)))
 		if not _prompt_event.is_empty():
 			hud.toast("A — %s  (%s)" % [_prompt_event.name, EventData.TYPE_NAMES[_prompt_event.type]], 0.3)
+			if gps_ribbon and not gps_ribbon.visible:
+				var ev_route := Route.from_roads(world, _prompt_event.roads, _prompt_event.closed)
+				gps_ribbon.set_route(ev_route)
 			if Pad.pressed("handbrake"):
 				start_event(_prompt_event)
+		elif gps_ribbon and gps_ribbon.visible and race == null:
+			gps_ribbon.clear()
 	# Odometer and play time for the career stats.
 	_odo_m += float(t.get("speed", 0.0)) * delta
 	_play_s += delta
@@ -361,6 +370,8 @@ func start_event(ev: Dictionary) -> void:
 	_follow_player = true
 	race.start(ev)
 	minimap.route_line = race.route.polyline(4)
+	if gps_ribbon:
+		gps_ribbon.set_route(race.route)
 	if args.has("autodrive"):
 		# Automated tests: the AI drives the player's car too.
 		sim.set_ai(player.car_id, true)
@@ -380,6 +391,8 @@ func _on_race_over() -> void:
 	if police:
 		police.enabled = true
 	minimap.route_line = PackedVector2Array()
+	if gps_ribbon:
+		gps_ribbon.clear()
 
 func _on_activity_result(kind: String, _id: String, value: float, stars: int) -> void:
 	if kind == "Barn Find":

@@ -63,10 +63,10 @@ static func build_body(b: Dictionary, dims: Dictionary, lod := 0) -> ArrayMesh:
 		var z := lerpf(-hz, hz, t)
 		var p := profile(b, t)
 		var half_w: float = hx * p.w
-		# Fender bulge around the axles.
+		# Fender bulge around the axles (JDM blister arches)
 		for wh in wheels:
 			var dz: float = absf(z - wh.pos.z)
-			half_w += 0.025 * smoothstep(0.7, 0.0, dz)
+			half_w += 0.052 * smoothstep(0.68, 0.0, dz)
 		var yb: float = p.bottom
 		var yt: float = p.top
 		# Wheel arch contour at this station (height above ground), or -1 outside the arches.

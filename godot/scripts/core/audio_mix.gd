@@ -37,6 +37,17 @@ func _ready() -> void:
 		var lim := AudioEffectHardLimiter.new()
 		lim.ceiling_db = -0.5
 		AudioServer.add_bus_effect(master, lim)
+
+	# GT7 / Forza acoustic mastering profile for Engine bus: deep low-end rumble and crisp high bite
+	var engine_idx := AudioServer.get_bus_index("Engine")
+	var eq := AudioEffectEQ6.new()
+	eq.set_band_gain_db(0, 3.2)  # 32 Hz sub-bass exhaust rumble
+	eq.set_band_gain_db(1, 4.0)  # 100 Hz low-end growl
+	eq.set_band_gain_db(2, -1.8) # 320 Hz boxy scoop
+	eq.set_band_gain_db(3, -1.0) # 1000 Hz midrange clarity
+	eq.set_band_gain_db(4, 2.2)  # 3200 Hz valve & cam mechanical bite
+	eq.set_band_gain_db(5, 2.8)  # 10000 Hz air intake hiss & exhaust rasp
+	AudioServer.add_bus_effect(engine_idx, eq)
 	Settings.changed.connect(func(sec): if sec == "audio": apply_volumes())
 	apply_volumes()
 

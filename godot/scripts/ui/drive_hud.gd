@@ -46,9 +46,19 @@ func _draw() -> void:
 		_draw_cluster(vp, s)
 	if skills:
 		_draw_skills(vp, s)
-	# Top-left race info.
+	# Top-left race info in sleek GT7-style frosted pill badge.
 	if race_text != "":
-		draw_string(_font, Vector2(24, 44) * Vector2.ONE, race_text, HORIZONTAL_ALIGNMENT_LEFT, -1, int(22 * s), WHITE)
+		var fs := int(19 * s)
+		var txt_w := _font.get_string_size(race_text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		var pill_rect := Rect2(Vector2(24 * s, 48 * s), Vector2(txt_w + 32 * s, 34 * s))
+		# Frosted glass background
+		draw_rect(pill_rect, Color(0.04, 0.05, 0.08, 0.78))
+		# Subtle border
+		draw_rect(pill_rect, Color(1, 1, 1, 0.12), false, 1.0 * s)
+		# Cyan vertical accent bar on left
+		draw_rect(Rect2(pill_rect.position, Vector2(3.5 * s, pill_rect.size.y)), CYAN)
+		# Info text
+		draw_string(_font, pill_rect.position + Vector2(16 * s, 24 * s), race_text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, WHITE)
 	if _toast_t > 0.0:
 		var a := clampf(_toast_t * 2.0, 0.0, 1.0)
 		var size := int(30 * s)
@@ -120,6 +130,13 @@ func _draw_cluster(vp: Vector2, s: float) -> void:
 	draw_arc(center, r, a0, fill_a, 72, fill_col, 8.0 * s, true)
 	# Inner bright core
 	draw_arc(center, r - 1 * s, a0, fill_a, 72, Color(fill_col, 0.5), 3.0 * s, true)
+	# Dynamic leading-edge needle pip (GT7 tach feel)
+	var tip_pos := center + Vector2(cos(fill_a), sin(fill_a)) * r
+	var tip_p0 := center + Vector2(cos(fill_a), sin(fill_a)) * (r - 12 * s)
+	var tip_p1 := center + Vector2(cos(fill_a), sin(fill_a)) * (r + 6 * s)
+	draw_line(tip_p0, tip_p1, Color(1.0, 1.0, 1.0, 0.95), 3.0 * s, true)
+	draw_circle(tip_pos, 4.0 * s, Color(1.0, 1.0, 1.0, 0.9))
+	draw_circle(tip_pos, 8.0 * s, Color(fill_col.r, fill_col.g, fill_col.b, 0.35))
 
 	# Tick marks: numbered every 1000, minor ticks every 500
 	var k := 0
