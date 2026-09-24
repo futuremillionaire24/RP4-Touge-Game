@@ -57,4 +57,7 @@ next wave starts. After wave 4 it cycles back to wave 1, carrying each piece's l
 - Don't use the RP4. It is reserved for critics. Verify on the desktop (GTX 1050 Ti runs the same Vulkan Mobile
   renderer): run `godot --headless --path godot --script res://tools/check_scripts.gd`, run the native tests if C++
   changed, and take windowed desktop screenshots.
-- Original designs only: no real car brands, logos or trademarks.
+- Cars are REAL-WORLD JDM models with real names (user decision 2026-09-24; private sideload build, never published).
+  Models come from open sources that need no login, and each one's licence and author go in
+  `godot/assets/models/cars/CREDITS.md`. Everything else stays original.
+- Priority (user, 2026-09-24): car pieces 01/02/03 come first; the other pieces are paused until the cars land.
