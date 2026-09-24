@@ -1,0 +1,13 @@
+{
+  "name": "mapbake",
+  "private": true,
+  "type": "module",
+  "description": "Bakes the real Riviera map (OpenStreetMap + AWS Terrain Tiles) into the game's world format.",
+  "scripts": {
+    "fetch": "node fetch.mjs",
+    "bake": "node bake.mjs"
+  },
+  "dependencies": {
+    "sharp": "^0.35.4"
+  }
+}

@@ -90,3 +90,15 @@ On-device (RP4 via adb) profiling to hold 60 fps; LOD/visibility ranges; APK ≤
 
 ## 4. Progress log
 (Updated by the agent as phases land.)
+
+- **A — done (2026-09-24).** tools/carbake pipeline; 19 hero cars + 6 traffic cars baked from Sketchfab CC-BY
+  (credits in each `<key>.json`); CarBuilder uses the real models (wheels spin/steer from the sim,
+  lamps, glass, paint classes); paint shader rewritten without glints. The Ferrari 458 (three.js) and
+  Maserati MC20 were dropped: their Sketchfab sources are gone so the licence can't be verified. The
+  Ferrari SF90 "Reward Recycled" and a GTA-derived Aventador were rejected as game rips.
+- **B — done.** roster.cpp with real specs for all 19 cars; save migration v3 maps the JDM keys.
+  Known follow-up for G: standing-start acceleration is 10-30 % slower than the real cars.
+- **F — mostly done.** Traffic = VW Polo, Skoda Superb, Volvo V60, VW T6, Mercedes Sprinter, town bus;
+  right-hand driving; spinning wheels; near/far LODs. Road connectivity moves to the map graph in D.
+- A parallel agent (Antigravity) edited the tree concurrently; its WIP was committed separately
+  (ab5c123) and the user stopped it.
