@@ -17,3 +17,4 @@ thirdparty/godot-cpp/bin/
 thirdparty/godot-cpp/gen/
 *.o
 *.os
+*.apk
