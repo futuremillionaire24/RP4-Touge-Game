@@ -1,0 +1,14 @@
+--target=x86_64-w64-mingw32
+-std=c++17
+-nostdinc++
+-isystem
+D:/RP4Toolchain/llvm-mingw/include/c++/v1
+-isystem
+D:/RP4Toolchain/llvm-mingw/lib/clang/23/include
+-isystem
+D:/RP4Toolchain/llvm-mingw/include
+-ID:/Android_RP4_Game/native/src
+-ID:/Android_RP4_Game/native/tests
+-ID:/Android_RP4_Game/thirdparty/godot-cpp/include
+-ID:/Android_RP4_Game/thirdparty/godot-cpp/gen/include
+-ID:/Android_RP4_Game/thirdparty/godot-cpp/gdextension

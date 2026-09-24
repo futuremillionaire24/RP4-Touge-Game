@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a0630"/>
+      <stop offset="1" stop-color="#04020a"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="256" height="256" rx="48" fill="url(#bg)"/>
+  <text x="128" y="178" font-family="Noto Sans JP, sans-serif" font-size="150" font-weight="900" text-anchor="middle" fill="#ff2e88" filter="url(#glow)">峠</text>
+  <rect x="40" y="206" width="176" height="8" rx="4" fill="#27e8ff" filter="url(#glow)"/>
+</svg>

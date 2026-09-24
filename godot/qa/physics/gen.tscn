@@ -1,0 +1,6 @@
+﻿[gd_scene format=3]
+
+[ext_resource type="Script" path="res://qa/physics/gen.gd" id="1"]
+
+[node name="Gen" type="Node"]
+script = ExtResource("1")

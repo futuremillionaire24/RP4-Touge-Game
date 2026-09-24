@@ -1,0 +1,118 @@
+; Engine configuration file.
+; Neon Touge RP4 - tuned for Retroid Pocket 4 Pro (Dimensity 1100 / Mali-G77, 1334x750 @ 60 Hz).
+
+config_version=5
+
+[application]
+
+config/name="Neon Touge RP4"
+config/description="Japan open-world street racing, built for the Retroid Pocket 4 Pro."
+config/version="0.5.0"
+run/main_scene="res://scenes/boot.tscn"
+config/features=PackedStringArray("4.7", "Mobile")
+boot_splash/bg_color=Color(0, 0, 0, 1)
+boot_splash/show_image=false
+config/icon="res://assets/icon.svg"
+run/max_fps=0
+config/quit_on_go_back=false
+
+[audio]
+
+driver/mix_rate=48000
+driver/output_latency=24
+general/3d_panning_strength=0.8
+
+[autoload]
+
+Settings="*res://scripts/core/settings.gd"
+Pad="*res://scripts/core/pad.gd"
+Haptics="*res://scripts/core/haptics.gd"
+Perf="*res://scripts/core/perf.gd"
+AudioMix="*res://scripts/core/audio_mix.gd"
+Profile="*res://scripts/core/profile.gd"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/rp4_bridge/plugin.cfg")
+
+[debug]
+
+gdscript/warnings/unused_parameter=0
+gdscript/warnings/untyped_declaration=0
+gdscript/warnings/inferred_declaration=0
+
+[display]
+
+window/size/viewport_width=1334
+window/size/viewport_height=750
+window/size/mode=0
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=4
+window/vsync/vsync_mode=1
+window/energy_saving/keep_screen_on=true
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=false
+pointing/android/enable_long_press_as_right_click=false
+
+[physics]
+
+common/physics_ticks_per_second=120
+common/max_physics_steps_per_frame=6
+common/physics_interpolation=true
+common/physics_jitter_fix=0.0
+3d/physics_engine="Jolt Physics"
+
+[shader_globals]
+
+nt_wetness={
+"type": "float",
+"value": 0.0
+}
+nt_rain={
+"type": "float",
+"value": 0.0
+}
+nt_snow={
+"type": "float",
+"value": 0.0
+}
+nt_season={
+"type": "float",
+"value": 0.0
+}
+nt_night={
+"type": "float",
+"value": 0.0
+}
+nt_wind={
+"type": "vec3",
+"value": Vector3(0.6, 0, 0.3)
+}
+
+[rendering]
+
+shader_compiler/shader_cache/enabled=true
+renderer/rendering_method="mobile"
+renderer/rendering_method.mobile="mobile"
+rendering_device/driver.android="vulkan"
+driver/threads/thread_model=1
+textures/vram_compression/import_etc2_astc=true
+textures/default_filters/anisotropic_filtering_level=2
+textures/canvas_textures/default_texture_filter=1
+anti_aliasing/quality/msaa_3d=2
+anti_aliasing/quality/screen_space_aa=0
+scaling_3d/mode=0
+scaling_3d/scale=1.0
+lights_and_shadows/directional_shadow/size=4096
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=2
+lights_and_shadows/directional_shadow/16_bits=true
+lights_and_shadows/positional_shadow/soft_shadow_filter_quality=1
+environment/defaults/default_clear_color=Color(0.02, 0.02, 0.04, 1)
+occlusion_culling/use_occlusion_culling=true
+limits/opengl/max_renderable_lights=64
+shading/overrides/force_vertex_shading=false
+reflections/sky_reflections/roughness_layers=6
+reflections/sky_reflections/texture_array_reflections=false

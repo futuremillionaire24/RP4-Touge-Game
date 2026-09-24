@@ -1,0 +1,19 @@
+# Secrets: never commit the signing key or its password.
+keystore/
+# Build outputs
+dist/
+build/
+native/build_*/
+native/*.log
+native/.sconsign*.dblite
+godot/.godot/
+godot/android/build/
+godot/native/bin/*.exp
+godot/native/bin/*.lib
+android_plugin/.gradle/
+android_plugin/**/build/
+android_plugin/local.properties
+thirdparty/godot-cpp/bin/
+thirdparty/godot-cpp/gen/
+*.o
+*.os
