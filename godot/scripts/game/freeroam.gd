@@ -295,6 +295,10 @@ func _update_acoustics(delta: float) -> void:
 
 func _exit_tree() -> void:
 	AudioMix.set_tunnel(0.0)
+	# Leaving the world: give its materials, texture arrays and prop meshes back before the
+	# festival menus load (the next free roam rebuilds them).
+	WorldMaterials.clear_cache()
+	PropLibrary.clear_cache()
 
 func _play_update(delta: float) -> void:
 	_update_acoustics(delta)

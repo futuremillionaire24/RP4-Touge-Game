@@ -46,6 +46,14 @@ static var _meshes := {}
 static var _model_meshes := {}
 static var _material: ShaderMaterial
 
+## Drops every cached prop mesh (and the textures they hold) - called when free roam exits so the
+## festival menus don't keep the world's props in memory.
+static func clear_cache() -> void:
+	_meshes.clear()
+	_model_meshes.clear()
+	_far_meshes.clear()
+	_far_procedural.clear()
+
 static func material() -> ShaderMaterial:
 	if _material == null:
 		_material = ShaderMaterial.new()

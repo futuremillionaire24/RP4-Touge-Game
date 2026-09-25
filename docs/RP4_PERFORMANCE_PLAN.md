@@ -62,4 +62,21 @@ records the governor tier and scale so "60 fps at tier 3" is visible as a miss, 
 
 ## Results
 
-(Filled in by the audit runs.)
+### Desktop baseline (2026-09-25, Ryzen 7 1700X, 75 Hz vsync, La Condamine, Golf GTI)
+
+| Scenario | fps avg | 1% low | GPU ms | CPU ms | draws (+shadow) | prims | VRAM MB | tier / scale |
+|---|---|---|---|---|---|---|---|---|
+| day_parked | 75.7 | 60.4 | 6.25 | 1.49 | 139 (+19) | 640k | 477 | 0 / 0.95 |
+| day_driving | 76.7 | 60.9 | 6.23 | 1.49 | 128 (+23) | 719k | 479 | 0 / 1.0 |
+| night_parked | 76.1 | 53.1 | 6.12 | 1.35 | 139 (+0) | 639k | 479 | 0 / 1.0 |
+| night_driving | 76.6 | 53.4 | 5.28 | 1.34 | 129 (+0) | 726k | 479 | 0 / 1.0 |
+
+Night has no sun shadow pass (0 shadow draws). The night 1% lows come from occasional 20-50 ms
+frames (streaming / shader compiles), not from sustained load.
+
+### RP4
+
+Pending: the APK (v0.5.0, code 3) is installed, but the device has a secure lock screen, so the
+audit can only run once it is unlocked (a locked device pauses the game). Run
+`tools\profile_device.ps1 -NoInstall` with the RP4 unlocked; it keeps the screen on while
+profiling.

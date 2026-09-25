@@ -23,6 +23,11 @@ static func set_world(world: NTWorld) -> void:
 	if _cache.has(Group.WATER):
 		_bind_sea(_cache[Group.WATER])
 
+## Releases the world materials, their texture arrays and the sea depth map (free roam exit).
+static func clear_cache() -> void:
+	_cache.clear()
+	_sea_depth = null
+
 static func _bind_sea(m: ShaderMaterial) -> void:
 	if _sea_depth == null:
 		return

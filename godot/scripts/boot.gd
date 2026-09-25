@@ -13,6 +13,7 @@ const SCENES := {
 	"showroom": "res://scenes/showroom.tscn",
 	"car_preview": "res://tools/car_preview.tscn",
 	"map_test": "res://qa/map_test.tscn",
+	"perf_audit": "res://scenes/perf_audit.tscn",
 }
 
 func _ready() -> void:
