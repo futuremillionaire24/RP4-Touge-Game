@@ -51,6 +51,88 @@ func setup(p_sim: NTSim, p_id: int, p_key: String, player: bool, paint: Material
 	audio.setup(self)
 	global_transform = sim.get_transform(car_id)
 	reset_physics_interpolation()
+	_redline = float(spec.get("redline_rpm", 7000.0))
+	_setup_effects()
+
+# ---- Brake glow and exhaust backfire ----------------------------------------------------------
+var _redline := 7000.0
+var _disc_mats: Array[StandardMaterial3D] = [] # front, rear
+var _disc_heat := [0.0, 0.0]
+var _flames: Array[MeshInstance3D] = []
+var _flame_timer := 0.0
+var _pops_left := 0
+var _pop_gap := 0.0
+var _prev_throttle := 0.0
+
+func _setup_effects() -> void:
+	# Per-car disc materials (the shared one would light every car's rotors at once).
+	for axle in range(2):
+		var m := (CarMaterials.shared("disc") as StandardMaterial3D).duplicate() as StandardMaterial3D
+		m.emission_enabled = true
+		m.emission = Color.BLACK
+		_disc_mats.append(m)
+	for i in range(_wheels.size()):
+		var disc := (_wheels[i] as Node).find_child("BrakeDisc", true, false) as MeshInstance3D
+		if disc:
+			disc.material_override = _disc_mats[0 if i < 2 else 1]
+	var fm := StandardMaterial3D.new()
+	fm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	fm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	fm.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	fm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	fm.albedo_color = Color(1.0, 0.5, 0.15, 0.9)
+	fm.disable_receive_shadows = true
+	var q := QuadMesh.new()
+	q.size = Vector2(0.28, 0.28)
+	var tips: Array = visual.get_meta("exhausts_local", []) if visual.has_meta("exhausts_local") else []
+	if tips.is_empty() and visual.has_meta("exhaust_local"):
+		tips = [visual.get_meta("exhaust_local")]
+	for p in tips:
+		var f := MeshInstance3D.new()
+		f.mesh = q
+		f.material_override = fm
+		f.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		f.position = (p as Vector3) + Vector3(0, 0, 0.18) # just behind the tip (forward is -Z)
+		f.visible = false
+		visual.add_child(f)
+		_flames.append(f)
+
+func _update_effects(delta: float) -> void:
+	var spd: float = float(telemetry.get("speed", 0.0))
+	var brk: float = float(telemetry.get("brake", 0.0))
+	# Rotors: braking energy ~ brake x speed heats them (a hard stop from 200 km/h reaches ~0.75);
+	# they cool faster in the airflow at speed.
+	var tau := 8.0 / (1.0 + spd / 30.0)
+	for axle in range(2):
+		var share := 1.3 if axle == 0 else 0.7
+		_disc_heat[axle] = clampf(_disc_heat[axle] + brk * spd * 0.005 * share * delta, 0.0, 1.0) * exp(-delta / tau)
+		if axle < _disc_mats.size():
+			var t: float = _disc_heat[axle]
+			var glow := smoothstep(0.35, 1.0, t)
+			_disc_mats[axle].emission = Color(0.55, 0.06, 0.0).lerp(Color(1.0, 0.42, 0.08), glow) * glow
+			_disc_mats[axle].emission_energy_multiplier = 3.0
+	# Backfire: overrun pops after lifting off from high revs, and crackle on the limiter.
+	if _flames.is_empty():
+		return
+	var thr: float = float(telemetry.get("throttle", 0.0))
+	var rpm: float = float(telemetry.get("rpm", 0.0))
+	if _prev_throttle > 0.6 and thr < 0.15 and rpm > _redline * 0.6:
+		_pops_left = randi_range(2, 4)
+		_pop_gap = randf_range(0.02, 0.08)
+	_prev_throttle = thr
+	if bool(telemetry.get("limiter", false)) and _pops_left == 0 and randf() < 0.25:
+		_pops_left = 1
+		_pop_gap = 0.0
+	_flame_timer -= delta
+	_pop_gap -= delta
+	if _pops_left > 0 and _pop_gap <= 0.0:
+		_pops_left -= 1
+		_pop_gap = randf_range(0.07, 0.16)
+		_flame_timer = randf_range(0.04, 0.09)
+		for f in _flames:
+			f.scale = Vector3.ONE * randf_range(0.6, 1.3)
+	for f in _flames:
+		f.visible = _flame_timer > 0.0
 
 ## Garage build: paint, finish and engine-swap audio from a Profile garage entry.
 func setup_entry(p_sim: NTSim, p_id: int, entry: Dictionary, player: bool) -> void:
@@ -141,8 +223,10 @@ var _chassis_roll := 0.0
 var _chassis_pitch := 0.0
 var _roll_velocity := 0.0
 var _pitch_velocity := 0.0
-var _prev_speed := 0.0
-var _prev_lat_vel := 0.0
+var _prev_pos := Vector3.ZERO
+var _prev_vel := Vector3.ZERO
+var _have_prev := false
+var _acc_smooth := Vector3.ZERO
 var _body_heave := 0.0
 var _heave_velocity := 0.0
 
@@ -176,59 +260,45 @@ func _physics_process(delta: float) -> void:
 		var susp_pitch := (wheel_y[2] + wheel_y[3] - wheel_y[0] - wheel_y[1]) * 0.5 / wheelbase
 		var susp_heave := (wheel_y[0] + wheel_y[1] + wheel_y[2] + wheel_y[3]) * 0.25
 
-		var thr: float = float(telemetry.get("throttle", 0.0))
-		var brk: float = float(telemetry.get("brake", 0.0))
-		var spd: float = float(telemetry.get("speed", 0.0))
-		var str_in: float = float(telemetry.get("steer", 0.0))
-		var lat_vel: float = float(telemetry.get("lateral_vel", 0.0))
-
-		# ---- Longitudinal deceleration G-force for progressive dive/squat ----
-		var decel_g := clampf((_prev_speed - spd) / maxf(delta, 0.001) / 9.81, -3.0, 3.0)
-		_prev_speed = spd
-
-		# Progressive dive: threshold braking produces dramatic nose dive (GT7 style)
-		var dive_curve := brk * brk * 0.08  # Squared for progressive feel
-		var decel_dive := clampf(decel_g * 0.025, 0.0, 0.06)
-		# Acceleration squat: power-on rear squat
-		var squat := thr * clampf(spd / 12.0, 0.0, 1.0) * 0.04
-		var pitch_weight := dive_curve + decel_dive - squat
-
-		# ---- Real suspension & lateral load roll (Forza 4 sim-driven) ----
-		# Remove fake steer-driven roll; let body attitude come directly from physical wheel travel
-		var lat_g := clampf((_prev_lat_vel - lat_vel) / maxf(delta, 0.001) / 9.81, -2.5, 2.5)
-		_prev_lat_vel = lat_vel
-		var g_roll := clampf(-lat_g * 0.035, -0.06, 0.06)
+		# ---- Load transfer from the car's real acceleration (body frame, low-passed) ----
+		# Measured from the simulated transform, so it covers braking, power, cornering, kerbs and
+		# crashes alike (no input-driven dive/squat: those ignored grip and pitched the wrong way).
+		var dt := maxf(delta, 1e-4)
+		var pos := global_position
+		var vel := (pos - _prev_pos) / dt if _have_prev else Vector3.ZERO
+		var acc := (vel - _prev_vel) / dt if _have_prev else Vector3.ZERO
+		_prev_pos = pos
+		_prev_vel = vel
+		_have_prev = true
+		var local_acc := global_transform.basis.inverse() * acc
+		var k := 1.0 - exp(-dt / 0.12)
+		_acc_smooth = _acc_smooth.lerp(local_acc.limit_length(40.0), k)
+		var lat_g := _acc_smooth.x / 9.81 # + towards the right
+		var long_g := -_acc_smooth.z / 9.81 # + accelerating (forward is -Z)
 
 		# ---- Heave: road surface following + bump absorption ----
 		var target_heave := susp_heave * 0.012
 
 		# ---- Combine physical suspension geometry with weight transfer ----
-		var target_roll := clampf(susp_roll * 0.9 + g_roll, -0.15, 0.15)
-		var target_pitch := clampf(susp_pitch * 0.85 + pitch_weight * 0.4, -0.10, 0.10)
+		# Right turn (lat_g > 0): the outside (left) dips = +roll about Z. Braking (long_g < 0):
+		# the nose dips = -pitch about X; power squats the tail.
+		var target_roll := clampf(susp_roll * 0.9 + clampf(lat_g * 0.02, -0.04, 0.04), -0.15, 0.15)
+		var target_pitch := clampf(susp_pitch * 0.85 + clampf(long_g * 0.012, -0.03, 0.02), -0.10, 0.10)
 
-		# ---- Critically damped spring interpolation (natural frequency ~4 Hz) ----
-		var omega := 25.0  # Natural angular frequency
-		var damping := 0.85  # Slightly underdamped for subtle overshoot
-		var dt := delta
-
-		# Roll spring
-		var roll_err := target_roll - _chassis_roll
-		var roll_accel := omega * omega * roll_err - 2.0 * damping * omega * _roll_velocity
-		_roll_velocity += roll_accel * dt
-		_chassis_roll += _roll_velocity * dt
-
-		# Pitch spring
-		var pitch_err := target_pitch - _chassis_pitch
-		var pitch_accel := omega * omega * pitch_err - 2.0 * damping * omega * _pitch_velocity
-		_pitch_velocity += pitch_accel * dt
-		_chassis_pitch += _pitch_velocity * dt
-
-		# Heave spring (softer, ~3 Hz)
+		# ---- Body springs (~4 Hz roll/pitch, ~3 Hz heave), fixed 1/120 s substeps so a slow
+		# frame can't make the explicit integration blow up ----
+		var omega := 25.0
+		var damping := 0.85
 		var heave_omega := 18.0
-		var heave_err := target_heave - _body_heave
-		var heave_accel := heave_omega * heave_omega * heave_err - 2.0 * 0.92 * heave_omega * _heave_velocity
-		_heave_velocity += heave_accel * dt
-		_body_heave += _heave_velocity * dt
+		var steps := clampi(ceili(dt / (1.0 / 120.0)), 1, 12)
+		var h := minf(dt, 0.1) / steps
+		for _i in range(steps):
+			_roll_velocity += (omega * omega * (target_roll - _chassis_roll) - 2.0 * damping * omega * _roll_velocity) * h
+			_chassis_roll += _roll_velocity * h
+			_pitch_velocity += (omega * omega * (target_pitch - _chassis_pitch) - 2.0 * damping * omega * _pitch_velocity) * h
+			_chassis_pitch += _pitch_velocity * h
+			_heave_velocity += (heave_omega * heave_omega * (target_heave - _body_heave) - 2.0 * 0.92 * heave_omega * _heave_velocity) * h
+			_body_heave += _heave_velocity * h
 
 		visual.rotation.z = _chassis_roll
 		visual.rotation.x = _chassis_pitch
@@ -237,6 +307,7 @@ func _physics_process(delta: float) -> void:
 	var is_braking := float(telemetry.get("brake", 0.0)) > 0.05
 	var is_reversing := int(telemetry.get("gear", 0)) < 0
 	CarBuilder.set_light_state(visual, is_braking, lights_on, is_reversing)
+	_update_effects(delta)
 	_update_taillights(is_braking)
 	_handle_events()
 	_dent_timer -= delta

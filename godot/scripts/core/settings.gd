@@ -5,7 +5,7 @@ extends Node
 signal changed(section: String)
 
 var PATH := "user://settings.json" # "-- profile=<name>" isolates test runs
-const VERSION := 1
+const VERSION := 2
 
 enum Tier { LOW, MEDIUM, HIGH, ULTRA, CUSTOM }
 
@@ -108,6 +108,9 @@ func load_settings() -> void:
 			for k in parsed[sec].keys():
 				if data[sec].has(k):
 					data[sec][k] = parsed[sec][k]
+	# v2: the RP4 free-roam budget - 4 shadow cascades only on Ultra (older saves stored "high").
+	if int(parsed.get("version", 1)) < 2 and int(data.graphics.tier) != Tier.ULTRA:
+		data.graphics.shadows = mini(int(data.graphics.shadows), 1)
 
 func save_settings() -> void:
 	var tmp := PATH + ".tmp"
