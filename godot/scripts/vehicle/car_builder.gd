@@ -121,6 +121,9 @@ static func build(key: String, spec: Dictionary, wheels: PackedFloat32Array, pai
 	var rear_z: float = float(meta.get("bounds", {}).get("max", [0, 0, 2.2])[2]) + off.z
 	root.set_meta("exhausts_local", exh)
 	root.set_meta("exhaust_local", exh[0] if not exh.is_empty() else Vector3(0.35, 0.3 + off.y, rear_z - 0.05))
+	root.set_meta("brake_lights", lamps.get("tail", []))
+	root.set_meta("headlights", lamps.get("head", []))
+	root.set_meta("popups", [])
 	set_light_state(root, false, false)
 	return root
 

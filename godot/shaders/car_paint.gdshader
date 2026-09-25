@@ -147,18 +147,28 @@ void light() {
 	float ndv = clamp(dot(NORMAL, VIEW), 1e-3, 1.0);
 	float ldh = clamp(dot(LIGHT, H), 1e-3, 1.0);
 	vec3 rad = LIGHT_COLOR * ATTENUATION;
+
+	// Clearcoat Fresnel reflection and transmission
 	float fc = v_coat * car_schlick(0.04, ldh);
 	float trans = 1.0 - fc;
-	DIFFUSE_LIGHT += rad * (cndl * trans / PI);
 
+	// Dielectric diffuse vs metallic: metals absorb diffuse light, dielectrics reflect it
+	float diffuse_k = (1.0 - METALLIC) * trans;
+	DIFFUSE_LIGHT += rad * (cndl * diffuse_k / PI);
+
+	// Base specular GGX lobe
 	float a = max(ROUGHNESS * ROUGHNESS, 0.002);
 	vec3 f0 = mix(vec3(0.04), ALBEDO, METALLIC);
 	vec3 spec = (car_d_ggx(ndh, a) * car_v_smith(ndv, cndl, a) * trans) * car_schlick3(f0, ldh);
+
+	// Clearcoat GGX lobe: use Smith visibility for physically bounded, non-diverging reflections
 	float ac = max(v_coat_rough * v_coat_rough, 0.0012);
-	spec += vec3(car_d_ggx(ndh, ac) * (0.25 / (ldh * ldh)) * fc);
-	// Flake glow: a wide lobe tinted by the base colour (flakes reflect through the tinted binder).
+	spec += vec3(car_d_ggx(ndh, ac) * car_v_smith(ndv, cndl, ac) * fc);
+
+	// Flake glow: soft subtle secondary lobe for metallic flake shimmer
 	if (v_flake > 0.001) {
-		spec += ALBEDO * (car_d_ggx(ndh, 0.16) * 0.25 * v_flake * trans);
+		float af = 0.16;
+		spec += ALBEDO * (car_d_ggx(ndh, af) * car_v_smith(ndv, cndl, af) * v_flake * trans);
 	}
 	SPECULAR_LIGHT += rad * cndl * spec * SPECULAR_AMOUNT;
 }

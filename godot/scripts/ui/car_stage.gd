@@ -61,58 +61,79 @@ func _build_studio() -> void:
 	_env.background_mode = Environment.BG_SKY
 	_env.sky = sky
 	_env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	_env.ambient_light_energy = 1.6
+	_env.ambient_light_energy = 0.85
 	_env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	_env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	_env.tonemap_exposure = 1.1
+	_env.tonemap_exposure = 1.05
 	_env.glow_enabled = true
-	_env.glow_intensity = 0.7
-	_env.glow_hdr_threshold = 1.0
+	_env.glow_intensity = 0.35
+	_env.glow_hdr_threshold = 1.15
 	_env.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
 	_env.adjustment_enabled = true
-	_env.adjustment_saturation = 1.1
+	_env.adjustment_saturation = 1.06
 	var we := WorldEnvironment.new()
 	we.environment = _env
 	add_child(we)
-	# Key light (sodium-white overhead), neon rims, cool fill.
+
+	# 1. Front 3/4 Studio Key Light (warm neutral daylight, natural specular on bonnet and front fender)
 	var key := SpotLight3D.new()
-	key.position = Vector3(0.0, 7.0, 1.0)
-	key.rotation_degrees = Vector3(-85, 0, 0)
-	key.spot_range = 14.0
-	key.spot_angle = 42.0
-	key.light_energy = 9.0
-	key.light_color = Color(1.0, 0.93, 0.85)
+	key.name = "StudioKey"
+	key.position = Vector3(2.5, 4.8, -4.5)
+	key.rotation_degrees = Vector3(-36, 150, 0)
+	key.spot_range = 16.0
+	key.spot_angle = 50.0
+	key.spot_attenuation = 1.0
+	key.light_energy = 2.4
+	key.light_color = Color(1.0, 0.98, 0.95)
 	key.shadow_enabled = true
 	add_child(key)
-	for s in [[Vector3(-5.5, 1.6, -3.0), UIKit.NEON], [Vector3(5.5, 1.4, 3.5), UIKit.CYAN]]:
+
+	# 2. Rear Kicker / Rim Light (sculpts the rear quarter panels and roofline)
+	var rim := SpotLight3D.new()
+	rim.name = "StudioRim"
+	rim.position = Vector3(-3.8, 3.5, 4.0)
+	rim.rotation_degrees = Vector3(-28, -42, 0)
+	rim.spot_range = 14.0
+	rim.spot_angle = 45.0
+	rim.spot_attenuation = 1.0
+	rim.light_energy = 1.6
+	rim.light_color = Color(0.95, 0.97, 1.0)
+	rim.shadow_enabled = false
+	add_child(rim)
+
+	# 3. Overhead Soft White Studio Light Banks (creates clean, continuous reflections along car waistline)
+	var bank_col := Color(0.98, 0.98, 1.0)
+	for s in [[Vector3(-2.8, 3.4, 0.0), -1.0], [Vector3(2.8, 3.4, 0.0), 1.0]]:
 		var o := OmniLight3D.new()
 		o.position = s[0]
-		o.light_color = s[1]
-		o.light_energy = 5.0
-		o.omni_range = 12.0
+		o.light_color = bank_col
+		o.light_energy = 1.2
+		o.omni_range = 7.5
+		o.omni_attenuation = 1.0
 		add_child(o)
-		# Visible neon tube behind each light.
+
+		# Overhead canopy light strips running front-to-back above each side
 		var tube := MeshInstance3D.new()
 		var cm := CapsuleMesh.new()
-		cm.radius = 0.04
-		cm.height = 3.2
+		cm.radius = 0.045
+		cm.height = 5.2
 		tube.mesh = cm
 		var tm := StandardMaterial3D.new()
 		tm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		tm.albedo_color = s[1]
+		tm.albedo_color = bank_col
 		tm.emission_enabled = true
-		tm.emission = s[1]
-		tm.emission_energy_multiplier = 4.0
+		tm.emission = bank_col
+		tm.emission_energy_multiplier = 2.4
 		tube.material_override = tm
-		# Overhead canopy tubes running front-to-back above each side of the car.
-		var p: Vector3 = s[0]
-		tube.position = Vector3(signf(p.x) * 2.6, 3.6, 0.0)
+		tube.position = Vector3(s[1] * 2.5, 3.6, 0.0)
 		tube.rotation_degrees = Vector3(90, 0, 0)
 		add_child(tube)
+
+	# 4. Subtle front-low fill bounce
 	var fill := DirectionalLight3D.new()
-	fill.rotation_degrees = Vector3(-30, 150, 0)
+	fill.rotation_degrees = Vector3(-20, 160, 0)
 	fill.light_energy = 0.35
-	fill.light_color = Color(0.6, 0.7, 1.0)
+	fill.light_color = Color(0.94, 0.96, 1.0)
 	add_child(fill)
 	var floor_mi := MeshInstance3D.new()
 	var pm := PlaneMesh.new()

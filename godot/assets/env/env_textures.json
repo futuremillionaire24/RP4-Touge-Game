@@ -1,0 +1,222 @@
+{
+ "ground": {
+  "size": 1024,
+  "layers": [
+   {
+    "id": "aerial_grass_rock",
+    "name": "Aerial Grass Rock",
+    "tile_m": 15,
+    "authors": [
+     "Rob Tuytel"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/aerial_grass_rock"
+   },
+   {
+    "id": "forrest_ground_01",
+    "name": "Forest Ground 01",
+    "tile_m": 2,
+    "authors": [
+     "Rob Tuytel"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/forrest_ground_01"
+   },
+   {
+    "id": "forest_leaves_03",
+    "name": "Forest Leaves 03",
+    "tile_m": 2.3,
+    "authors": [
+     "Rob Tuytel",
+     "Dimitrios Savva"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/forest_leaves_03"
+   },
+   {
+    "id": "marble_cliff_03",
+    "name": "Marble Cliff 03",
+    "tile_m": 5.748,
+    "authors": [
+     "Amal Kumar"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/marble_cliff_03"
+   },
+   {
+    "id": "coast_sand_01",
+    "name": "Coast Sand 01",
+    "tile_m": 15,
+    "authors": [
+     "Rob Tuytel"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/coast_sand_01"
+   },
+   {
+    "id": "rectangular_paving",
+    "name": "Rectangular Paving",
+    "tile_m": 2,
+    "authors": [
+     "Dimitrios Savva"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/rectangular_paving"
+   },
+   {
+    "id": "park_dirt",
+    "name": "Park Dirt",
+    "tile_m": 3,
+    "authors": [
+     "Christopher Melani"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/park_dirt"
+   },
+   {
+    "id": "dry_ground_rocks",
+    "name": "Dry Ground Rocks",
+    "tile_m": 4,
+    "authors": [
+     "Rob Tuytel"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/dry_ground_rocks"
+   },
+   {
+    "id": "pavement_02",
+    "name": "Pavement 02",
+    "tile_m": 2.12,
+    "authors": [
+     "Dario Barresi",
+     "Charlotte Baglioni"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/pavement_02"
+   }
+  ]
+ },
+ "road": {
+  "size": 1024,
+  "layers": [
+   {
+    "id": "asphalt_02",
+    "name": "Asphalt 02",
+    "tile_m": 3,
+    "authors": [
+     "Rob Tuytel"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/asphalt_02"
+   },
+   {
+    "id": "clean_asphalt",
+    "name": "Clean Asphalt",
+    "tile_m": 2.1,
+    "authors": [
+     "Dimitrios Savva"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/clean_asphalt"
+   },
+   {
+    "id": "square_cobblestone",
+    "name": "Square Cobblestone",
+    "tile_m": 2,
+    "authors": [
+     "Sơn Nguyễn"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/square_cobblestone"
+   }
+  ]
+ },
+ "facade": {
+  "size": 1024,
+  "layers": [
+   {
+    "id": "white_stucco",
+    "name": "White Stucco",
+    "tile_m": 1.998,
+    "authors": [
+     "Amal Kumar"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/white_stucco"
+   },
+   {
+    "id": "painted_plaster_wall",
+    "name": "Painted Plaster Wall",
+    "tile_m": 2,
+    "authors": [
+     "Amal Kumar"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/painted_plaster_wall"
+   },
+   {
+    "id": "grey_plaster",
+    "name": "Grey Plaster",
+    "tile_m": 1,
+    "authors": [
+     "Rob Tuytel"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/grey_plaster"
+   },
+   {
+    "id": "white_sandstone_bricks",
+    "name": "White Sandstone Bricks",
+    "tile_m": 2,
+    "authors": [
+     "Rob Tuytel"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/white_sandstone_bricks"
+   },
+   {
+    "id": "concrete_wall_008",
+    "name": "Concrete Wall 008",
+    "tile_m": 2.71,
+    "authors": [
+     "Dario Barresi",
+     "Charlotte Baglioni"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/concrete_wall_008"
+   },
+   {
+    "id": "painted_metal_shutter",
+    "name": "Painted Metal Shutter",
+    "tile_m": 2,
+    "authors": [
+     "Dario Barresi",
+     "Rico Cilliers",
+     "Charlotte Baglioni"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/painted_metal_shutter"
+   },
+   {
+    "id": "clay_roof_tiles_02",
+    "name": "Clay Roof Tiles 02",
+    "tile_m": 2.5,
+    "authors": [
+     "Amal Kumar"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/clay_roof_tiles_02"
+   },
+   {
+    "id": "tarred_gravel",
+    "name": "Tarred Gravel",
+    "tile_m": 2.2,
+    "authors": [
+     "Dimitrios Savva"
+    ],
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/tarred_gravel"
+   }
+  ]
+ }
+}

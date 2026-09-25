@@ -19,6 +19,7 @@ var _wheels := []
 var _paint: ShaderMaterial
 var _brake_lights := []
 var _headlights := []
+var _taillights := []
 var _dent_timer := 0.0
 var lights_on := false
 
@@ -41,6 +42,9 @@ func setup(p_sim: NTSim, p_id: int, p_key: String, player: bool, paint: Material
 			m.material_override = m.material_override.duplicate()
 	if is_player:
 		_make_headlights(spec)
+		_make_taillights(spec)
+	else:
+		_make_rival_headlight(spec)
 	audio = CarAudio.new()
 	audio.name = "Audio"
 	add_child(audio)
@@ -56,26 +60,82 @@ func setup_entry(p_sim: NTSim, p_id: int, entry: Dictionary, player: bool) -> vo
 
 func _make_headlights(spec: Dictionary) -> void:
 	var he: Vector3 = spec.half_extents
-	for side in [-1.0, 1.0]:
+	var anchors: Array = visual.get_meta("headlights_local", []) if visual and visual.has_meta("headlights_local") else []
+	for i in range(2):
+		var side := -1.0 if i == 0 else 1.0
+		var pos: Vector3
+		if anchors.size() > i:
+			pos = anchors[i] + Vector3(0, 0, -0.15)
+		else:
+			pos = Vector3(side * he.x * 0.68, he.y * 0.28 + 0.12, -he.z - 0.15)
 		var l := SpotLight3D.new()
-		l.name = "HeadBeam"
-		l.light_color = Color(0.92, 0.95, 1.0)
+		l.name = "HeadBeam_%d" % i
+		l.light_color = Color(0.96, 0.98, 1.0)
 		l.light_energy = 0.0
-		l.spot_range = 90.0
-		l.spot_angle = 26.0
-		l.spot_attenuation = 0.55
-		l.spot_angle_attenuation = 1.6
-		# In front of the bumper: inside the body, the car's own mesh would shadow the beam.
+		l.spot_range = 80.0
+		l.spot_angle = 32.0
+		l.spot_attenuation = 1.0
+		l.spot_angle_attenuation = 1.4
 		l.shadow_enabled = false
-		l.position = Vector3(side * he.x * 0.62, 0.05, -he.z - 0.25)
-		l.rotation = Vector3(deg_to_rad(-4.0), 0, 0)
+		l.position = pos
+		l.rotation = Vector3(deg_to_rad(-2.8), side * deg_to_rad(-1.8), 0)
 		add_child(l)
 		_headlights.append(l)
 
+func _make_taillights(spec: Dictionary) -> void:
+	var he: Vector3 = spec.half_extents
+	var anchors: Array = visual.get_meta("taillights_local", []) if visual and visual.has_meta("taillights_local") else []
+	for i in range(2):
+		var side := -1.0 if i == 0 else 1.0
+		var pos: Vector3
+		if anchors.size() > i:
+			pos = anchors[i] + Vector3(0, 0, 0.15)
+		else:
+			pos = Vector3(side * he.x * 0.65, he.y * 0.32 + 0.15, he.z + 0.15)
+		var l := SpotLight3D.new()
+		l.name = "TailBeam_%d" % i
+		l.light_color = Color(1.0, 0.06, 0.03)
+		l.light_energy = 0.0
+		l.spot_range = 10.0
+		l.spot_angle = 68.0
+		l.spot_attenuation = 1.2
+		l.spot_angle_attenuation = 1.2
+		l.shadow_enabled = false
+		l.position = pos
+		l.rotation = Vector3(deg_to_rad(-12.0), PI + side * deg_to_rad(4.0), 0)
+		add_child(l)
+		_taillights.append(l)
+
+func _make_rival_headlight(spec: Dictionary) -> void:
+	var he: Vector3 = spec.half_extents
+	var l := SpotLight3D.new()
+	l.name = "RivalBeam"
+	l.light_color = Color(0.95, 0.97, 1.0)
+	l.light_energy = 0.0
+	l.spot_range = 50.0
+	l.spot_angle = 38.0
+	l.spot_attenuation = 1.1
+	l.shadow_enabled = false
+	l.position = Vector3(0.0, he.y * 0.28 + 0.12, -he.z - 0.15)
+	l.rotation = Vector3(deg_to_rad(-3.0), 0, 0)
+	add_child(l)
+	_headlights.append(l)
+
 func set_lights(on: bool) -> void:
 	lights_on = on
+	var h_energy := 3.8 if on else 0.0
 	for l in _headlights:
-		l.light_energy = 16.0 if on else 0.0
+		l.light_energy = h_energy
+	_update_taillights(false)
+
+func _update_taillights(braking: bool) -> void:
+	var target_e := 0.0
+	if braking:
+		target_e = 3.2
+	elif lights_on:
+		target_e = 0.55
+	for l in _taillights:
+		l.light_energy = target_e
 
 var _chassis_roll := 0.0
 var _chassis_pitch := 0.0
@@ -174,7 +234,10 @@ func _physics_process(delta: float) -> void:
 		visual.rotation.x = _chassis_pitch
 		visual.position.y = _body_heave
 
-	CarBuilder.set_light_state(visual, float(telemetry.get("brake", 0.0)) > 0.05, lights_on)
+	var is_braking := float(telemetry.get("brake", 0.0)) > 0.05
+	var is_reversing := int(telemetry.get("gear", 0)) < 0
+	CarBuilder.set_light_state(visual, is_braking, lights_on, is_reversing)
+	_update_taillights(is_braking)
 	_handle_events()
 	_dent_timer -= delta
 	if _dent_timer <= 0.0:

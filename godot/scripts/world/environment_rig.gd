@@ -7,7 +7,8 @@ extends Node3D
 var sun: DirectionalLight3D
 var world_env: WorldEnvironment
 var env: Environment
-var sky_mat: ProceduralSkyMaterial
+## Photographic day-cycle sky (sky_hdri.gdshader), driven by SkyWeather.
+var sky_mat: ShaderMaterial
 
 func _ready() -> void:
 	sun = DirectionalLight3D.new()
@@ -26,16 +27,13 @@ func _ready() -> void:
 	sun.directional_shadow_pancake_size = 20.0
 	add_child(sun)
 
-	sky_mat = ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color(0.18, 0.44, 0.80)
-	sky_mat.sky_horizon_color = Color(0.85, 0.82, 0.74)
-	sky_mat.ground_horizon_color = Color(0.55, 0.52, 0.48)
-	sky_mat.ground_bottom_color = Color(0.18, 0.20, 0.16)
-	sky_mat.sun_angle_max = 26.0
-	sky_mat.sun_curve = 0.09
+	sky_mat = ShaderMaterial.new()
+	sky_mat.shader = preload("res://shaders/sky_hdri.gdshader")
 	var sky := Sky.new()
 	sky.sky_material = sky_mat
 	sky.radiance_size = Sky.RADIANCE_SIZE_128
+	# The sky changes slowly; incremental radiance updates keep the Mali GPU cost flat.
+	sky.process_mode = Sky.PROCESS_MODE_INCREMENTAL
 
 	env = Environment.new()
 	env.background_mode = Environment.BG_SKY

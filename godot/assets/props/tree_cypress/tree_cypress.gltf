@@ -1,0 +1,370 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.0",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 442,
+      "max": [
+        0.7634347677230835,
+        9.980388641357422,
+        1.0130864381790161
+      ],
+      "min": [
+        -0.8985484838485718,
+        2.5054544711151335e-17,
+        -0.9640941619873047
+      ],
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 442,
+      "bufferView": 0,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 442,
+      "bufferView": 0,
+      "byteOffset": 24
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 1323,
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 15,
+      "bufferView": 1,
+      "byteOffset": 2648
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 15,
+      "bufferView": 1,
+      "byteOffset": 2680
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 3513,
+      "bufferView": 1,
+      "byteOffset": 2712
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 9,
+      "max": [
+        -0.11970638483762741,
+        1.5487444400787354,
+        -0.2264794260263443
+      ],
+      "min": [
+        -0.3692847490310669,
+        1.3912233114242554,
+        -0.5576856732368469
+      ],
+      "bufferView": 2,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 9,
+      "bufferView": 2,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 9,
+      "bufferView": 2,
+      "byteOffset": 24
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 10,
+      "max": [
+        0.13264495134353638,
+        11.66690444946289,
+        0.07121776044368744
+      ],
+      "min": [
+        -0.2388189136981964,
+        1.0881080627441406,
+        -0.5523398518562317
+      ],
+      "bufferView": 3,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 10,
+      "bufferView": 3,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 10,
+      "bufferView": 3,
+      "byteOffset": 24
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 1053,
+      "max": [
+        1.7261205911636353,
+        11.804275512695312,
+        1.5160821676254272
+      ],
+      "min": [
+        -1.9029866456985474,
+        0.9757135510444641,
+        -1.6205708980560303
+      ],
+      "bufferView": 4,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 1053,
+      "bufferView": 4,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 1053,
+      "bufferView": 4,
+      "byteOffset": 24
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 14144,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 14144,
+      "byteLength": 9740,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 23884,
+      "byteLength": 288,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 24172,
+      "byteLength": 320,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 24492,
+      "byteLength": 33696,
+      "byteStride": 32,
+      "target": 34962
+    }
+  ],
+  "samplers": [
+    {
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "source": 0,
+      "sampler": 0
+    },
+    {
+      "source": 1,
+      "sampler": 0
+    },
+    {
+      "source": 2,
+      "sampler": 0
+    },
+    {
+      "source": 3,
+      "sampler": 0
+    }
+  ],
+  "images": [
+    {
+      "name": "tree_cypress_0",
+      "mimeType": "image/jpeg",
+      "uri": "tree_cypress_0.jpg"
+    },
+    {
+      "name": "tree_cypress_1",
+      "mimeType": "image/jpeg",
+      "uri": "tree_cypress_1.jpg"
+    },
+    {
+      "name": "tree_cypress_2",
+      "mimeType": "image/png",
+      "uri": "tree_cypress_2.png"
+    },
+    {
+      "name": "tree_cypress_3",
+      "mimeType": "image/jpeg",
+      "uri": "tree_cypress_3.jpg"
+    }
+  ],
+  "buffers": [
+    {
+      "name": "tree_cypress.bin",
+      "uri": "tree_cypress.bin",
+      "byteLength": 58188
+    }
+  ],
+  "materials": [
+    {
+      "name": "Cypress_bark",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.6,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 0
+        }
+      },
+      "normalTexture": {
+        "index": 1
+      }
+    },
+    {
+      "name": "Cypress_bark.1",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.588,
+          0.588,
+          0.588,
+          1
+        ],
+        "roughnessFactor": 0.6,
+        "metallicFactor": 0
+      }
+    },
+    {
+      "name": "Cypress_bark.2",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.588,
+          0.588,
+          0.588,
+          1
+        ],
+        "roughnessFactor": 0.6,
+        "metallicFactor": 0
+      }
+    },
+    {
+      "name": "Cypress_2_sided",
+      "alphaMode": "MASK",
+      "alphaCutoff": 0.4,
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.6,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 2
+        }
+      },
+      "normalTexture": {
+        "index": 3
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "tree_cypress",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 3
+        },
+        {
+          "attributes": {
+            "POSITION": 7,
+            "NORMAL": 8,
+            "TEXCOORD_0": 9
+          },
+          "mode": 4,
+          "material": 1,
+          "indices": 4
+        },
+        {
+          "attributes": {
+            "POSITION": 10,
+            "NORMAL": 11,
+            "TEXCOORD_0": 12
+          },
+          "mode": 4,
+          "material": 2,
+          "indices": 5
+        },
+        {
+          "attributes": {
+            "POSITION": 13,
+            "NORMAL": 14,
+            "TEXCOORD_0": 15
+          },
+          "mode": 4,
+          "material": 3,
+          "indices": 6
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "tree_cypress",
+      "mesh": 0
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ]
+}

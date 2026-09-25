@@ -1,10 +1,11 @@
-// Wet-capable asphalt with procedural aggregate, tire-worn lanes, Japanese road markings,
+// Wet-capable asphalt (Poly Haven CC0 "road" array: asphalt_02, clean_asphalt patches), tyre-worn lanes, European (French) road markings,
 // crown-drained puddles and rain ripples. UV.x: 0..1 across the road, UV.y: along (per repeat).
 // UV2.x: lanes*10 + marking style, UV2.y: road width in meters. COLOR.r: ambient occlusion.
 shader_type spatial;
 render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx;
 
 #include "res://shaders/include/nt_noise.gdshaderinc"
+#include "res://shaders/include/env_layers.gdshaderinc"
 
 global uniform float nt_wetness;
 global uniform float nt_rain;
@@ -15,6 +16,8 @@ uniform vec3 asphalt_light : source_color = vec3(0.28, 0.28, 0.29);
 uniform vec3 marking_white : source_color = vec3(0.88, 0.88, 0.86);
 uniform vec3 marking_yellow : source_color = vec3(0.96, 0.70, 0.14);
 uniform float uv_length = 12.0;
+uniform sampler2DArray road_albedo : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2DArray road_normal : filter_linear_mipmap_anisotropic, repeat_enable;
 uniform float wear = 0.5;
 uniform float age = 0.5;
 
@@ -73,7 +76,7 @@ void fragment() {
 		vec2 wpj = world_pos.xz;
 		float n1j = nt_value_noise(wpj * 3.1);
 		float n2j = nt_value_noise(wpj * 17.0);
-		vec3 basej = mix(asphalt_color, asphalt_light, n1j * 0.35 + n2j * 0.25);
+		vec3 basej = texture(road_albedo, vec3(wpj / 3.0, 0.0)).rgb * (0.9 + 0.12 * n1j);
 		if (jstyle == 4) basej = mix(vec3(0.4, 0.4, 0.39), vec3(0.5, 0.5, 0.48), n1j);
 		vec3 mcol;
 		float mk = junction_marks(jstyle, UV, size, mcol);
@@ -105,9 +108,16 @@ void fragment() {
 	float stones = step(0.86, nt_value_noise(wp * 41.0));
 	float micro_cracks = nt_value_noise(wp * 65.0) * 0.12;  // Fine crack detail
 	float patch_n = nt_fbm(wp * 0.05, 3);
-	vec3 base = mix(asphalt_color, asphalt_light, n1 * 0.35 + n2 * 0.25 + stones * 0.4 + micro_cracks);
-	// Resurfacing patches of darker, newer asphalt.
-	base = mix(base, asphalt_color * 0.72, smoothstep(0.62, 0.66, patch_n) * age);
+	// Real asphalt: two rotated scales hide tiling; resurfaced patches use the fresh layer.
+	vec4 ta = texture(road_albedo, vec3(wp / 3.0, 0.0));
+	vec4 tn = texture(road_normal, vec3(wp / 3.0, 0.0));
+	float mm = smoothstep(0.3, 0.7, nt_fbm(wp * 0.02, 2)) * 0.5;
+	ta = mix(ta, texture(road_albedo, vec3(env_rot(wp, 0.7) / 7.3, 0.0)), mm);
+	float patch_m = smoothstep(0.62, 0.66, patch_n) * age;
+	vec4 pa = texture(road_albedo, vec3(wp / 2.1, 1.0));
+	vec4 pn = texture(road_normal, vec3(wp / 2.1, 1.0));
+	vec3 base = mix(ta.rgb, pa.rgb * 0.7, patch_m) * (0.9 + 0.12 * n1);
+	tn = mix(tn, pn, patch_m);
 	// Polished wheel paths: two per lane, darker and smoother with rubber deposits.
 	float lane_w = width / max(lanes, 1.0);
 	float lane_pos = mod(across_m, lane_w);
@@ -115,9 +125,9 @@ void fragment() {
 	// Tire rubber darkens the polished paths (GT7-style)
 	base *= 1.0 - tracks * 0.22 * wear;
 	base = mix(base, base * vec3(0.92, 0.90, 0.88), tracks * 0.15 * wear);  // Slight warm tint from rubber
-	float rough = mix(0.88, 0.68, tracks * wear) - stones * 0.12 - micro_cracks * 0.3;
+	float rough = mix(mix(0.8, 0.95, tn.b), 0.68, tracks * wear) - micro_cracks * 0.3;
 
-	// ---- Markings (Japanese conventions) ----
+	// ---- Markings (French / European conventions: all white) ----
 	float mark = 0.0;
 	vec3 mark_col = marking_white;
 	float lw = 0.15; // half widths below are in meters
@@ -129,17 +139,15 @@ void fragment() {
 
 	if (style > 0.5 && style < 1.5) { // 2-lane: dashed white centre
 		mark = max(mark, band(across_m, width * 0.5, 0.075) * dash12);
-	} else if (style > 1.5 && style < 2.5) { // no-overtaking double yellow
-		float y = max(band(across_m, width * 0.5 - 0.14, 0.06), band(across_m, width * 0.5 + 0.14, 0.06));
-		if (y > mark) { mark = y; mark_col = marking_yellow; }
+	} else if (style > 1.5 && style < 2.5) { // no overtaking: double solid white
+		mark = max(mark, max(band(across_m, width * 0.5 - 0.14, 0.06), band(across_m, width * 0.5 + 0.14, 0.06)));
 	} else if (style > 2.5 && style < 3.5) { // expressway lanes: dashed white dividers
 		for (float k = 1.0; k < 6.0; k += 1.0) {
 			if (k >= lanes) break;
 			mark = max(mark, band(across_m, lane_w * k, lw * 0.5) * step(fract(along_m / 20.0), 0.4));
 		}
-	} else if (style > 3.5 && style < 4.5) { // touge: solid yellow centre
-		float y = band(across_m, width * 0.5, 0.075);
-		if (y > mark) { mark = y; mark_col = marking_yellow; }
+	} else if (style > 3.5 && style < 4.5) { // mountain road: solid white centre (ligne continue)
+		mark = max(mark, band(across_m, width * 0.5, 0.06));
 	}
 	// Worn paint: breaks up where tires run.
 	mark *= 1.0 - 0.55 * smoothstep(0.35, 0.8, nt_value_noise(wp * 6.0)) * wear;
@@ -165,7 +173,7 @@ void fragment() {
 	rough = mix(rough, 0.22, wet_surface);  // Smoother when wet
 	rough = mix(rough, 0.02, puddle);  // Mirror-like puddles
 	vec2 rip = nt_ripples(wp, TIME, nt_rain) * (0.25 + puddle * 0.75);
-	vec2 grain = vec2(n1 - 0.5, n2 - 0.5) * 0.24;
+	vec2 grain = (tn.rg * 2.0 - 1.0) * 0.8 * (1.0 - mark);
 	NORMAL_MAP = normalize(vec3(rip + grain * (1.0 - puddle * 0.8), 1.0)) * 0.5 + 0.5;
 	NORMAL_MAP_DEPTH = 1.0;
 

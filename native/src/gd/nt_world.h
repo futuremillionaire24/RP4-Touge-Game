@@ -44,6 +44,7 @@ public:
 	double chunk_size() const { return nt::World::CHUNK; }
 	Rect2 bounds() const;
 	Ref<Image> minimap(int size) const;
+	Ref<Image> sea_depth(double cell) const;
 	const nt::World &native() const { return world_; }
 
 protected:

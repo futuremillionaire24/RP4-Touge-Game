@@ -7,6 +7,7 @@ extends Node3D
 var out_dir := "user://car_preview"
 var cars: PackedStringArray = []
 var cam: Camera3D
+var asset_root := "res://assets/cars"
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
@@ -15,8 +16,10 @@ func _ready() -> void:
 			out_dir = kv[1]
 		elif kv.size() == 2 and kv[0] == "cars":
 			cars = kv[1].split(",")
+		elif a == "props":
+			asset_root = "res://assets/props" # tools/carbake/props.mjs output; the arrow marks +Z
 	if cars.is_empty():
-		for d in DirAccess.get_directories_at("res://assets/cars"):
+		for d in DirAccess.get_directories_at(asset_root):
 			cars.append(d)
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	var env := Environment.new()
@@ -46,7 +49,7 @@ func _ready() -> void:
 	cam.current = true
 	add_child(cam)
 	for key in cars:
-		var path := "res://assets/cars/%s/%s.gltf" % [key, key]
+		var path := "%s/%s/%s.gltf" % [asset_root, key, key]
 		if not ResourceLoader.exists(path):
 			print("PREVIEW missing ", key)
 			continue
@@ -87,6 +90,9 @@ func _ready() -> void:
 		marks.add_child(arrow)
 		var bb := _aabb(car)
 		arrow.position = Vector3(0, bb.end.y + 0.4, bb.position.z - 0.3)
+		if asset_root.ends_with("props"):
+			arrow.rotation_degrees = Vector3(90, 0, 0)
+			arrow.position = Vector3(0, bb.end.y + 0.4, bb.end.z + 0.3)
 		var shots: Array[Image] = []
 		for v in [[Vector3(0.62, 0.32, -0.72), 1.0], [Vector3(1, 0.12, 0), 1.0], [Vector3(0.001, 1, 0.0), 1.0]]:
 			var dir: Vector3 = (v[0] as Vector3).normalized()

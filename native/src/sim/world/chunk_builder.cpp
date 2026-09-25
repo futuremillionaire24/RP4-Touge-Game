@@ -81,13 +81,13 @@ void build_terrain(Ctx &c) {
 			real h = w.terrain.sample(x, z);
 			Vec3 nrm = w.terrain.normal(x, z);
 			int mat = w.terrain.material(x, z);
-			// COLOR: r rock, g sand, b urban, a paddy. UV2.x: dirt. Grass is the default.
+			// COLOR: r rock, g sand, b urban, a farm. UV2: x forest, y park. Scrub is the default.
 			real rock = mat == 2 ? 1.0 : 0.0;
 			rock = std::max(rock, smoothstep(0.62, 0.78, 1.0 - nrm.y)); // steep = rock
 			m.positions.insert(m.positions.end(), {(float)x, (float)h, (float)z});
 			m.normals.insert(m.normals.end(), {(float)nrm.x, (float)nrm.y, (float)nrm.z});
 			m.uvs.insert(m.uvs.end(), {(float)(x / 8.0), (float)(z / 8.0)});
-			m.uv2s.insert(m.uv2s.end(), {mat == 1 ? 1.0f : 0.0f, (float)h});
+			m.uv2s.insert(m.uv2s.end(), {mat == 1 ? 1.0f : 0.0f, mat == 6 ? 1.0f : 0.0f});
 			m.colors.insert(m.colors.end(), {(float)rock, mat == 3 ? 1.0f : 0.0f, mat == 5 ? 1.0f : 0.0f, mat == 4 ? 1.0f : 0.0f});
 			c.out.min_y = std::min(c.out.min_y, h);
 			c.out.max_y = std::max(c.out.max_y, h);
@@ -253,7 +253,7 @@ void build_roads(Ctx &c) {
 							real off = side < 0 ? out_l - 0.6 : out_r - 0.6;
 							Vec3 p = s.center + right * (side * off);
 							add_prop(c, PROP_STREET_LAMP, p, yaw + (side < 0 ? PI * 0.5 : -PI * 0.5), Vec3(1, 1, 1), 0.0);
-							add_light(c, p + Vec3(0, 7.5, 0) - right * side * 1.4, 1.0, 0.1);
+							add_light(c, p + Vec3(0, 7.0, 0) - right * side * 3.2, 1.0, 0.1);
 						}
 					}
 					// European towns bury their cables; the generated (legacy) map keeps Japanese poles.
@@ -285,7 +285,7 @@ void build_roads(Ctx &c) {
 						real side = ((int)(s.distance / 42.0) % 2) ? 1.0 : -1.0;
 						Vec3 p = s.center + right * side * ((side < 0 ? out_l : out_r) - 0.2);
 						add_prop(c, PROP_HIGHWAY_LAMP, p + Vec3(0, 1.1, 0), yaw + (side < 0 ? PI * 0.5 : -PI * 0.5), Vec3(1, 1, 1), 0.0);
-						add_light(c, p + Vec3(0, 10.0, 0) - right * side * 3.0, 1.2, 0.08);
+						add_light(c, p + Vec3(0, 10.0, 0) - right * side * 4.1, 1.2, 0.08);
 					}
 					break;
 				case RK_RURAL:
@@ -318,7 +318,7 @@ void build_roads(Ctx &c) {
 						last_lamp = s.distance;
 						Vec3 p = s.center + right * (out_r - 0.4);
 						add_prop(c, PROP_HIGHWAY_LAMP, p, yaw - PI * 0.5, Vec3(1, 1.4, 1), 0.0);
-						add_light(c, p + Vec3(0, 13.0, 0) - right * 3.0, 1.4, 0.07);
+						add_light(c, p + Vec3(0, 12.6, 0) - right * 4.1, 1.4, 0.07);
 					}
 					break;
 				default:
@@ -677,6 +677,13 @@ void build_buildings(Ctx &c) {
 		real sgn = area >= 0 ? 1.0 : -1.0; // outward normal side
 		real h = b.top - b.base;
 		real u = 0.0;
+		// Floors stay level: the ground floor starts at the highest ground along the footprint
+		// (the street-side entrance on a slope); downhill walls show the storeys below it.
+		real gmax = b.base;
+		for (int k = 0; k < n; ++k) gmax = std::max(gmax, w.terrain.sample(b.ring[k].x, b.ring[k].z));
+		real anchor = clampr(gmax - b.base, 0.0, std::max(0.0, h - 3.0));
+		// UV2: x = style + seed * 0.98 (seed in the fraction), y = ground-floor anchor (m).
+		real style_seed = b.style + seedf * 0.98;
 		for (int k = 0; k < n; ++k) {
 			Vec3 a(b.ring[k].x, b.base, b.ring[k].z), bb(b.ring[(k + 1) % n].x, b.base, b.ring[(k + 1) % n].z);
 			real len = distance(a, bb);
@@ -685,10 +692,12 @@ void build_buildings(Ctx &c) {
 			Vec3 nrm = Vec3(dir.z, 0, -dir.x) * sgn;
 			Vec3 top(0, h, 0);
 			int i = m.vertex_count();
-			m.add_vertex(a, nrm, u, 0.0, b.style, seedf, cr, cg, cb, 1.0);
-			m.add_vertex(bb, nrm, u + len, 0.0, b.style, seedf, cr, cg, cb, 1.0);
-			m.add_vertex(bb + top, nrm, u + len, h, b.style, seedf, cr, cg, cb, 1.0);
-			m.add_vertex(a + top, nrm, u, h, b.style, seedf, cr, cg, cb, 1.0);
+			// COLOR: wall colour, alpha = wall height / 250 m (facade shader: cornice, parapet).
+			real ha = std::min(h, 250.0) / 250.0;
+			m.add_vertex(a, nrm, u, 0.0, style_seed, anchor, cr, cg, cb, ha);
+			m.add_vertex(bb, nrm, u + len, 0.0, style_seed, anchor, cr, cg, cb, ha);
+			m.add_vertex(bb + top, nrm, u + len, h, style_seed, anchor, cr, cg, cb, ha);
+			m.add_vertex(a + top, nrm, u, h, style_seed, anchor, cr, cg, cb, ha);
 			Vec3 fn = (bb - a).cross(top);
 			if (fn.dot(nrm) >= 0) m.add_quad(i, i + 1, i + 2, i + 3);
 			else m.add_quad(i, i + 3, i + 2, i + 1);

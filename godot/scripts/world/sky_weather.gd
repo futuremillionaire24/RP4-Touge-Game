@@ -99,10 +99,59 @@ func _make_rain() -> void:
 	_rain_fx.emitting = false
 	add_child(_rain_fx)
 
+const SKY_DIR := "res://assets/env/sky/"
+var _sky_keys: Array = [] # day-cycle keyframes from sky.json, sorted by hour
+var _sky_weather := {} # weather id -> keyframe
+var _sky_tex := {} # id -> Texture2D (only the ones in use stay referenced)
+
+func _sky_meta() -> void:
+	if not _sky_keys.is_empty():
+		return
+	var f := FileAccess.open(SKY_DIR + "sky.json", FileAccess.READ)
+	if f == null:
+		return
+	for s in JSON.parse_string(f.get_as_text()).skies:
+		if float(s.hour) < 0.0:
+			_sky_weather[s.weather] = s
+		else:
+			_sky_keys.append(s)
+	_sky_keys.sort_custom(func(a, b): return a.hour < b.hour)
+
+## The two day-cycle keyframes around `h` and the blend between them (wraps over midnight).
+func _sky_pair(h: float) -> Array:
+	var n := _sky_keys.size()
+	for i in range(n):
+		var a: Dictionary = _sky_keys[i]
+		var b: Dictionary = _sky_keys[(i + 1) % n]
+		var ha := float(a.hour)
+		var hb := float(b.hour) + (24.0 if i == n - 1 else 0.0)
+		var hh := h + (24.0 if i == n - 1 and h < ha else 0.0)
+		if hh >= ha and hh < hb:
+			return [a, b, smoothstep(0.0, 1.0, (hh - ha) / (hb - ha))]
+	return [_sky_keys[0], _sky_keys[0], 0.0]
+
+func _sky_texture(id: String) -> Texture2D:
+	if not _sky_tex.has(id):
+		_sky_tex[id] = load(SKY_DIR + id + ".jpg")
+	return _sky_tex[id]
+
+## Sun azimuth (radians from north, clockwise): east at 6:00, south at noon, west at 18:00.
+func sun_azimuth() -> float:
+	return deg_to_rad(90.0 + (time_of_day - 6.0) / 12.0 * 180.0)
+
 func sun_direction() -> Vector3:
-	# Sun rises in the east (+X) at 6:00, sets in the west at 18:00; tilted south.
-	var t := (time_of_day - 6.0) / 12.0 * PI
-	return Vector3(cos(t), sin(t), 0.35).normalized()
+	# Elevation follows the photographed sky keyframes, so the sky's sun glow, the disc and the
+	# shadows always agree.
+	_sky_meta()
+	var el := 0.0
+	if _sky_keys.is_empty():
+		el = asin(clampf(sin((time_of_day - 6.0) / 12.0 * PI), -1.0, 1.0)) * 0.8
+	else:
+		var p := _sky_pair(time_of_day)
+		el = deg_to_rad(lerpf(float(p[0].sun_el), float(p[1].sun_el), p[2]))
+	var az := sun_azimuth()
+	# +X east, +Z south, -Z north.
+	return Vector3(sin(az) * cos(el), sin(el), -cos(az) * cos(el)).normalized()
 
 func _process(delta: float) -> void:
 	var real_minutes_per_hour := day_length_minutes / 24.0
@@ -169,40 +218,57 @@ func _update_lighting(delta: float) -> void:
 	sun.light_energy = lerpf(lerpf(1.35, 0.28, overcast), 0.065, night)
 	sun.shadow_opacity = lerpf(1.0, 0.3, overcast)
 
-	# ---- Sky palette: GT7-grade day → golden hour → night ----
-	var top_day := Color(0.20, 0.40, 0.74)
-	var hor_day := Color(0.70, 0.78, 0.88)
-	# Golden hour: peach horizon, warm indigo top
-	var top_golden := Color(0.38, 0.24, 0.48)
-	var hor_golden := Color(1.0, 0.50, 0.28)
-	# Night: deep purple-black sky with subtle Japanese city glow on horizon
-	var top_n := Color(0.010, 0.008, 0.035)
-	var hor_n := Color(0.09, 0.05, 0.16)  # Purple-pink city glow
+	# ---- Photographic sky: day-cycle keyframes + weather cloud layers ----
+	var horizon := Color(0.7, 0.76, 0.84)
+	_sky_meta()
+	if not _sky_keys.is_empty():
+		var p := _sky_pair(time_of_day)
+		var a: Dictionary = p[0]
+		var b: Dictionary = p[1]
+		var t: float = p[2]
+		# Rotate each panorama so its sun glow sits at the game sun's azimuth.
+		var az_u := sun_azimuth() / TAU
+		var rot := Vector4(float(a.sun_u) - 0.5 - az_u, float(b.sun_u) - 0.5 - az_u, 0.0, 0.0)
+		sky.set_shader_parameter("sky_a", _sky_texture(a.id))
+		sky.set_shader_parameter("sky_b", _sky_texture(b.id))
+		sky.set_shader_parameter("blend", t)
+		sky.set_shader_parameter("energy", Vector2(float(a.energy), float(b.energy)))
+		var partly := smoothstep(0.05, 0.4, cloud) * (1.0 - smoothstep(0.7, 0.95, cloud) * 0.5)
+		var over := smoothstep(0.45, 0.85, cloud)
+		if _sky_weather.has("cloudy"):
+			var w: Dictionary = _sky_weather.cloudy
+			sky.set_shader_parameter("sky_p", _sky_texture(w.id))
+			rot.z = float(w.sun_u) - 0.5 - az_u
+		if _sky_weather.has("overcast"):
+			var w: Dictionary = _sky_weather.overcast
+			sky.set_shader_parameter("sky_o", _sky_texture(w.id))
+			rot.w = float(w.sun_u) - 0.5 - az_u
+		sky.set_shader_parameter("rot", rot)
+		sky.set_shader_parameter("weather", Vector2(partly, over))
+		var ha: Array = a.horizon
+		var hb: Array = b.horizon
+		var e := lerpf(float(a.energy), float(b.energy), t)
+		horizon = Color(lerpf(ha[0], hb[0], t), lerpf(ha[1], hb[1], t), lerpf(ha[2], hb[2], t)) * e
+		var grey := Color(0.5, 0.52, 0.55) * e
+		horizon = horizon.lerp(grey, over * 0.7)
+		# Drop texture references that are no longer shown (VRAM on the handheld).
+		for id in _sky_tex.keys():
+			if id != a.id and id != b.id and not _sky_weather.values().any(func(s): return s.id == id):
+				_sky_tex.erase(id)
 
-	var top := top_day.lerp(top_golden, golden * 0.7).lerp(top_n, night)
-	var hor := hor_day.lerp(hor_golden, golden).lerp(hor_n, night)
+	# ---- Ambient & exposure ----
+	env.ambient_light_energy = lerpf(lerpf(1.0, 1.1, overcast), 0.4, night)
+	env.ambient_light_color = horizon.lightened(0.1)
+	env.tonemap_exposure = lerpf(1.0, 1.25, night)
 
-	# Overcast greys
-	var grey := Color(0.42, 0.44, 0.48).lerp(Color(0.04, 0.04, 0.06), night)
-	sky.sky_top_color = top.lerp(grey, overcast * 0.85)
-	sky.sky_horizon_color = hor.lerp(grey.lightened(0.08), overcast * 0.8)
-	sky.ground_horizon_color = sky.sky_horizon_color.darkened(0.22)
-	sky.sun_angle_max = lerpf(28.0, 12.0, night)  # Tighter moon disc at night
-	sky.sun_curve = lerpf(0.08, 0.15, night)
-
-	# ---- Ambient & exposure: richer night presence ----
-	env.ambient_light_energy = lerpf(lerpf(0.60, 0.65, overcast), 0.32, night)
-	env.ambient_light_color = sky.sky_horizon_color.lightened(0.2)
-	env.tonemap_exposure = lerpf(0.95, 1.5, night)
-
-	# ---- Glow: dramatic at night for neon signs and headlights ----
-	env.glow_intensity = lerpf(0.42, 1.25, night)
-	env.glow_hdr_threshold = lerpf(1.3, 0.75, night)
-	env.glow_bloom = lerpf(0.025, 0.06, night)
+	# ---- Glow: clean bloom on light emitters without blowing out car panels ----
+	env.glow_intensity = lerpf(0.35, 0.55, night)
+	env.glow_hdr_threshold = lerpf(1.2, 1.05, night)
+	env.glow_bloom = lerpf(0.02, 0.04, night)
 
 	# ---- Fog: atmospheric depth with weather ----
 	env.fog_density = lerpf(0.0004, 0.007, fog_amount) + rain * 0.0015 + night * 0.0002
-	env.fog_light_color = sky.sky_horizon_color.lerp(Color(0.52, 0.55, 0.60), overcast * 0.5)
+	env.fog_light_color = horizon.lerp(Color(0.52, 0.55, 0.60), overcast * 0.5)
 
 	# ---- Lightning in storms: double-flash pattern (GT7-style) ----
 	if weather == W.STORM:
@@ -215,5 +281,7 @@ func _update_lighting(delta: float) -> void:
 		# Double-flash: first burst + secondary pulse
 		var flash_intensity := _flash * (1.0 + 0.3 * sin(_flash * 12.0))
 		env.ambient_light_energy += flash_intensity * 5.0
-		sky.sky_top_color = sky.sky_top_color.lerp(Color(0.85, 0.88, 1.0), flash_intensity * 0.85)
+		sky.set_shader_parameter("flash", flash_intensity)
+	else:
+		sky.set_shader_parameter("flash", 0.0)
 

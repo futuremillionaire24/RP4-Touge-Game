@@ -1,81 +1,317 @@
-// Procedural building facades: 8 styles (glass office, tiled commercial, mixed-use with shop
-// fronts, concrete apartments with balconies...). UV = meters along the perimeter / height,
-// UV2.x style, UV2.y per-building seed. Windows light up at night with per-window randomness.
+// European / Riviera building facades on flat wall quads. UV = metres along the perimeter / up
+// from the base, UV2.x = style + seed * 0.98, UV2.y = ground-floor line above the base (m),
+// COLOR.rgb wall colour (OSM building:colour or a Riviera pastel), COLOR.a wall height / 250 m.
+// Styles (tools/mapbake): 0 low town house, 1 mid-rise, 2 Monaco apartments, 3 villa/house,
+// 4 tower, 5 church/historic, 6 industrial/garage.
+// Real surfaces from the "facade" texture array (Poly Haven CC0: stucco, plaster, sandstone,
+// concrete, slatted shutters). Depth is faked: recessed windows parallax against the view,
+// balconies and cornices cast baked shadow bands. Windows light up at night.
 shader_type spatial;
 render_mode cull_back, diffuse_burley;
 
 #include "res://shaders/include/nt_noise.gdshaderinc"
+#include "res://shaders/include/env_layers.gdshaderinc"
 
 global uniform float nt_night;
 global uniform float nt_wetness;
+global uniform float nt_snow;
 
-const vec3 BASES[8] = vec3[](
-	vec3(0.85, 0.68, 0.45), // Warm Mediterranean Ochre
-	vec3(0.88, 0.84, 0.76), // Cream Limestone
-	vec3(0.78, 0.48, 0.35), // Tuscan Terracotta / Sienna
-	vec3(0.82, 0.64, 0.58), // Riviera Pastel Rose
-	vec3(0.80, 0.73, 0.60), // Golden Sandstone
-	vec3(0.66, 0.68, 0.58), // Olive Stucco
-	vec3(0.48, 0.52, 0.58), // Heritage Slate
-	vec3(0.70, 0.45, 0.36)  // Heritage Brick
-);
+uniform sampler2DArray facade_albedo : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2DArray facade_normal : filter_linear_mipmap_anisotropic, repeat_enable;
+
+const float F_STUCCO = 0.0;
+const float F_PLASTER = 1.0;
+const float F_GREY = 2.0;
+const float F_STONE = 3.0;
+const float F_CONCRETE = 4.0;
+const float F_SLATS = 5.0;
+const float FTILE[6] = float[](2.0, 2.0, 1.0, 2.0, 2.71, 2.0);
+
+// Provencal shutter paints: sage, grey-blue, dove grey, walnut, lavender blue, cream.
+const vec3 SHUTTER[6] = vec3[](vec3(0.33, 0.43, 0.33), vec3(0.3, 0.42, 0.5), vec3(0.55, 0.57, 0.55), vec3(0.36, 0.24, 0.16), vec3(0.3, 0.36, 0.55), vec3(0.82, 0.8, 0.72));
+// Awning canvas colours for shop fronts.
+const vec3 AWNING[5] = vec3[](vec3(0.55, 0.08, 0.08), vec3(0.1, 0.25, 0.18), vec3(0.08, 0.14, 0.35), vec3(0.7, 0.55, 0.2), vec3(0.2, 0.2, 0.22));
+
+varying vec3 world_pos;
+varying vec3 world_nrm;
+
+void vertex() {
+	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	world_nrm = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
+}
+
+// Anti-aliased rectangle mask (metres); aa = pixel footprint.
+float rect(vec2 p, vec2 mn, vec2 mx, float aa) {
+	vec2 a = smoothstep(mn - aa, mn + aa, p) * (1.0 - smoothstep(mx - aa, mx + aa, p));
+	return a.x * a.y;
+}
+
+// Wall material sample: texture detail normalised by the layer's average colour, so the OSM /
+// palette colour sets the hue and the texture only adds real surface grain.
+vec4 wall_tex(float layer, vec2 m, vec3 tint, out vec4 nrm) {
+	vec3 uv = vec3(m / FTILE[int(layer)], layer);
+	vec4 a = texture(facade_albedo, uv);
+	nrm = texture(facade_normal, uv);
+	vec3 avg = textureLod(facade_albedo, vec3(0.5, 0.5, layer), 12.0).rgb;
+	vec3 detail = a.rgb / max(avg, vec3(0.05));
+	return vec4(tint * mix(vec3(1.0), detail, 0.85), a.a);
+}
 
 void fragment() {
-	int style = int(round(UV2.x));
-	float seed = UV2.y;
-	vec2 m = UV; // meters
-	// Real-world scale: 1.5-1.8 m window bays, 3.4 m commercial / 2.9 m residential floors.
-	float bay_w = style <= 3 ? 1.5 + 0.3 * seed : 1.8;
-	float floor_h = style <= 3 ? 3.4 : 2.9;
-	vec2 cell = vec2(floor(m.x / bay_w), floor(m.y / floor_h));
-	vec2 f = vec2(fract(m.x / bay_w), fract(m.y / floor_h));
-	vec3 base = BASES[style] * (0.85 + 0.3 * seed);
-	// Window rectangle within each bay (curtain wall: thin mullions; others: punched windows).
-	vec2 win_min = style == 0 || style == 3 ? vec2(0.05, 0.1) : vec2(0.14, 0.3);
-	vec2 win_max = style == 0 || style == 3 ? vec2(0.95, 0.94) : vec2(0.86, 0.82);
-	float aa = 0.02;
-	float win = smoothstep(win_min.x - aa, win_min.x, f.x) * smoothstep(win_max.x + aa, win_max.x, f.x) *
-			smoothstep(win_min.y - aa, win_min.y, f.y) * smoothstep(win_max.y + aa, win_max.y, f.y);
-	// Ground floor: shop fronts (commercial) / entrances.
-	bool ground = m.y < floor_h * 1.15;
-	float h = nt_hash(cell + seed * 97.0);
-	vec3 glass = mix(vec3(0.05, 0.07, 0.1), vec3(0.2, 0.28, 0.36), h * 0.5);
-	vec3 albedo = mix(base, glass, win);
-	float rough = mix(0.85, 0.08, win);
-	float metal = style == 0 ? win * 0.3 : 0.0;
-	// Balconies on apartments (horizontal bands).
-	if (style >= 5) {
-		float slab = step(0.9, f.y);
-		albedo = mix(albedo, base * 1.15, slab);
-		float rail = step(0.1, f.y) * step(f.y, 0.38) * (1.0 - win) ;
-		albedo = mix(albedo, base * 0.7, rail * 0.5);
+	int style = int(floor(UV2.x + 0.001));
+	float seed = clamp(fract(UV2.x + 0.001) / 0.98, 0.0, 1.0);
+	float anchor = UV2.y; // ground-floor line above the wall base (m)
+	vec2 m = UV;
+	float wall_h = max(COLOR.a * 250.0, 3.0);
+	// Real stucco sits around 0.5-0.7 albedo; OSM/palette colours are sRGB swatches.
+	vec3 wall_col = min(COLOR.rgb, vec3(0.92)) * 0.78;
+	vec3 N = normalize(world_nrm);
+	vec3 V = normalize(CAMERA_POSITION_WORLD - world_pos);
+	// Tangent frame from screen derivatives (walls carry no tangents): T along +u, B up.
+	vec3 dp1 = dFdx(world_pos);
+	vec3 dp2 = dFdy(world_pos);
+	vec3 T = cross(dp2, N) * dFdx(m.x) + cross(N, dp1) * dFdy(m.x);
+	T = normalize(T - N * dot(T, N) + vec3(1e-6));
+	vec3 B = vec3(0.0, 1.0, 0.0);
+	float aa = max(fwidth(m.x), fwidth(m.y)) * 0.75 + 0.002;
+	float far = smoothstep(0.03, 0.12, aa); // fine details fade once they alias
+
+	// ---- Layout per style (metres) ----
+	float fh = 3.1;          // floor height
+	float gf = 4.2;          // ground floor height
+	float bw = 2.7 + seed * 0.7; // bay width
+	vec2 win = vec2(1.15, 2.05); // window size
+	float sill = 0.35;       // window bottom above the floor
+	float shutters = 1.0;    // chance of shutters
+	float balcony = 0.0;     // 0 none, 1 per window, 2 continuous
+	float cornice = 1.0;
+	float wall_layer = seed < 0.5 ? F_STUCCO : (seed < 0.8 ? F_PLASTER : F_GREY);
+	float base_layer = F_STONE;
+	bool shops = true;
+	if (style == 1) { fh = 3.2; shutters = 0.5; balcony = 1.0; }
+	else if (style == 2) { fh = 3.05; balcony = seed < 0.55 ? 1.0 : 2.0; shutters = 0.6; }
+	else if (style == 3) { fh = 3.0; gf = 3.0; win = vec2(1.0, 1.45); sill = 0.9; balcony = seed > 0.7 ? 1.0 : 0.0; base_layer = wall_layer; shops = false; cornice = 0.5; }
+	else if (style == 4) { fh = 3.3; gf = 5.0; bw = 3.0; win = vec2(2.7, 2.5); sill = 0.25; shutters = 0.0; balcony = 2.0; wall_layer = seed < 0.5 ? F_STUCCO : F_CONCRETE; cornice = 0.0; }
+	else if (style == 5) { fh = 5.5; gf = 5.5; bw = 4.2; win = vec2(1.3, 3.0); sill = 1.4; shutters = 0.0; wall_layer = F_STONE; shops = false; }
+	else if (style == 6) { fh = 5.0; gf = 5.0; bw = 6.0; win = vec2(3.4, 1.1); sill = 3.4; shutters = 0.0; wall_layer = F_CONCRETE; base_layer = F_CONCRETE; shops = false; cornice = 0.0; }
+	vec3 shutter_col = SHUTTER[int(fract(seed * 7.31) * 5.99)];
+	float top = wall_h - (cornice > 0.0 ? 0.9 : 0.4);
+
+	// ---- Cells ----
+	// Floors are level, counted from the anchor; below it (downhill walls) are lower storeys.
+	float ya = m.y - anchor;
+	bool ground = ya >= 0.0 && ya < gf;
+	float y = ya >= 0.0 ? ya - gf : ya;
+	float fi = floor(y / fh);
+	float fy = y - fi * fh;
+	float bi = floor(m.x / bw);
+	float fx = m.x - (bi + 0.5) * bw;
+	float cell_h = nt_hash(vec2(bi, fi) + seed * 91.0);
+	// Fewer windows on narrow return walls: skip some bays on low houses.
+	bool has_win = !ground && m.y + (fh - fy) < top + 0.2 && !(style == 3 && cell_h < 0.25) && m.y > 0.8;
+	if (ground) { fy = ya; }
+
+	// ---- Wall ----
+	vec4 wn;
+	vec4 wall = wall_tex(wall_layer, m, wall_col, wn);
+	vec3 albedo = wall.rgb;
+	float rough = mix(0.82, 0.95, wn.b);
+	vec2 nxy = wn.rg;
+	float height = wall.a;
+
+	// Rusticated stone base / plinth on the ground floor.
+	float plinth = ground ? 1.0 : 0.0;
+	if (ground && style != 3) {
+		vec4 bn;
+		vec3 stone_tint = mix(wall_col, vec3(0.86, 0.82, 0.74), base_layer == F_STONE ? 0.6 : 0.0);
+		vec4 base_c = wall_tex(base_layer, m * vec2(1.0, 1.0), stone_tint, bn);
+		albedo = base_c.rgb;
+		nxy = bn.rg;
+		rough = mix(0.8, 0.95, bn.b);
 	}
-	// Grime streaks below windows and toward the ground.
-	float streak = nt_value_noise(vec2(m.x * 1.7, m.y * 0.08) + seed * 10.0);
-	albedo *= 0.8 + 0.2 * streak;
-	albedo *= mix(0.75, 1.0, smoothstep(0.0, 6.0, m.y));
-	// Night: random lit windows in warm/cool tints; shop fronts glow.
+
+	// Cornices: string course at each floor line, heavy cornice at the roof line.
+	float band = 0.0;
+	float shadow = 1.0;
+	if (cornice > 0.0 && style != 4) {
+		float course = rect(vec2(0.0, fy), vec2(-1.0, 0.0), vec2(1.0, 0.16 * cornice), aa) * (ground ? 0.0 : 1.0);
+		float gf_line = rect(vec2(0.0, ya), vec2(-1.0, gf - 0.25), vec2(1.0, gf + 0.05), aa);
+		float roof_c = rect(vec2(0.0, m.y), vec2(-1.0, top), vec2(1.0, top + 0.55), aa);
+		band = max(max(course, gf_line), roof_c);
+		// Soft shadow under the projecting roof cornice and ground-floor course.
+		shadow *= 1.0 - 0.35 * smoothstep(top - 0.6, top, m.y) * step(m.y, top);
+		shadow *= 1.0 - 0.3 * smoothstep(gf - 0.7, gf - 0.25, ya) * step(ya, gf - 0.25) * step(0.0, ya);
+		albedo = mix(albedo, mix(wall_col, vec3(0.9, 0.88, 0.82), 0.65) * (0.9 + 0.2 * height), band);
+	}
+	// Parapet above the roof cornice.
+	if (m.y > top + 0.55) {
+		albedo = wall.rgb * 0.95;
+	}
+
+	// ---- Windows (recessed, parallax) ----
 	vec3 emit = vec3(0.0);
-	if (nt_night > 0.0) {
-		// ~30-45% of windows lit, grouped by floor (offices light whole floors), dim and varied so
-		// the neon stays the brightest thing on the street.
-		float floor_lit = nt_hash(vec2(cell.y, seed * 51.0));
-		float lit = step(0.62 - 0.12 * seed, h * 0.6 + floor_lit * 0.4);
-		vec3 tint = mix(vec3(1.0, 0.8, 0.55), vec3(0.72, 0.85, 1.0), step(0.55, nt_hash(cell + 3.3)));
-		float blind = 0.55 + 0.45 * step(0.5, fract(f.y * 6.0 + h)); // venetian blinds pattern
-		emit += tint * win * lit * blind * (0.35 + 0.35 * h) * nt_night;
-		if (ground && style <= 4) {
-			// Shop fronts: warm or cool interiors with a dark lower counter band.
-			vec3 shop = mix(vec3(1.0, 0.78, 0.5), vec3(0.55, 0.85, 1.0), h) * mix(0.45, 0.8, nt_hash(cell + 9.1));
-			emit += shop * win * step(0.35, f.y) * nt_night;
+	float glass = 0.0;
+	float metal = 0.0;
+	float spec = 0.5;
+	if (has_win) {
+		vec2 c = vec2(fx, fy - sill - win.y * 0.5); // window-centred coordinates
+		vec2 hw = win * 0.5;
+		float opening = rect(c, -hw, hw, aa);
+		// Arched heads on churches.
+		if (style == 5) {
+			float arc = length(vec2(c.x, max(c.y - (hw.y - hw.x), 0.0))) - hw.x;
+			opening = smoothstep(aa, -aa, arc) * rect(c, -hw, vec2(hw.x, hw.y + hw.x), aa);
+		}
+		// Parallax: the glass sits `depth` behind the wall plane.
+		vec3 vt = vec3(dot(V, T), dot(V, B), dot(V, N));
+		float depth = style == 4 ? 0.12 : 0.24;
+		vec2 off = -vt.xy / max(vt.z, 0.25) * depth;
+		vec2 cg = c + off;
+		float inner = rect(cg, -hw, hw, aa) * opening;
+		float reveal = opening - inner;
+		// Frame: pale painted timber / aluminium ring around the glass.
+		float frame = inner * (1.0 - rect(cg, -hw + 0.07, hw - 0.07, aa));
+		float mullion = inner * rect(cg, vec2(-0.03, -hw.y), vec2(0.03, hw.y), aa) * (style == 4 ? 0.0 : 1.0);
+		float transom = inner * rect(cg, vec2(-hw.x, hw.y - 0.55), vec2(hw.x, hw.y - 0.5), aa) * (style == 4 ? 0.0 : 1.0);
+		float glass_m = clamp(inner - frame - mullion - transom, 0.0, 1.0);
+		// Glass: dark, reflective, with sheer curtains / blinds in some windows.
+		float lit_h = nt_hash(vec2(bi * 1.7, fi * 3.1) + seed * 13.0);
+		vec3 interior = mix(vec3(0.02, 0.025, 0.03), vec3(0.08, 0.075, 0.07), lit_h);
+		float curtain = step(0.55, lit_h) * smoothstep(-0.2, 0.6, cg.y / hw.y);
+		interior = mix(interior, vec3(0.42, 0.4, 0.36), curtain * 0.6);
+		vec3 frame_col = style == 4 ? vec3(0.55, 0.56, 0.58) : vec3(0.86, 0.85, 0.8);
+		vec3 reveal_col = wall.rgb * mix(0.45, 0.8, smoothstep(hw.y, hw.y - 0.3, c.y)); // lintel shadow on top
+		albedo = mix(albedo, reveal_col, reveal);
+		albedo = mix(albedo, frame_col, clamp(frame + mullion + transom, 0.0, 1.0));
+		albedo = mix(albedo, interior, glass_m);
+		rough = mix(rough, 0.06, glass_m);
+		rough = mix(rough, 0.5, clamp(frame + mullion + transom, 0.0, 1.0));
+		spec = mix(spec, 0.75, glass_m);
+		glass = glass_m;
+		nxy = mix(nxy, vec2(0.5), opening);
+		// Stone sill and lintel on classic facades.
+		if (style != 4 && style != 6) {
+			float sillm = rect(c, vec2(-hw.x - 0.12, -hw.y - 0.1), vec2(hw.x + 0.12, -hw.y), aa);
+			float lint = rect(c, vec2(-hw.x - 0.08, hw.y), vec2(hw.x + 0.08, hw.y + 0.14), aa) * (style == 5 ? 0.0 : 1.0);
+			albedo = mix(albedo, vec3(0.85, 0.83, 0.77) * (0.9 + 0.2 * height), max(sillm, lint));
+			shadow *= 1.0 - 0.3 * rect(c, vec2(-hw.x - 0.1, -hw.y - 0.35), vec2(hw.x + 0.1, -hw.y - 0.1), aa); // drip shadow
+		}
+		// Shutters: open panels either side (or closed over the window).
+		if (shutters > 0.0 && fract(seed * 13.7) < shutters) {
+			float closed = step(nt_hash(vec2(bi, fi) + seed * 3.0), 0.22);
+			vec2 sp = vec2(abs(c.x) - hw.x - hw.x * 0.5 - 0.03, c.y);
+			float open_panel = rect(sp, vec2(-hw.x * 0.5, -hw.y), vec2(hw.x * 0.5, hw.y), aa) * (1.0 - closed);
+			float shut = max(open_panel, opening * closed);
+			vec4 sn;
+			vec3 slat_uv_tint = shutter_col;
+			vec4 sl = wall_tex(F_SLATS, vec2(c.x, c.y) * vec2(1.0, 1.6), slat_uv_tint, sn);
+			// Panel border.
+			float edge = 1.0 - rect(closed > 0.5 ? c : sp, closed > 0.5 ? -hw + 0.05 : vec2(-hw.x * 0.5 + 0.05, -hw.y + 0.05), closed > 0.5 ? hw - 0.05 : vec2(hw.x * 0.5 - 0.05, hw.y - 0.05), aa);
+			vec3 sc = mix(sl.rgb, shutter_col * 0.85, edge);
+			albedo = mix(albedo, sc, shut);
+			rough = mix(rough, 0.6, shut);
+			nxy = mix(nxy, sn.rg, shut * (1.0 - far));
+			glass *= 1.0 - shut;
+			spec = mix(spec, 0.45, shut);
+			// Open shutters stand off the wall: thin shadow line on their inner edge.
+			shadow *= 1.0 - 0.35 * open_panel * (1.0 - smoothstep(0.0, 0.08, abs(abs(c.x) - hw.x - 0.03)));
+		}
+		// Balcony: slab + wrought-iron railing in front of the lower window.
+		if (balcony > 0.0) {
+			float span = balcony > 1.5 ? 1.0 : rect(vec2(fx, 0.0), vec2(-hw.x - 0.45, -1.0), vec2(hw.x + 0.45, 1.0), aa);
+			float slab = span * rect(vec2(0.0, fy), vec2(-1.0, 0.0), vec2(1.0, 0.18), aa);
+			float rail_zone = span * rect(vec2(0.0, fy), vec2(-1.0, 0.18), vec2(1.0, 1.08), aa);
+			float top_rail = span * rect(vec2(0.0, fy), vec2(-1.0, 1.02), vec2(1.0, 1.1), aa);
+			float bar_d = abs(fract(m.x / 0.13) - 0.5) * 0.13; // metres from the nearest bar
+			float bars = 1.0 - smoothstep(0.012, 0.012 + aa, bar_d);
+			bars = mix(bars, 0.3, far) * rail_zone; // average density once the bars alias
+			vec3 slab_col = mix(wall_col, vec3(0.92, 0.9, 0.86), 0.6);
+			if (style == 4 || style == 2 && seed > 0.8) {
+				// Modern: glass balustrade with a white slab edge.
+				albedo = mix(albedo, mix(albedo, vec3(0.45, 0.55, 0.6), 0.35), rail_zone);
+				spec = mix(spec, 0.7, rail_zone);
+				rough = mix(rough, 0.1, rail_zone);
+			} else {
+				albedo = mix(albedo, vec3(0.05, 0.05, 0.05), max(bars, top_rail));
+				metal = max(metal, 0.4 * max(bars, top_rail));
+				rough = mix(rough, 0.55, max(bars, top_rail));
+			}
+			albedo = mix(albedo, slab_col, slab);
+			// The slab above shades the top of this floor.
+			shadow *= 1.0 - 0.4 * span * smoothstep(fh - 0.5, fh, fy);
+		}
+		// Night: lit rooms, whole floors on offices, warm or cool.
+		if (nt_night > 0.0) {
+			float floor_lit = nt_hash(vec2(fi, seed * 51.0));
+			float lit = step(0.6 - 0.1 * seed, lit_h * 0.6 + floor_lit * 0.4);
+			vec3 tint = mix(vec3(1.0, 0.78, 0.5), vec3(0.75, 0.86, 1.0), step(0.7, nt_hash(vec2(bi, fi) + 3.3)));
+			emit += tint * glass * lit * (0.5 + 0.8 * curtain) * (0.4 + 0.4 * lit_h) * nt_night;
 		}
 	}
-	if (ground && style <= 4) {
-		albedo = mix(albedo, vec3(0.08, 0.08, 0.09), 1.0 - win);
+
+	// ---- Ground floor: shop fronts with awnings, or doors ----
+	if (ground && shops) {
+		float sb = floor(m.x / (bw * 2.0));
+		float sx = m.x - (sb + 0.5) * bw * 2.0;
+		float sh = nt_hash(vec2(sb, 7.0) + seed * 17.0);
+		vec2 c = vec2(sx, ya);
+		float shop = rect(c, vec2(-bw + 0.35, 0.25), vec2(bw - 0.35, gf - 1.05), aa);
+		vec3 vt = vec3(dot(V, T), dot(V, B), dot(V, N));
+		vec2 off = -vt.xy / max(vt.z, 0.25) * 0.3;
+		float inner = rect(c + off, vec2(-bw + 0.35, 0.25), vec2(bw - 0.35, gf - 1.05), aa) * shop;
+		float frame = inner * (1.0 - rect(c + off, vec2(-bw + 0.45, 0.35), vec2(bw - 0.45, gf - 1.15), aa));
+		float gl = clamp(inner - frame, 0.0, 1.0);
+		bool shuttered = sh < 0.18; // closed roller shutter
+		vec3 interior = mix(vec3(0.05, 0.05, 0.055), vec3(0.2, 0.18, 0.15), step(0.5, nt_hash(vec2(sb, 3.0))));
+		albedo = mix(albedo, wall.rgb * 0.35, shop - inner);
+		albedo = mix(albedo, vec3(0.12, 0.12, 0.13), frame);
+		if (shuttered) {
+			vec4 sn;
+			vec4 sl = wall_tex(F_SLATS, c * vec2(1.0, 2.0), vec3(0.62, 0.63, 0.64), sn);
+			albedo = mix(albedo, sl.rgb, shop);
+			nxy = mix(nxy, sn.rg, shop);
+			rough = mix(rough, 0.5, shop);
+		} else {
+			albedo = mix(albedo, interior, gl);
+			rough = mix(rough, 0.05, gl);
+			spec = mix(spec, 0.75, gl);
+			// Striped canvas awning above the window (seen as a band on the wall).
+			float awn = rect(c, vec2(-bw + 0.25, gf - 1.0), vec2(bw - 0.25, gf - 0.45), aa) * step(0.35, sh);
+			vec3 ac = AWNING[int(sh * 4.99)];
+			float stripe = step(0.5, fract(sx / 0.35));
+			ac = mix(ac, vec3(0.92, 0.9, 0.85), stripe * step(0.6, sh));
+			albedo = mix(albedo, ac * (0.8 + 0.2 * smoothstep(gf - 1.0, gf - 0.45, ya)), awn);
+			rough = mix(rough, 0.85, awn);
+			// Shop light spills at night; some stay lit during the day.
+			float on = max(nt_night, 0.25 * step(0.7, sh));
+			emit += mix(vec3(1.0, 0.82, 0.55), vec3(0.85, 0.92, 1.0), step(0.6, sh)) * gl * on * (0.6 + 0.5 * sh);
+		}
+		nxy = mix(nxy, vec2(0.5), shop * (shuttered ? 0.0 : 1.0));
+	} else if (ground) {
+		// Entrance door on houses / churches.
+		float db = floor(m.x / 9.0);
+		float dx = m.x - (db + 0.5) * 9.0;
+		float door = rect(vec2(dx, ya), vec2(-0.55, 0.0), vec2(0.55, style == 5 ? 3.6 : 2.3), aa);
+		albedo = mix(albedo, vec3(0.28, 0.18, 0.1), door);
+		rough = mix(rough, 0.6, door);
 	}
+
+	// ---- Weathering ----
+	float streak = nt_value_noise(vec2(m.x * 2.3, m.y * 0.07) + seed * 10.0);
+	albedo *= mix(1.0, 0.82 + 0.18 * streak, 0.7 * (1.0 - glass));
+	albedo *= mix(0.72, 1.0, smoothstep(0.0, 1.2, m.y)); // splash / grime at the foot
+	albedo *= 0.92 + 0.16 * nt_fbm(m * 0.05 + seed * 3.0, 2);
+	albedo *= shadow;
+
 	float wet = clamp(nt_wetness, 0.0, 1.0);
-	ALBEDO = albedo * mix(1.0, 0.8, wet);
-	ROUGHNESS = mix(rough, rough * 0.6, wet);
+	albedo *= mix(1.0, 0.78, wet * (1.0 - glass));
+	rough = mix(rough, rough * 0.55, wet);
+
+	vec3 Nw = env_perturb(N, T, B, nxy, 0.9 * (1.0 - far * 0.6));
+	NORMAL = normalize((VIEW_MATRIX * vec4(Nw, 0.0)).xyz);
+	ALBEDO = albedo;
+	ROUGHNESS = rough;
 	METALLIC = metal;
+	SPECULAR = spec;
 	EMISSION = emit;
 }

@@ -1,0 +1,230 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.0",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 1386,
+      "max": [
+        2.92895770072937,
+        12.234667778015137,
+        2.9546384811401367
+      ],
+      "min": [
+        -2.8161206245422363,
+        0.002729030093178153,
+        -3.051046848297119
+      ],
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 1386,
+      "bufferView": 0,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 1386,
+      "bufferView": 0,
+      "byteOffset": 24
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 3459,
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 6132,
+      "bufferView": 1,
+      "byteOffset": 6920
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 5550,
+      "max": [
+        3.6000466346740723,
+        13,
+        3.7119009494781494
+      ],
+      "min": [
+        -3.64697265625,
+        3.592742443084717,
+        -3.655827522277832
+      ],
+      "bufferView": 2,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 5550,
+      "bufferView": 2,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 5550,
+      "bufferView": 2,
+      "byteOffset": 24
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 44352,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 44352,
+      "byteLength": 19184,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 63536,
+      "byteLength": 177600,
+      "byteStride": 32,
+      "target": 34962
+    }
+  ],
+  "samplers": [
+    {
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "source": 0,
+      "sampler": 0
+    },
+    {
+      "source": 1,
+      "sampler": 0
+    },
+    {
+      "source": 2,
+      "sampler": 0
+    },
+    {
+      "source": 3,
+      "sampler": 0
+    }
+  ],
+  "images": [
+    {
+      "name": "tree_plane_0",
+      "mimeType": "image/jpeg",
+      "uri": "tree_plane_0.jpg"
+    },
+    {
+      "name": "tree_plane_1",
+      "mimeType": "image/jpeg",
+      "uri": "tree_plane_1.jpg"
+    },
+    {
+      "name": "tree_plane_2",
+      "mimeType": "image/png",
+      "uri": "tree_plane_2.png"
+    },
+    {
+      "name": "tree_plane_3",
+      "mimeType": "image/jpeg",
+      "uri": "tree_plane_3.jpg"
+    }
+  ],
+  "buffers": [
+    {
+      "name": "tree_plane.bin",
+      "uri": "tree_plane.bin",
+      "byteLength": 241136
+    }
+  ],
+  "materials": [
+    {
+      "name": "M_Bark.005",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 0
+        }
+      },
+      "normalTexture": {
+        "index": 1
+      }
+    },
+    {
+      "name": "M_Branch.005",
+      "alphaMode": "MASK",
+      "alphaCutoff": 0.4,
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 2
+        }
+      },
+      "normalTexture": {
+        "index": 3
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "tree_plane",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 3
+        },
+        {
+          "attributes": {
+            "POSITION": 5,
+            "NORMAL": 6,
+            "TEXCOORD_0": 7
+          },
+          "mode": 4,
+          "material": 1,
+          "indices": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "tree_plane",
+      "mesh": 0
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ]
+}

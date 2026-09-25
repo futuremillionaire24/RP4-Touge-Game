@@ -1,0 +1,17 @@
+{
+ "key": "street_lamp",
+ "credit": {
+  "title": "PBR Street Props Pack (Game Ready)",
+  "author": "MadeByYeshe",
+  "author_url": "https://sketchfab.com/MadeByYeshe",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/pbr-street-props-pack-game-ready-8013d8e6af4645d1a7c3d5b24054bfc8"
+ },
+ "size": [
+  3.8,
+  7.5,
+  0.72
+ ],
+ "triangles": 720
+}

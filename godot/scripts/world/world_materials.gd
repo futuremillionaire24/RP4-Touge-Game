@@ -6,9 +6,35 @@ enum Group { ROAD, SHOULDER, CURB, RAIL, WALL, POST, TIREWALL, TERRAIN, JUNCTION
 
 static var _cache := {}
 
+## Poly Haven texture arrays (tools/carbake/envtex.mjs) bound to every shader that samples them.
+const ENV_ARRAYS := {
+	"ground_albedo": "res://assets/env/ground_albedo.webp", "ground_normal": "res://assets/env/ground_normal.webp",
+	"road_albedo": "res://assets/env/road_albedo.webp", "road_normal": "res://assets/env/road_normal.webp",
+	"facade_albedo": "res://assets/env/facade_albedo.webp", "facade_normal": "res://assets/env/facade_normal.webp",
+}
+
+static var _sea_depth: ImageTexture
+static var _sea_rect := Rect2()
+
+## Per-world data for the materials: the sea depth map (shallows, shore foam) for the water.
+static func set_world(world: NTWorld) -> void:
+	_sea_rect = world.bounds()
+	_sea_depth = ImageTexture.create_from_image(world.sea_depth(8.0))
+	if _cache.has(Group.WATER):
+		_bind_sea(_cache[Group.WATER])
+
+static func _bind_sea(m: ShaderMaterial) -> void:
+	if _sea_depth == null:
+		return
+	m.set_shader_parameter("sea_depth", _sea_depth)
+	m.set_shader_parameter("sea_rect", Vector4(_sea_rect.position.x, _sea_rect.position.y, _sea_rect.size.x, _sea_rect.size.y))
+
 static func _shader(path: String) -> ShaderMaterial:
 	var m := ShaderMaterial.new()
 	m.shader = load(path)
+	for u in m.shader.get_shader_uniform_list():
+		if ENV_ARRAYS.has(u.name) and ResourceLoader.exists(ENV_ARRAYS[u.name]):
+			m.set_shader_parameter(u.name, load(ENV_ARRAYS[u.name]))
 	return m
 
 static func get_material(group: int) -> Material:
@@ -51,10 +77,7 @@ static func get_material(group: int) -> Material:
 		Group.BUILDING:
 			m = _shader("res://shaders/facade.gdshader")
 		Group.ROOF:
-			var s := StandardMaterial3D.new()
-			s.albedo_color = Color(0.74, 0.35, 0.22)
-			s.roughness = 0.82
-			m = s
+			m = _shader("res://shaders/roof.gdshader")
 		Group.NEON:
 			m = _shader("res://shaders/neon.gdshader")
 		Group.TUNNEL:
@@ -69,6 +92,7 @@ static func get_material(group: int) -> Material:
 			m = s
 		Group.WATER:
 			m = _shader("res://shaders/water.gdshader")
+			_bind_sea(m)
 		_:
 			m = StandardMaterial3D.new()
 	_cache[group] = m

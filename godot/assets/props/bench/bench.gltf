@@ -1,0 +1,234 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.0",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 202,
+      "max": [
+        0.2935366928577423,
+        0.8500000238418579,
+        0.6315916180610657
+      ],
+      "min": [
+        -0.2785523235797882,
+        0.30815330147743225,
+        -0.6117817759513855
+      ],
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 202,
+      "bufferView": 0,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 202,
+      "bufferView": 0,
+      "byteOffset": 24
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 306,
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 888,
+      "bufferView": 1,
+      "byteOffset": 612
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 351,
+      "max": [
+        0.25204765796661377,
+        0.8182929158210754,
+        0.6117802262306213
+      ],
+      "min": [
+        -0.2935366928577423,
+        0,
+        -0.6315916180610657
+      ],
+      "bufferView": 2,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 351,
+      "bufferView": 2,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 351,
+      "bufferView": 2,
+      "byteOffset": 24
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 6464,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 6464,
+      "byteLength": 2388,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 8852,
+      "byteLength": 11232,
+      "byteStride": 32,
+      "target": 34962
+    }
+  ],
+  "samplers": [
+    {
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "source": 0,
+      "sampler": 0
+    },
+    {
+      "source": 1,
+      "sampler": 0
+    },
+    {
+      "source": 2,
+      "sampler": 0
+    },
+    {
+      "source": 3,
+      "sampler": 0
+    }
+  ],
+  "images": [
+    {
+      "name": "bench_0",
+      "mimeType": "image/jpeg",
+      "uri": "bench_0.jpg"
+    },
+    {
+      "name": "bench_1",
+      "mimeType": "image/jpeg",
+      "uri": "bench_1.jpg"
+    },
+    {
+      "name": "bench_2",
+      "mimeType": "image/jpeg",
+      "uri": "bench_2.jpg"
+    },
+    {
+      "name": "bench_3",
+      "mimeType": "image/jpeg",
+      "uri": "bench_3.jpg"
+    }
+  ],
+  "buffers": [
+    {
+      "name": "bench.bin",
+      "uri": "bench.bin",
+      "byteLength": 20084
+    }
+  ],
+  "materials": [
+    {
+      "name": "Wood",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.8530241029991515,
+          0.8530241029991515,
+          0.8530241029991515,
+          1
+        ],
+        "roughnessFactor": 0.7968835770248016,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 0
+        }
+      },
+      "normalTexture": {
+        "index": 1
+      }
+    },
+    {
+      "name": "Bench_Supports",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 2
+        }
+      },
+      "normalTexture": {
+        "index": 3
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "bench",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 3
+        },
+        {
+          "attributes": {
+            "POSITION": 5,
+            "NORMAL": 6,
+            "TEXCOORD_0": 7
+          },
+          "mode": 4,
+          "material": 1,
+          "indices": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "bench",
+      "mesh": 0
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ]
+}

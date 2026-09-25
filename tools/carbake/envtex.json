@@ -1,0 +1,17 @@
+{
+	"_doc": "Environment texture arrays from Poly Haven (CC0). Each set becomes <set>_albedo.webp (RGB albedo, A height) and <set>_normal.webp (RG normal xy, B roughness, A AO): layers stacked vertically, imported by Godot as Texture2DArray. Layer order = shader layer index. size = px per layer. Real tile size (m) comes from Poly Haven and is written to godot/assets/env/env_textures.json.",
+	"sets": {
+		"ground": {
+			"size": 1024,
+			"layers": ["aerial_grass_rock", "forrest_ground_01", "forest_leaves_03", "marble_cliff_03", "coast_sand_01", "rectangular_paving", "park_dirt", "dry_ground_rocks", "pavement_02"]
+		},
+		"road": {
+			"size": 1024,
+			"layers": ["asphalt_02", "clean_asphalt", "square_cobblestone"]
+		},
+		"facade": {
+			"size": 1024,
+			"layers": ["white_stucco", "painted_plaster_wall", "grey_plaster", "white_sandstone_bricks", "concrete_wall_008", "painted_metal_shutter", "clay_roof_tiles_02", "tarred_gravel"]
+		}
+	}
+}

@@ -53,6 +53,7 @@ real World::base_height(real x, real z, uint8_t &material) const {
 			case LAND_FARM: material = 4; break;
 			case LAND_URBAN: case LAND_PORT: material = 5; break;
 			case LAND_FOREST: material = 1; break;
+			case LAND_PARK: material = 6; break;
 			default: material = 0; break;
 		}
 		return h;

@@ -258,6 +258,24 @@ Rect2 NTWorld::bounds() const {
 			(real_t)(world_.terrain.max_z() - world_.terrain.min_z()));
 }
 
+// Water depth over the whole map for the sea shader (shallow turquoise, shore foam): R8,
+// 0 = land / waterline, 1 = 24 m or deeper; one texel per `cell` metres over bounds().
+Ref<Image> NTWorld::sea_depth(double cell) const {
+	double x0 = world_.terrain.min_x(), z0 = world_.terrain.min_z();
+	int w = std::max(1, (int)std::ceil((world_.terrain.max_x() - x0) / cell));
+	int h = std::max(1, (int)std::ceil((world_.terrain.max_z() - z0) / cell));
+	PackedByteArray px;
+	px.resize(w * h);
+	uint8_t *d = px.ptrw();
+	for (int j = 0; j < h; ++j)
+		for (int i = 0; i < w; ++i) {
+			double x = x0 + (i + 0.5) * cell, z = z0 + (j + 0.5) * cell;
+			double depth = -world_.terrain.sample(x, z);
+			d[j * w + i] = (uint8_t)std::clamp(depth / 24.0 * 255.0, 0.0, 255.0);
+		}
+	return Image::create_from_data(w, h, false, Image::FORMAT_R8, px);
+}
+
 // Stylised top-down map: shaded terrain, sea, districts tinted, roads drawn by kind.
 Ref<Image> NTWorld::minimap(int size) const {
 	Ref<Image> img = Image::create(size, size, false, Image::FORMAT_RGBA8);
@@ -328,4 +346,5 @@ void NTWorld::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("chunk_size"), &NTWorld::chunk_size);
 	ClassDB::bind_method(D_METHOD("bounds"), &NTWorld::bounds);
 	ClassDB::bind_method(D_METHOD("minimap", "size"), &NTWorld::minimap);
+	ClassDB::bind_method(D_METHOD("sea_depth", "cell"), &NTWorld::sea_depth, DEFVAL(8.0));
 }

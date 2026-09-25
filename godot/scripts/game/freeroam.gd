@@ -114,6 +114,7 @@ func _find_spawn() -> Transform3D:
 
 func _begin_streaming() -> void:
 	_state = "streaming"
+	WorldMaterials.set_world(world)
 	streamer = WorldStreamer.new()
 	streamer.name = "World"
 	add_child(streamer)
@@ -288,9 +289,14 @@ func _play_update(delta: float) -> void:
 	var hh := int(sky.time_of_day)
 	var mm := int((sky.time_of_day - hh) * 60.0)
 	hud.race_text = "" if race != null else "%02d:%02d  %s  %s" % [hh, mm, SkyWeather.W_NAMES[sky.weather], world.district_name(d)]
-	# Auto headlights.
-	if player.lights_on != (sky.night > 0.35 or sky.fog_amount > 0.5):
-		player.set_lights(sky.night > 0.35 or sky.fog_amount > 0.5)
+	# Auto headlights for player and all active rivals.
+	var should_lights := (sky.night > 0.35 or sky.fog_amount > 0.5)
+	if player.lights_on != should_lights:
+		player.set_lights(should_lights)
+	if race != null:
+		for c in race.cars:
+			if c != null and is_instance_valid(c) and c != player and c.lights_on != should_lights:
+				c.set_lights(should_lights)
 	# Fell into the sea / off the world: recover onto the nearest road.
 	if pos.y < -3.0 or Pad.pressed("reset_car"):
 		_recover()

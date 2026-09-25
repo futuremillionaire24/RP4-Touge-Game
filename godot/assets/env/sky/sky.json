@@ -1,0 +1,249 @@
+{
+    "skies":  [
+                  {
+                      "id":  "qwantani_dawn_puresky",
+                      "hour":  5.4,
+                      "weather":  "",
+                      "sun_u":  0.5962,
+                      "sun_el":  -4,
+                      "energy":  0.25,
+                      "horizon":  [
+                                      0.2974,
+                                      0.274,
+                                      0.2912
+                                  ],
+                      "authors":  [
+                                      "Greg Zaal",
+                                      "Jarod Guest"
+                                  ],
+                      "license":  "CC0",
+                      "source":  "https://polyhaven.com/a/qwantani_dawn_puresky"
+                  },
+                  {
+                      "id":  "qwantani_sunrise_puresky",
+                      "hour":  6.2,
+                      "weather":  "",
+                      "sun_u":  0.6001,
+                      "sun_el":  1.93,
+                      "energy":  0.6,
+                      "horizon":  [
+                                      0.4303,
+                                      0.3207,
+                                      0.2841
+                                  ],
+                      "authors":  [
+                                      "Greg Zaal",
+                                      "Jarod Guest"
+                                  ],
+                      "license":  "CC0",
+                      "source":  "https://polyhaven.com/a/qwantani_sunrise_puresky"
+                  },
+                  {
+                      "id":  "qwantani_morning_puresky",
+                      "hour":  7.6,
+                      "weather":  "",
+                      "sun_u":  0.6001,
+                      "sun_el":  20.21,
+                      "energy":  0.9,
+                      "horizon":  [
+                                      0.5364,
+                                      0.5317,
+                                      0.4899
+                                  ],
+                      "authors":  [
+                                      "Jarod Guest"
+                                  ],
+                      "license":  "CC0",
+                      "source":  "https://polyhaven.com/a/qwantani_morning_puresky"
+                  },
+                  {
+                      "id":  "qwantani_mid_morning_puresky",
+                      "hour":  9.6,
+                      "weather":  "",
+                      "sun_u":  0.6001,
+                      "sun_el":  40.25,
+                      "energy":  0.95,
+                      "horizon":  [
+                                      0.4767,
+                                      0.4984,
+                                      0.5213
+                                  ],
+                      "authors":  [
+                                      "Greg Zaal",
+                                      "Jarod Guest"
+                                  ],
+                      "license":  "CC0",
+                      "source":  "https://polyhaven.com/a/qwantani_mid_morning_puresky"
+                  },
+                  {
+                      "id":  "qwantani_noon_puresky",
+                      "hour":  12.5,
+                      "weather":  "",
+                      "sun_u":  0.6001,
+                      "sun_el":  49.75,
+                      "energy":  1,
+                      "horizon":  [
+                                      0.6906,
+                                      0.7564,
+                                      0.8355
+                                  ],
+                      "authors":  [
+                                      "Greg Zaal",
+                                      "Jarod Guest"
+                                  ],
+                      "license":  "CC0",
+                      "source":  "https://polyhaven.com/a/qwantani_noon_puresky"
+                  },
+                  {
+                      "id":  "qwantani_afternoon_puresky",
+                      "hour":  15.2,
+                      "weather":  "",
+                      "sun_u":  0.6001,
+                      "sun_el":  40.96,
+                      "energy":  1,
+                      "horizon":  [
+                                      0.684,
+                                      0.7363,
+                                      0.7922
+                                  ],
+                      "authors":  [
+                                      "Greg Zaal",
+                                      "Jarod Guest"
+                                  ],
+                      "license":  "CC0",
+                      "source":  "https://polyhaven.com/a/qwantani_afternoon_puresky"
+                  },
+                  {
+                      "id":  "qwantani_late_afternoon_puresky",
+                      "hour":  16.8,
+                      "weather":  "",
+                      "sun_u":  0.6001,
+                      "sun_el":  19.16,
+                      "energy":  0.95,
+                      "horizon":  [
+                                      0.4843,
+                                      0.4596,
+                                      0.4108
+                                  ],
+                      "authors":  [
+                                      "Greg Zaal",
+                                      "Jarod Guest"
+                                  ],
+                      "license":  "CC0",
+                      "source":  "https://polyhaven.com/a/qwantani_late_afternoon_puresky"
+                  },
+                  {
+                      "id":  "qwantani_sunset_puresky",
+                      "hour":  17.9,
+                      "weather":  "",
+                      "sun_u":  0.6001,
+                      "sun_el":  6.15,
+                      "energy":  0.75,
+                      "horizon":  [
+                                      0.6916,
+                                      0.5237,
+                                      0.356
+                                  ],
+                      "authors":  [
+                                      "Greg Zaal",
+                                      "Jarod Guest"
+                                  ],
+                      "license":  "CC0",
+                      "source":  "https://polyhaven.com/a/qwantani_sunset_puresky"
+                  },
+                  {
+                      "id":  "qwantani_dusk_1_puresky",
+                      "hour":  18.5,
+                      "weather":  "",
+                      "sun_u":  0.5952,
+                      "sun_el":  -2.5,
+                      "energy":  0.38,
+                      "horizon":  [
+                                      0.2144,
+                                      0.2418,
+                                      0.2967
+                                  ],
+                      "authors":  [
+                                      "Greg Zaal",
+                                      "Jarod Guest"
+                                  ],
+                      "license":  "CC0",
+                      "source":  "https://polyhaven.com/a/qwantani_dusk_1_puresky"
+                  },
+                  {
+                      "id":  "qwantani_dusk_2_puresky",
+                      "hour":  19.1,
+                      "weather":  "",
+                      "sun_u":  0.5903,
+                      "sun_el":  -6,
+                      "energy":  0.16,
+                      "horizon":  [
+                                      0.2557,
+                                      0.1792,
+                                      0.223
+                                  ],
+                      "authors":  [
+                                      "Greg Zaal",
+                                      "Jarod Guest"
+                                  ],
+                      "license":  "CC0",
+                      "source":  "https://polyhaven.com/a/qwantani_dusk_2_puresky"
+                  },
+                  {
+                      "id":  "qwantani_night_puresky",
+                      "hour":  21.5,
+                      "weather":  "",
+                      "sun_u":  0.7827,
+                      "sun_el":  -35,
+                      "energy":  0.018,
+                      "horizon":  [
+                                      0.7901,
+                                      1,
+                                      1
+                                  ],
+                      "authors":  [
+                                      "Greg Zaal",
+                                      "Jarod Guest"
+                                  ],
+                      "license":  "CC0",
+                      "source":  "https://polyhaven.com/a/qwantani_night_puresky"
+                  },
+                  {
+                      "id":  "kloofendal_overcast_puresky",
+                      "hour":  -1,
+                      "weather":  "overcast",
+                      "sun_u":  0.5815,
+                      "sun_el":  23.03,
+                      "energy":  0.62,
+                      "horizon":  [
+                                      0.2445,
+                                      0.2567,
+                                      0.2832
+                                  ],
+                      "authors":  [
+                                      "Greg Zaal"
+                                  ],
+                      "license":  "CC0",
+                      "source":  "https://polyhaven.com/a/kloofendal_overcast_puresky"
+                  },
+                  {
+                      "id":  "kloofendal_48d_partly_cloudy_puresky",
+                      "hour":  -1,
+                      "weather":  "cloudy",
+                      "sun_u":  0.5952,
+                      "sun_el":  47.99,
+                      "energy":  0.95,
+                      "horizon":  [
+                                      0.3047,
+                                      0.3282,
+                                      0.3967
+                                  ],
+                      "authors":  [
+                                      "Greg Zaal",
+                                      "Jarod Guest"
+                                  ],
+                      "license":  "CC0",
+                      "source":  "https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky"
+                  }
+              ]
+}

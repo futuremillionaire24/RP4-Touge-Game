@@ -36,6 +36,9 @@ func _make_mm(mesh: Mesh, near: bool) -> MultiMesh:
 	mm.visible_instance_count = 0
 	var mmi := MultiMeshInstance3D.new()
 	mmi.multimesh = mm
+	# Buffers are rewritten every frame from the latest 120 Hz sim tick, and the near/far
+	# compaction reorders slots, so engine interpolation would blend different cars together.
+	mmi.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if near else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	# Instances are spread over ~800 m; skip per-instance culling cost.
 	mmi.custom_aabb = AABB(Vector3(-5000, -100, -5000), Vector3(10000, 1000, 10000))
