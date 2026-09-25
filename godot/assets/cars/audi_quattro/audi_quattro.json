@@ -90,12 +90,9 @@
   "other:RedPaint",
   "other:Under",
   "other:material",
-  "other:other:Under",
   "paint:SilverPaint",
   "rim:Rims",
-  "rim:rim:Rims",
-  "tyre:Rubber",
-  "tyre:tyre:Rubber"
+  "tyre:Rubber"
  ],
  "triangles": 95109,
  "source_triangles": 148992

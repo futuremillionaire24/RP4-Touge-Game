@@ -19,7 +19,7 @@
 		"jaguar_ftype": { "uid": "de4dfe1256564276b9a134535f324b7a", "length": 4.470, "width": 1.923, "height": 1.311, "wheelbase": 2.622,
 			"paint": "M_CarPaint_Max$", "tail": "LightGlass_Red" },
 		"mb_g63": { "uid": "e5e2a1d2238048a1a494b3df983c16bb", "length": 4.873, "width": 1.984, "height": 1.966, "wheelbase": 2.890,
-			"paint": "\\|bodypaint$|smallspecmap__PAINT_2$" },
+			"paint": "\\|bodypaint$|smallspecmap__PAINT_2$", "tail": "G-class_taillight", "signal": "nlightsf20", "head": "G-class_lightled|lamp_alpha|G-class_glass\\.004", "glass": "G-class_glass$", "other": "G-class_black$|setlogo|door_handles|leather|wiper|black[0-9]|window_plastic|speedo|door_plastic|\\|light1$" },
 		"bmw_m4": { "uid": "8e87379f40fd40dcac0a751e22c1a188", "length": 4.671, "width": 1.870, "height": 1.383, "wheelbase": 2.812,
 			"paint": "ARm4_main$" },
 		"audi_r8": { "uid": "e17e438f076f4427a58d93aa779edaed", "length": 4.426, "width": 1.940, "height": 1.240, "wheelbase": 2.650,
@@ -31,13 +31,13 @@
 		"ferrari_f40": { "uid": "52a66c41cfcd4f999fb1b1c49bf24d70", "length": 4.358, "width": 1.970, "height": 1.124, "wheelbase": 2.450,
 			"paint": "F40_Skin", "head": "super_headlight|F40_Headlights", "tail": "super_brakelight", "reverse": "super_reverselight", "signal": "super_signal" },
 		"lambo_svj": { "uid": "784e4656aca649cca55d6b18740a19b2", "length": 4.943, "width": 2.098, "height": 1.136, "wheelbase": 2.700,
-			"paint": "CARROSSERIE", "tail": "GlassRedLights", "signal": "GlassOrangeLights", "head": "HdLightsLens|LightEmissiveWhite|GlassWhite" },
+			"paint": "CARROSSERIE", "tail": "GlassRedLights", "signal": "GlassOrangeLights", "head": "HdLightsLens|LightEmissiveWhite", "reverse": "GlassWhite", "glass": "GlassLights", "other": "ExteriorDetailTex" },
 		"jaguar_xj220": { "uid": "d99bb7b0fc0e4e3c9553246679dd067f", "length": 4.930, "width": 2.220, "height": 1.150, "wheelbase": 2.640,
 			"paint": "\\|body$" },
 		"porsche_918": { "uid": "ec8eebcdbf534bbba151375b9992f6d7", "length": 4.643, "width": 1.940, "height": 1.167, "wheelbase": 2.730,
-			"paint": "P918_paint", "tail": "taillight", "head": "p918_headlight" },
+			"paint": "P918_paint", "tail": "taillight", "head": "p918_headlight", "other": "ext_details" },
 		"ferrari_laferrari": { "uid": "f75b682bb0de4a14b3b6c1f52862ca48", "length": 4.702, "width": 1.992, "height": 1.116, "wheelbase": 2.650,
-			"paint": "\\|Body$", "tail": "break_lights|tail_lights|red_light", "drop": "wireframe_color" }
+			"paint": "\\|Body$", "tail": "break_lights|tail_lights|red_light|Rear_headlights|run_lights", "glass": "head_lights_glasses", "drop": "wireframe_color" }
 	},
 	"traffic": {
 		"vw_polo": { "uid": "bab77902c638427bb85e68b6762a481f", "length": 3.972, "width": 1.682, "height": 1.453, "wheelbase": 2.470, "paint": "\\|primary", "budget": 24000 },

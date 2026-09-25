@@ -101,4 +101,16 @@ On-device (RP4 via adb) profiling to hold 60 fps; LOD/visibility ranges; APK ≤
 - **F — mostly done.** Traffic = VW Polo, Skoda Superb, Volvo V60, VW T6, Mercedes Sprinter, town bus;
   right-hand driving; spinning wheels; near/far LODs. Road connectivity moves to the map graph in D.
 - A parallel agent (Antigravity) edited the tree concurrently; its WIP was committed separately
-  (ab5c123) and the user stopped it.
+  (ab5c123) and the user stopped it. A later burst of its edits (paint clear-coat, car view/stage,
+  QA test) was reviewed and kept in e0d6975.
+- **D — done.** Riviera baked from OSM + Terrarium DEM (a6fd3e0, e4fc94c); Monaco GP route measures
+  3331 m (real 3337 m); events run on real routes.
+- **E — core done (e0d6975).** Real props (Sketchfab CC-BY: plane/pine/palm/cypress/olive trees,
+  shrub, boulder, street lamp, curve sign, cone; `tools/carbake/props.mjs`), Poly Haven CC0 texture
+  arrays for ground/road/facades (`envtex.mjs`), European facade shader (parallax windows,
+  shutters, balconies, cornices, shop awnings), clay/gravel roofs, photographic day-cycle sky
+  (`skybake.mjs`, qwantani set + weather layers), depth-aware sea with shore foam.
+  Remaining: yachts in the harbours, street furniture placement (benches, bins, bollards,
+  hydrants), guard-rail/kerb textures, landmarks, lamp density at plazas.
+- Dev loop: `tools\play.ps1 [args]` opens/restarts a play-test window; native builds work while it
+  runs (the loaded DLL is moved aside).

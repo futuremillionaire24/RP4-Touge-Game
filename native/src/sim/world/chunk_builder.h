@@ -41,6 +41,11 @@ enum PropType : uint8_t {
 	PROP_SIGN_CURVE, // chevron curve sign
 	PROP_TREE_OLIVE,
 	PROP_BUSH,
+	PROP_YACHT, // moored stern-to at the port quays; scale = size variety
+	PROP_BENCH,
+	PROP_BIN,
+	PROP_BOLLARD,
+	PROP_HYDRANT,
 	PROP_COUNT
 };
 

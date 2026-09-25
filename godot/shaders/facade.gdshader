@@ -262,7 +262,15 @@ void fragment() {
 		float frame = inner * (1.0 - rect(c + off, vec2(-bw + 0.45, 0.35), vec2(bw - 0.45, gf - 1.15), aa));
 		float gl = clamp(inner - frame, 0.0, 1.0);
 		bool shuttered = sh < 0.18; // closed roller shutter
-		vec3 interior = mix(vec3(0.05, 0.05, 0.055), vec3(0.2, 0.18, 0.15), step(0.5, nt_hash(vec2(sb, 3.0))));
+		// Lit shop interior seen through the glass: shelves of goods on a back wall ~2.5 m deep.
+		vec2 cb = c + (-vt.xy / max(vt.z, 0.25)) * 2.5;
+		vec2 shelf = vec2(floor(cb.x / 0.18), floor(cb.y / 0.38));
+		float goods = step(0.25, fract(cb.y / 0.38)) * step(0.15, fract(cb.x / 0.18)) * step(0.45, nt_hash(shelf + sb));
+		vec3 item = mix(vec3(0.5, 0.46, 0.4), vec3(nt_hash(shelf + 1.3), nt_hash(shelf + 5.1), nt_hash(shelf + 9.7)), 0.3);
+		vec3 wall_in = mix(vec3(0.3, 0.27, 0.23), vec3(0.16, 0.17, 0.19), step(0.5, nt_hash(vec2(sb, 3.0))));
+		// Ceiling lights make the top of the room brighter; the floor falls into shadow.
+		float light_in = mix(0.35, 1.0, smoothstep(0.2, gf - 1.2, cb.y));
+		vec3 interior = mix(wall_in, item, goods * step(0.5, cb.y) * step(cb.y, gf - 1.5)) * light_in * 0.45;
 		albedo = mix(albedo, wall.rgb * 0.35, shop - inner);
 		albedo = mix(albedo, vec3(0.12, 0.12, 0.13), frame);
 		if (shuttered) {
@@ -273,18 +281,26 @@ void fragment() {
 			rough = mix(rough, 0.5, shop);
 		} else {
 			albedo = mix(albedo, interior, gl);
-			rough = mix(rough, 0.05, gl);
-			spec = mix(spec, 0.75, gl);
-			// Striped canvas awning above the window (seen as a band on the wall).
-			float awn = rect(c, vec2(-bw + 0.25, gf - 1.0), vec2(bw - 0.25, gf - 0.45), aa) * step(0.35, sh);
+			rough = mix(rough, 0.1, gl);
+			spec = mix(spec, 0.45, gl);
+			// Above the window: striped canvas awning, or a painted fascia board with lettering.
+			float band_m = rect(c, vec2(-bw + 0.25, gf - 1.0), vec2(bw - 0.25, gf - 0.45), aa);
 			vec3 ac = AWNING[int(sh * 4.99)];
-			float stripe = step(0.5, fract(sx / 0.35));
-			ac = mix(ac, vec3(0.92, 0.9, 0.85), stripe * step(0.6, sh));
-			albedo = mix(albedo, ac * (0.8 + 0.2 * smoothstep(gf - 1.0, gf - 0.45, ya)), awn);
-			rough = mix(rough, 0.85, awn);
-			// Shop light spills at night; some stay lit during the day.
-			float on = max(nt_night, 0.25 * step(0.7, sh));
-			emit += mix(vec3(1.0, 0.82, 0.55), vec3(0.85, 0.92, 1.0), step(0.6, sh)) * gl * on * (0.6 + 0.5 * sh);
+			if (sh > 0.55) {
+				float stripe = step(0.5, fract(sx / 0.35));
+				ac = mix(ac, vec3(0.92, 0.9, 0.85), stripe * step(0.75, sh));
+				albedo = mix(albedo, ac * (0.8 + 0.2 * smoothstep(gf - 1.0, gf - 0.45, ya)), band_m);
+				rough = mix(rough, 0.85, band_m);
+			} else {
+				vec2 lt = vec2(sx / 0.22, (ya - (gf - 0.9)) / 0.36);
+				float letters = step(abs(sx), bw * 0.55) * step(0.15, lt.y) * step(lt.y, 0.85) * step(0.45, nt_hash(vec2(floor(lt.x), sb)));
+				albedo = mix(albedo, mix(ac * 0.8, vec3(0.9, 0.85, 0.7), letters), band_m);
+				metal = max(metal, 0.5 * band_m * letters);
+				rough = mix(rough, 0.45, band_m);
+			}
+			// Shops are lit inside by day; brighter at night.
+			float on = mix(0.35, 1.0, nt_night);
+			emit += mix(vec3(1.0, 0.86, 0.62), vec3(0.88, 0.93, 1.0), step(0.6, sh)) * interior * gl * on * 1.6;
 		}
 		nxy = mix(nxy, vec2(0.5), shop * (shuttered ? 0.0 : 1.0));
 	} else if (ground) {

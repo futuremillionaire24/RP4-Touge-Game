@@ -604,7 +604,7 @@
       }
     },
     {
-      "name": "light_misc:Lights",
+      "name": "light_head:Lights",
       "doubleSided": true,
       "pbrMetallicRoughness": {
         "roughnessFactor": 0.5,
@@ -632,6 +632,28 @@
     },
     {
       "name": "light_signal:Left_Indicator",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.5,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 8
+        }
+      }
+    },
+    {
+      "name": "light_reverse:Reverse_Light",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.5,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 8
+        }
+      }
+    },
+    {
+      "name": "light_signal:Right_Indicator",
       "doubleSided": true,
       "pbrMetallicRoughness": {
         "roughnessFactor": 0.5,
@@ -737,7 +759,7 @@
             "TEXCOORD_0": 28
           },
           "mode": 4,
-          "material": 5,
+          "material": 6,
           "indices": 9
         },
         {
@@ -747,7 +769,7 @@
             "TEXCOORD_0": 31
           },
           "mode": 4,
-          "material": 5,
+          "material": 7,
           "indices": 8
         },
         {
@@ -757,7 +779,7 @@
             "TEXCOORD_0": 34
           },
           "mode": 4,
-          "material": 6,
+          "material": 8,
           "indices": 10
         }
       ]

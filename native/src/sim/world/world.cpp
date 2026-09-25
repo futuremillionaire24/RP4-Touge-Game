@@ -656,6 +656,17 @@ void World::classify_and_furnish(Road &r, const std::vector<Vec3> &pts, const st
 			if (d.kind == RK_STREET && d.half_width < 3.0) s.marking = 0; // narrow old-town lanes
 			// Old towns: narrow pavements; hill roads: tight verges.
 			if (d.kind == RK_STREET) s.shoulder_left = s.shoulder_right = d.half_width < 3.0 ? 1.2 : 2.2;
+			// Through-roads crossing town (the Corniches through Monaco, Cap d'Ail...) get
+			// pavements with kerbs instead of grass verges.
+			if (d.kind == RK_RURAL || d.kind == RK_COAST || d.kind == RK_TOUGE) {
+				auto town = [](uint8_t lc) { return lc == LAND_URBAN || lc == LAND_PORT; };
+				if (town(land_at(pts[i].x - right.x * (hw + 5), pts[i].z - right.z * (hw + 5))) ||
+						town(land_at(pts[i].x + right.x * (hw + 5), pts[i].z + right.z * (hw + 5)))) {
+					s.shoulder_surface = SURF_CONCRETE;
+					s.shoulder_left = s.shoulder_right = 2.0;
+					s.curb_left = s.curb_right = true;
+				}
+			}
 		}
 		if (sx.type == ST_BRIDGE) {
 			if (s.barrier_left != BARRIER_WALL) s.barrier_left = BARRIER_GUARDRAIL;

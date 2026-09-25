@@ -67,26 +67,26 @@
  "track_rear": 1.3923,
  "headlights": [
   [
-   -0.559,
-   0.643,
-   -1.293
+   -0.58,
+   0.641,
+   -1.533
   ],
   [
-   0.559,
-   0.643,
-   -1.293
+   0.58,
+   0.641,
+   -1.533
   ]
  ],
  "taillights": [
   [
-   -0.569,
-   0.789,
-   1.495
+   -0.568,
+   0.79,
+   1.49
   ],
   [
-   0.569,
-   0.789,
-   1.495
+   0.568,
+   0.79,
+   1.49
   ]
  ],
  "exhausts": [
@@ -103,9 +103,7 @@
  ],
  "classes": [
   "caliper:CAR_PinzaFreni",
-  "caliper:caliper:CAR_PinzaFreni",
   "disc:CAR_DiscoFreni",
-  "disc:disc:CAR_DiscoFreni",
   "glass:CAR_Vetro",
   "glass:INT_Vetro",
   "glass:INT_Vetro_Display",
@@ -144,9 +142,9 @@
   "interior:INT_cuciture_NM_skin",
   "light_head:CAR_FariAnteriori",
   "light_head:CAR_Vetro_Fanali_ANTERIORI",
-  "light_head:CAR_Vetro_Fanali_POSTERIORI",
-  "light_misc:EXT_side_lights",
+  "light_head:EXT_side_lights",
   "light_tail:CAR_LuciPosteriori",
+  "light_tail:CAR_Vetro_Fanali_POSTERIORI",
   "other:CAR_Griglia",
   "other:CAR_Loghi",
   "other:CAR_PLASTICA",
@@ -154,14 +152,11 @@
   "other:CAR_Sottoscocca",
   "other:EXT_PLATE_plastic",
   "other:GLOBAL_Specchio",
-  "other:other:CAR_Sottoscocca",
   "paint:CAR_Livrea",
   "rim:CAR_Cerchione",
-  "rim:rim:CAR_Cerchione",
   "tyre:CAR_GommaBattistrada",
   "tyre:INT_Gomma_Guarnizioni",
-  "tyre:INT_Tappeto_Gomma",
-  "tyre:tyre:CAR_GommaBattistrada"
+  "tyre:INT_Tappeto_Gomma"
  ],
  "triangles": 65519,
  "source_triangles": 105796

@@ -82,11 +82,8 @@
   "other:Material.007",
   "other:material",
   "other:material_0",
-  "other:other:Material",
-  "other:other:Material.001",
   "paint:Material.002",
-  "tyre:rubber",
-  "tyre:tyre:rubber"
+  "tyre:rubber"
  ],
  "triangles": 88062,
  "source_triangles": 100075

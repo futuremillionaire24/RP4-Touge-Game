@@ -177,6 +177,8 @@ void build_roads(Ctx &c) {
 		// Per-sample extras.
 		int n = (int)r.samples.size();
 		real last_lamp = -1e9, last_pole = -1e9, last_pier = -1e9, last_chevron = -1e9;
+		real last_bench = -1e9, last_hydrant = -1e9;
+		bool bollards_start = false, bollards_end = false;
 		Rng rng((uint64_t)span.road * 7919 + span.begin);
 		for (int i = span.begin; i < std::min(span.end, n); ++i) {
 			const RoadSampleX &sx = r.samples[i];
@@ -247,13 +249,53 @@ void build_roads(Ctx &c) {
 			switch (r.def.kind) {
 				case RK_STREET:
 				case RK_AVENUE:
-					if (s.distance - last_lamp > 28.0) {
+					// Real map: lamps staggered from side to side (one per ~26 m of street), never at a
+					// junction mouth and never crowding lamps of the other roads at a plaza.
+					if (w.baked ? (s.distance - last_lamp > 26.0 && s.distance > 10.0 && s.distance < r.length - 10.0 && sx.type == ST_GROUND)
+								: s.distance - last_lamp > 28.0) {
 						last_lamp = s.distance;
+						int lamp_k = (int)(s.distance / 26.0);
 						for (real side : {-1.0, 1.0}) {
+							if (w.baked && ((lamp_k & 1) ? side > 0 : side < 0)) continue;
 							real off = side < 0 ? out_l - 0.6 : out_r - 0.6;
 							Vec3 p = s.center + right * (side * off);
+							bool crowded = false;
+							for (const PropInstance &o : c.out.props[PROP_STREET_LAMP])
+								if (sqr(o.x - p.x) + sqr(o.z - p.z) < 14.0 * 14.0) crowded = true;
+							if (crowded) continue;
 							add_prop(c, PROP_STREET_LAMP, p, yaw + (side < 0 ? PI * 0.5 : -PI * 0.5), Vec3(1, 1, 1), 0.0);
 							add_light(c, p + Vec3(0, 7.0, 0) - right * side * 3.2, 1.0, 0.1);
+						}
+					}
+					// Street furniture on real sidewalks: benches with a bin beside them, hydrants, and
+					// bollards guarding the kerb at the junction mouths of avenues.
+					if (w.baked && sx.type == ST_GROUND) {
+						real side = ((int)(s.distance / 26.0) & 1) ? -1.0 : 1.0; // opposite the lamp
+						real walk = side < 0 ? s.shoulder_left : s.shoulder_right;
+						real edge = side < 0 ? out_l : out_r;
+						if (walk > 2.2 && s.distance - last_bench > 55.0 && s.distance > 15.0 && s.distance < r.length - 15.0) {
+							last_bench = s.distance;
+							Vec3 p = s.center + right * (side * (edge - 1.1));
+							add_prop(c, PROP_BENCH, p, yaw + (side < 0 ? 0.0 : PI), Vec3(1, 1, 1), 0.0);
+							add_prop(c, PROP_BIN, p + s.tangent * 1.4, rng.range(0, TAU), Vec3(1, 1, 1), rng.next());
+						}
+						if (walk > 1.5 && s.distance - last_hydrant > 95.0 && s.distance > 20.0) {
+							last_hydrant = s.distance;
+							real hs = -side; // the lamp side, at the kerb
+							Vec3 p = s.center + right * (hs * ((hs < 0 ? out_l : out_r) - 0.5));
+							add_prop(c, PROP_HYDRANT, p, rng.range(0, TAU), Vec3(1, 1, 1), 0.0);
+						}
+						if (r.def.kind == RK_AVENUE && r.length > 60.0 && s.shoulder_left > 1.5 && s.shoulder_right > 1.5) {
+							bool at_start = !bollards_start && s.distance > 5.0;
+							bool at_end = !bollards_end && s.distance > r.length - 7.0;
+							if (at_start || at_end) {
+								(at_start ? bollards_start : bollards_end) = true;
+								for (real sd : {-1.0, 1.0})
+									for (int b = -1; b <= 1; ++b) {
+										Vec3 p = s.center + right * (sd * ((sd < 0 ? s.width_left : s.width_right) + 0.45)) + s.tangent * (b * 1.6);
+										add_prop(c, PROP_BOLLARD, p, 0.0, Vec3(1, 1, 1), 0.0);
+									}
+							}
 						}
 					}
 					// European towns bury their cables; the generated (legacy) map keeps Japanese poles.
@@ -292,7 +334,7 @@ void build_roads(Ctx &c) {
 				case RK_COAST:
 				case RK_TOUGE:
 				case RK_FARM:
-					if (s.distance - last_pole > 36.0 && sx.type == ST_GROUND && (!w.baked || r.def.kind == RK_RURAL)) {
+					if (!w.baked && s.distance - last_pole > 36.0 && sx.type == ST_GROUND) { // Riviera cables are buried
 						last_pole = s.distance;
 						Vec3 p = s.center - right * (out_l + 1.2);
 						p.y = w.terrain.sample(p.x, p.z);
@@ -823,6 +865,52 @@ void scatter_baked(Ctx &c) {
 		}
 }
 
+// Yachts moored Mediterranean-style (stern to the quay) along the port quays: walk the water
+// 2-5 m off LAND_PORT edges and fit boats side by side with a hull's width of clearance.
+void scatter_harbour(Ctx &c) {
+	const World &w = c.w;
+	Rng rng(w.seed * 13 + (uint64_t)(c.out.cx * 7919 + c.out.cz * 104729));
+	const real step = 3.0;
+	auto &yachts = c.out.props[PROP_YACHT];
+	for (real z = c.mn.z; z < c.mx.z; z += step)
+		for (real x = c.mn.x; x < c.mx.x; x += step) {
+			if (!w.is_sea(x, z) || w.terrain.sample(x, z) > -1.5) continue;
+			// Nearest quay direction.
+			Vec3 d;
+			bool quay = false;
+			for (int k = 0; k < 8 && !quay; ++k) {
+				real a = k * (TAU / 8.0);
+				Vec3 dir(std::cos(a), 0, std::sin(a));
+				for (real r = 2.0; r <= 5.0; r += 1.5) {
+					real qx = x + dir.x * r, qz = z + dir.z * r;
+					if (!w.is_sea(qx, qz)) {
+						if (w.land_at(qx, qz) == LAND_PORT) {
+							d = dir;
+							quay = true;
+						}
+						break;
+					}
+				}
+			}
+			if (!quay) continue;
+			real s = rng.range(0.45, 1.0);
+			real len = 30.0 * s, beam = 6.1 * s;
+			Vec3 centre = Vec3(x, 0, z) - d * (len * 0.5);
+			Vec3 bow = Vec3(x, 0, z) - d * len;
+			if (!w.is_sea(bow.x, bow.z) || !w.is_sea(centre.x, centre.z)) continue;
+			bool clash = false;
+			for (const PropInstance &o : yachts) {
+				real ob = 6.1 * o.sx;
+				if (sqr(o.x - centre.x) + sqr(o.z - centre.z) < sqr((beam + ob) * 0.5 + 1.2)) {
+					clash = true;
+					break;
+				}
+			}
+			if (clash) continue;
+			add_prop(c, PROP_YACHT, centre, std::atan2(d.x, d.z), Vec3(s, s, s), rng.next());
+		}
+}
+
 } // namespace
 
 void build_chunk(const World &w, int cx, int cz, const ChunkOptions &opt, ChunkOutput &out) {
@@ -848,6 +936,7 @@ void build_chunk(const World &w, int cx, int cz, const ChunkOptions &opt, ChunkO
 		build_junction_polys(c);
 		build_buildings(c);
 		if (opt.props) scatter_baked(c);
+		if (opt.props && out.min_y < 0.5) scatter_harbour(c);
 		return;
 	}
 	build_junctions(c);

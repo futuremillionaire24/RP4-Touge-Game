@@ -16,7 +16,7 @@ func _ready() -> void:
 	for i in range(size):
 		var l := OmniLight3D.new()
 		l.omni_range = 16.0
-		l.omni_attenuation = 1.4
+		l.omni_attenuation = 1.0
 		l.light_energy = 0.0
 		l.shadow_enabled = false
 		l.visible = false
@@ -55,6 +55,7 @@ func _process(delta: float) -> void:
 		var i: int = order[k][1]
 		l.global_position = Vector3(data[i * 5], data[i * 5 + 1], data[i * 5 + 2])
 		l.light_color = hue_to_color(data[i * 5 + 4])
-		l.light_energy = data[i * 5 + 3] * 2.2 * night
-		l.omni_range = 10.0 + 10.0 * data[i * 5 + 3]
+		# Lamp heads sit ~7 m up: enough energy and range for a visible pool on the road.
+		l.light_energy = data[i * 5 + 3] * 5.0 * night
+		l.omni_range = 14.0 + 8.0 * data[i * 5 + 3]
 		l.visible = true

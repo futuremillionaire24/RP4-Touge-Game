@@ -20,6 +20,8 @@ var _bridge: Object = null
 var _cooldown := 0.0
 var _thermal_timer := 0.0
 var _viewport: Viewport
+var _hold := 0.0 # governor paused (seconds) while the world streams in
+var _over := 0 # consecutive over-budget evaluations
 
 func _ready() -> void:
 	frame_ms.resize(WINDOW)
@@ -63,9 +65,16 @@ func _process(delta: float) -> void:
 	if enabled and Settings.get_value("graphics", "dynamic_resolution", true):
 		_govern(delta)
 
+## Suspends the governor for `seconds` (world streaming, teleports, scene loads): loading
+## hitches are not a sustained load and must not strip MSAA or resolution.
+func hold(seconds: float) -> void:
+	_hold = maxf(_hold, seconds)
+	frame_ms.fill(target_ms())
+
 func _govern(delta: float) -> void:
 	_cooldown -= delta
-	if _cooldown > 0.0:
+	_hold -= delta
+	if _cooldown > 0.0 or _hold > 0.0:
 		return
 	var sorted := frame_ms.duplicate()
 	sorted.sort()
@@ -86,7 +95,10 @@ func _govern(delta: float) -> void:
 	var work_ms := maxf(proc_ms, maxf(gpu_ms, cpu_ms))
 	var has_measure := (gpu_ms + cpu_ms) > 0.05
 
-	var missed_frames := low1_ms > (budget * 1.06)
+	# Sustained misses only: the 90th percentile over budget on two evaluations in a row.
+	var p90: float = sorted[int(WINDOW * 0.9)]
+	_over = _over + 1 if p90 > budget * 1.06 else 0
+	var missed_frames := _over >= 2
 	var has_headroom := (work_ms < budget * 0.78) if has_measure else (low1_ms <= budget * 1.01 and avg_ms <= budget * 1.01)
 
 	if missed_frames:
@@ -107,15 +119,19 @@ func _govern(delta: float) -> void:
 		scale = ceiling
 	_viewport.scaling_3d_scale = scale
 
+## Effect tiers. MSAA is nearly free on tile-based Mali GPUs (resolved on chip) and is what keeps
+## thin geometry (grilles, railings, cables, foliage) from shimmering, so it goes last.
 func _on_tier_changed(lvl: int) -> void:
 	match lvl:
 		0:
 			_viewport.msaa_3d = Viewport.MSAA_4X
 			RenderingServer.positional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_SOFT_LOW)
+			RenderingServer.directional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_SOFT_LOW)
 		1:
 			RenderingServer.positional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_HARD)
+			RenderingServer.directional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_HARD)
 		2:
-			_viewport.msaa_3d = Viewport.MSAA_DISABLED
+			_viewport.msaa_3d = Viewport.MSAA_2X
 		3:
 			_viewport.scaling_3d_scale = maxf(scale, 0.75)
 		4:

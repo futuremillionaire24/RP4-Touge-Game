@@ -9,10 +9,12 @@ Push-Location (Join-Path $NT_ROOT "native")
 # A running game (tools\play.ps1) keeps the Windows DLL loaded. Windows allows renaming a loaded
 # DLL, so move it aside and let the linker write a fresh one; the game picks it up on restart.
 $bin = Join-Path $NT_ROOT "godot\native\bin"
-Get-ChildItem $bin -Filter "*.dll.old*" -ErrorAction SilentlyContinue | ForEach-Object { try { Remove-Item $_.FullName -Force -ErrorAction Stop } catch {} }
-Get-ChildItem $bin -Filter "*.dll" -ErrorAction SilentlyContinue | ForEach-Object {
-    try { [IO.File]::Open($_.FullName, 'Open', 'ReadWrite', 'None').Close() }
-    catch { Rename-Item $_.FullName "$($_.Name).old$([DateTime]::Now.Ticks)" }
+# (-Filter "*.dll" would also match "*.dll.old..." - Windows wildcard quirk - so match exactly.)
+$files = @(Get-ChildItem $bin -File -ErrorAction SilentlyContinue)
+foreach ($f in $files | Where-Object { $_.Name -like "*.dll.old*" }) { try { Remove-Item $f.FullName -Force -ErrorAction Stop } catch {} }
+foreach ($f in $files | Where-Object { $_.Extension -eq ".dll" }) {
+    try { [IO.File]::Open($f.FullName, 'Open', 'ReadWrite', 'None').Close() }
+    catch { Rename-Item $f.FullName "$($f.Name).old$([DateTime]::Now.Ticks)" }
 }
 try {
     foreach ($p in $platforms) {

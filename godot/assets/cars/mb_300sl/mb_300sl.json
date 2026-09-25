@@ -70,8 +70,6 @@
  "exhausts": [],
  "classes": [
   "chrome:chrome",
-  "chrome:chrome:chrome",
-  "chrome:chrome:mid-chrome",
   "chrome:mid-chrome",
   "other:Material",
   "other:Material.001",
@@ -83,10 +81,8 @@
   "other:Material.007",
   "other:black",
   "other:material",
-  "other:other:black",
   "paint:main_color",
-  "tyre:tire",
-  "tyre:tyre:tire"
+  "tyre:tire"
  ],
  "triangles": 93262,
  "source_triangles": 96160

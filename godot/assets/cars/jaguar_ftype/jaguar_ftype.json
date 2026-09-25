@@ -67,26 +67,26 @@
  "track_rear": 1.626,
  "headlights": [
   [
-   -0.555,
-   0.827,
-   0.519
+   -0.689,
+   0.77,
+   -1.547
   ],
   [
-   0.659,
-   0.754,
-   0.38
+   0.682,
+   0.77,
+   -1.547
   ]
  ],
  "taillights": [
   [
-   -0.63,
-   0.784,
-   1.892
+   -0.401,
+   0.788,
+   1.885
   ],
   [
-   0.624,
-   0.784,
-   1.892
+   0.483,
+   0.698,
+   2.035
   ]
  ],
  "exhausts": [],
@@ -98,8 +98,11 @@
   "interior:M_InteriorTiled_Common_Max",
   "interior:M_Interior_Max",
   "light_head:M_LightGlass_Clear_Low",
+  "light_head:M_Light_Max",
   "light_misc:M_Light_Max",
+  "light_tail:M_LightGlass_Clear_Low",
   "light_tail:M_LightGlass_Red_Low",
+  "light_tail:M_Light_Max",
   "other:M_Badge_Max",
   "other:M_CarPaint_Trim_PlasticSmoothBlack_Max",
   "other:M_Chassis_Max",
@@ -112,8 +115,6 @@
   "other:M_Opaque_PlasticRoughBlack_Max.007",
   "other:M_Opaque_PlasticSmoothBlack_Max",
   "other:Material.001",
-  "other:other:M_Chassis_Max",
-  "other:other:M_Engine_Max",
   "paint:M_CarPaint_Max",
   "rim:M_RimBadge_Max",
   "rim:M_RimBadge_Max.001",

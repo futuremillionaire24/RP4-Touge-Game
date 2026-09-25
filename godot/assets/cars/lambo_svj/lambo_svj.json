@@ -67,26 +67,26 @@
  "track_rear": 1.7034,
  "headlights": [
   [
-   -0.684,
-   0.774,
-   1.582
+   -0.612,
+   0.54,
+   -2.111
   ],
   [
-   0.68,
-   0.774,
-   1.582
+   0.609,
+   0.54,
+   -2.111
   ]
  ],
  "taillights": [
   [
-   -0.668,
-   0.778,
-   2.031
+   -0.67,
+   0.798,
+   2.055
   ],
   [
-   0.664,
-   0.778,
-   2.031
+   0.666,
+   0.798,
+   2.055
   ]
  ],
  "exhausts": [
@@ -104,16 +104,16 @@
  "classes": [
   "chrome:Chrome",
   "glass:GLASS",
+  "glass:GlassLights",
   "interior:intAlcantara",
-  "light_head:GlassLights",
-  "light_head:GlassWhite",
   "light_head:HdLightsLens",
   "light_head:LightEmissiveWhite",
+  "light_reverse:GlassWhite",
   "light_signal:GlassOrangeLights",
-  "light_tail:ExteriorDetailTex",
   "light_tail:GlassRedLights",
   "other:Aluminum",
   "other:CARBONE",
+  "other:ExteriorDetailTex",
   "other:GLS_MR",
   "other:Material.001",
   "other:Material.002",
@@ -129,17 +129,10 @@
   "other:intPlasticDkPlain",
   "other:intTexButtonsGlossy",
   "other:material_0",
-  "other:other:CARBONE",
-  "other:other:Material.004",
-  "other:other:Material.005",
-  "other:other:Material.006",
-  "other:other:material_0",
   "paint:CARROSSERIE",
   "rim:WheelMetalBlack",
-  "rim:rim:WheelMetalBlack",
-  "tyre:WheelTireBump",
-  "tyre:tyre:WheelTireBump"
+  "tyre:WheelTireBump"
  ],
- "triangles": 107725,
+ "triangles": 107918,
  "source_triangles": 508324
 }

@@ -165,7 +165,16 @@ static func _dress(mi: MeshInstance3D, paint: ShaderMaterial, livery_mode: Strin
 					t.roughness = maxf(t.roughness, 0.82)
 					mi.set_surface_override_material(s, t)
 			_:
-				pass
+				# Mesh grilles / vents are dense sub-pixel geometry: glossy facets shimmer as white
+				# noise, so they get a rough, low-specular copy (reads as dark mesh at any distance).
+				if src is BaseMaterial3D and GRILLE_RX.search(tag.to_lower()) != null:
+					var g := (src as BaseMaterial3D).duplicate() as BaseMaterial3D
+					g.roughness = maxf(g.roughness, 0.75)
+					g.metallic = minf(g.metallic, 0.3)
+					g.metallic_specular = 0.2
+					mi.set_surface_override_material(s, g)
+
+static var GRILLE_RX := RegEx.create_from_string("grid|grill|griglia|mesh|vent|net\\b|louv")
 
 ## Per-car emissive copy of a lamp material (keeps the lens texture when the model has one).
 static func _lamp_material(src: Material, cls: String) -> StandardMaterial3D:

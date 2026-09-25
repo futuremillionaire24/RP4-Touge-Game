@@ -65,24 +65,46 @@
  "wheelbase": 2.2717,
  "track_front": 1.5142,
  "track_rear": 1.5522,
- "headlights": [],
- "taillights": [],
+ "headlights": [
+  [
+   -0.601,
+   0.478,
+   -1.817
+  ],
+  [
+   0.601,
+   0.478,
+   -1.817
+  ]
+ ],
+ "taillights": [
+  [
+   -0.456,
+   0.471,
+   2.039
+  ],
+  [
+   0.558,
+   0.502,
+   2.016
+  ]
+ ],
  "exhausts": [],
  "classes": [
   "chrome:930_chromes",
   "glass:glass",
+  "light_head:930_lights",
+  "light_head:930_lights_refraction",
   "light_misc:930_lights",
-  "light_misc:930_lights_refraction",
+  "light_tail:930_lights",
   "other:930_plastics",
   "other:930_stickers",
   "other:black",
   "other:plate",
   "paint:paint",
   "rim:930_rim",
-  "rim:rim:930_rim",
-  "tyre:930_tire",
-  "tyre:tyre:930_tire"
+  "tyre:930_tire"
  ],
- "triangles": 120042,
+ "triangles": 120096,
  "source_triangles": 195365
 }

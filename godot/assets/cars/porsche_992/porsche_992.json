@@ -67,17 +67,28 @@
  "track_rear": 1.5642,
  "headlights": [
   [
-   -0.674,
-   0.683,
-   -0.876
+   -0.709,
+   0.652,
+   -1.712
   ],
   [
-   0.674,
-   0.683,
-   -0.876
+   0.709,
+   0.652,
+   -1.712
   ]
  ],
- "taillights": [],
+ "taillights": [
+  [
+   -0.453,
+   0.711,
+   2.059
+  ],
+  [
+   0.517,
+   0.724,
+   2.029
+  ]
+ ],
  "exhausts": [
   [
    -0.412,
@@ -93,7 +104,6 @@
  "classes": [
   "chrome:pipes_chrom",
   "disc:Discs",
-  "disc:disc:Discs",
   "glass:windows",
   "glass:windows_dots",
   "glass:windows_edge",
@@ -106,14 +116,16 @@
   "interior:leather_perforated",
   "interior:leather_seam",
   "interior:monitor",
-  "interior:rim:pl_leather_int",
+  "interior:pl_leather_int",
   "interior:rug_interior",
   "interior:upholstery",
   "light_head:headlights_pattern",
   "light_head:headlights_plastic_ring",
   "light_head:hedlights_grid",
   "light_head:lights",
-  "light_misc:light_head:lights",
+  "light_misc:lights",
+  "light_tail:headlights_pattern",
+  "light_tail:lights",
   "light_tail:red_light_main",
   "other:LOGO1",
   "other:Mirror",
@@ -123,20 +135,13 @@
   "other:brakes",
   "other:dynamics",
   "other:number_plate1",
-  "other:other:LOGO1",
-  "other:other:bl_pl_M_ext",
-  "other:other:black_metal",
-  "other:other:brakes",
   "other:reflectors",
   "other:reisin",
   "paint:body_main",
   "rim:pl_leather_int",
-  "rim:rim:rim_black",
-  "rim:rim:rim_chrome",
   "rim:rim_black",
   "rim:rim_chrome",
-  "tyre:tires",
-  "tyre:tyre:tires"
+  "tyre:tires"
  ],
  "triangles": 113495,
  "source_triangles": 421397

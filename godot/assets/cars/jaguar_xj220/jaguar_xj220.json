@@ -65,29 +65,49 @@
  "wheelbase": 2.6531,
  "track_front": 1.8537,
  "track_rear": 1.7041,
- "headlights": [],
- "taillights": [],
+ "headlights": [
+  [
+   -0.714,
+   0.405,
+   -2.357
+  ],
+  [
+   0.714,
+   0.405,
+   -2.357
+  ]
+ ],
+ "taillights": [
+  [
+   -0.679,
+   0.633,
+   2.337
+  ],
+  [
+   0.678,
+   0.633,
+   2.337
+  ]
+ ],
  "exhausts": [],
  "classes": [
   "caliper:caliper",
-  "caliper:caliper:caliper",
   "chrome:chrome",
-  "disc:disc:disk",
   "disc:disk",
   "glass:glass",
   "interior:interior",
+  "light_head:light",
   "light_misc:light",
+  "light_tail:light",
   "other:chassis",
   "other:engine",
   "other:frames",
   "other:plastic",
   "other:plastic_matte",
   "paint:body",
-  "rim:rim:rims",
   "rim:rims",
   "rim:stwheel",
-  "tyre:tyre",
-  "tyre:tyre:tyre"
+  "tyre:tyre"
  ],
  "triangles": 35640,
  "source_triangles": 38777

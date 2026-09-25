@@ -7,15 +7,15 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 4563,
+      "count": 5024,
       "max": [
-        1.0107423067092896,
+        1.006201148033142,
         1.4121406078338623,
         2.520836114883423
       ],
       "min": [
         -1.0088127851486206,
-        -0.0066010854206979275,
+        -0.010678991675376892,
         -2.325244188308716
       ],
       "bufferView": 0,
@@ -24,28 +24,28 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 4563,
+      "count": 5024,
       "bufferView": 0,
       "byteOffset": 12
     },
     {
       "type": "VEC4",
       "componentType": 5126,
-      "count": 4563,
+      "count": 5024,
       "bufferView": 0,
       "byteOffset": 24
     },
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 4563,
+      "count": 5024,
       "bufferView": 0,
       "byteOffset": 40
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
-      "count": 13503,
+      "count": 14961,
       "bufferView": 1,
       "byteOffset": 0
     },
@@ -54,28 +54,28 @@
       "componentType": 5123,
       "count": 3255,
       "bufferView": 1,
-      "byteOffset": 27008
+      "byteOffset": 29924
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
       "count": 255,
       "bufferView": 1,
-      "byteOffset": 33520
+      "byteOffset": 36436
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
-      "count": 261,
+      "count": 147,
       "bufferView": 1,
-      "byteOffset": 34032
+      "byteOffset": 36948
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
-      "count": 63,
+      "count": 1701,
       "bufferView": 1,
-      "byteOffset": 34556
+      "byteOffset": 37244
     },
     {
       "type": "VEC3",
@@ -156,14 +156,14 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 90,
+      "count": 47,
       "max": [
         0.845387876033783,
-        0.9486004114151001,
-        2.4660794734954834
+        0.7861499190330505,
+        -1.801099419593811
       ],
       "min": [
-        -0.8451740145683289,
+        -0.839685320854187,
         0.3519621193408966,
         -2.324679136276245
       ],
@@ -173,37 +173,37 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 90,
+      "count": 47,
       "bufferView": 4,
       "byteOffset": 12
     },
     {
       "type": "VEC4",
       "componentType": 5126,
-      "count": 90,
+      "count": 47,
       "bufferView": 4,
       "byteOffset": 24
     },
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 90,
+      "count": 47,
       "bufferView": 4,
       "byteOffset": 40
     },
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 31,
+      "count": 557,
       "max": [
-        0.8113493919372559,
-        0.9451401829719543,
-        2.3702876567840576
+        0.8269019722938538,
+        0.9504705667495728,
+        2.4660794734954834
       ],
       "min": [
-        -0.8094198107719421,
-        0.6361355781555176,
-        -2.1864051818847656
+        -0.82497239112854,
+        0.7542703747749329,
+        2.00337815284729
       ],
       "bufferView": 5,
       "byteOffset": 0
@@ -211,21 +211,21 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 31,
+      "count": 557,
       "bufferView": 5,
       "byteOffset": 12
     },
     {
       "type": "VEC4",
       "componentType": 5126,
-      "count": 31,
+      "count": 557,
       "bufferView": 5,
       "byteOffset": 24
     },
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 31,
+      "count": 557,
       "bufferView": 5,
       "byteOffset": 40
     }
@@ -234,41 +234,41 @@
     {
       "buffer": 0,
       "byteOffset": 0,
-      "byteLength": 219024,
+      "byteLength": 241152,
       "byteStride": 48,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 219024,
-      "byteLength": 34684,
+      "byteOffset": 241152,
+      "byteLength": 40648,
       "target": 34963
     },
     {
       "buffer": 0,
-      "byteOffset": 253708,
+      "byteOffset": 281800,
       "byteLength": 38160,
       "byteStride": 48,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 291868,
+      "byteOffset": 319960,
       "byteLength": 4944,
       "byteStride": 48,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 296812,
-      "byteLength": 4320,
+      "byteOffset": 324904,
+      "byteLength": 2256,
       "byteStride": 48,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 301132,
-      "byteLength": 1488,
+      "byteOffset": 327160,
+      "byteLength": 26736,
       "byteStride": 48,
       "target": 34962
     }
@@ -276,7 +276,7 @@
   "buffers": [
     {
       "uri": "skoda_superb_lod1.bin",
-      "byteLength": 302620
+      "byteLength": 353896
     }
   ],
   "materials": [

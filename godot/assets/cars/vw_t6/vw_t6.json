@@ -67,7 +67,8 @@
   "body",
   "paint",
   "glass",
-  "light_head"
+  "light_head",
+  "light_tail"
  ],
- "triangles": 23083
+ "triangles": 23206
 }

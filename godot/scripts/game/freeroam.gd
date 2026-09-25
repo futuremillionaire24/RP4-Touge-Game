@@ -98,17 +98,27 @@ func _find_spawn() -> Transform3D:
 			var pos: Vector3 = p.position
 			var road := world.nearest_road(pos, 200.0)
 			if not road.is_empty():
-				# Step 30 m into the road so we never spawn at a dead end or a junction mouth.
 				var rs := world.road_samples(road.road)
 				var n: int = rs.centers.size()
-				var i: int = clampi(road.sample, 12, maxi(12, n - 12))
-				if road.sample > n / 2:
-					i = clampi(road.sample - 10, 12, n - 12)
-				else:
-					i = clampi(road.sample + 10, 12, n - 12)
-				var at: Vector3 = rs.centers[i]
-				var dir: Vector3 = rs.tangents[i]
-				return Transform3D(Basis.looking_at(dir, Vector3.UP), at + Vector3(0, 1.0, 0))
+				# Walk outward from the nearest sample to an ordinary stretch: on the ground (not a
+				# tunnel or bridge), away from the road ends (junction mouths), level with the terrain
+				# and straight enough to start on.
+				var types: PackedByteArray = rs.get("types", PackedByteArray())
+				for k in range(0, n):
+					for sgn in [1, -1]:
+						var i: int = road.sample + k * sgn
+						if i < 6 or i >= n - 6:
+							continue
+						if not types.is_empty() and types[i] != 0:
+							continue
+						var c: Vector3 = rs.centers[i]
+						if absf(c.y - world.height_at(c.x, c.z)) > 1.5:
+							continue
+						if (rs.tangents[i] as Vector3).dot(rs.tangents[mini(i + 4, n - 1)]) < 0.97:
+							continue
+						return Transform3D(Basis.looking_at(rs.tangents[i], Vector3.UP), c + Vector3(0, 0.6, 0))
+				var at: Vector3 = rs.centers[clampi(road.sample, 0, n - 1)]
+				return Transform3D(Basis.looking_at(rs.tangents[clampi(road.sample, 0, n - 1)], Vector3.UP), at + Vector3(0, 0.6, 0))
 			return Transform3D(Basis(Vector3.UP, p.yaw), pos + Vector3(0, 1.0, 0))
 	return Transform3D(Basis(), Vector3(0, world.height_at(0, 0) + 2.0, 0))
 
@@ -245,6 +255,7 @@ func _on_initial_load() -> void:
 	sim.running = true
 	_loading.get_parent().queue_free()
 	_state = "playing"
+	Perf.hold(4.0) # the first seconds still stream LOD rings and compile shaders
 	if args.has("event"):
 		start_event(EventData.get_event(args.event))
 	if args.has("shot"):
@@ -512,6 +523,7 @@ func _open_world_map() -> void:
 		sim.reset_car(player.car_id, Transform3D(Basis.looking_at(dir, Vector3.UP), pos), 0.0)
 		if camera:
 			camera.snap()
+		Perf.hold(4.0)
 		hud.toast("FAST TRAVEL COMPLETE", 2.0)
 		if hud: hud.visible = true
 		if race_hud: race_hud.visible = (race != null)

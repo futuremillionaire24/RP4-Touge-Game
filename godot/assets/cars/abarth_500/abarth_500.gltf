@@ -3906,6 +3906,16 @@
       }
     },
     {
+      "name": "interior:INT_Tessuto_soffitto",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 19
+        }
+      }
+    },
+    {
       "name": "interior:INT_Telaio",
       "doubleSided": true,
       "pbrMetallicRoughness": {
@@ -4004,6 +4014,18 @@
       }
     },
     {
+      "name": "light_tail:CAR_Vetro_Fanali_POSTERIORI",
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 8
+        }
+      }
+    },
+    {
       "name": "glass:CAR_Vetro",
       "alphaMode": "BLEND",
       "pbrMetallicRoughness": {
@@ -4014,7 +4036,7 @@
       }
     },
     {
-      "name": "light_misc:EXT_side_lights",
+      "name": "light_head:EXT_side_lights",
       "doubleSided": true,
       "pbrMetallicRoughness": {
         "roughnessFactor": 0,
@@ -4433,7 +4455,7 @@
             "TEXCOORD_0": 214
           },
           "mode": 4,
-          "material": 26,
+          "material": 44,
           "indices": 52
         },
         {
@@ -4443,7 +4465,7 @@
             "TEXCOORD_0": 217
           },
           "mode": 4,
-          "material": 44,
+          "material": 45,
           "indices": 53
         },
         {
@@ -4453,7 +4475,7 @@
             "TEXCOORD_0": 220
           },
           "mode": 4,
-          "material": 45,
+          "material": 46,
           "indices": 54
         },
         {
@@ -4463,7 +4485,7 @@
             "TEXCOORD_0": 223
           },
           "mode": 4,
-          "material": 46,
+          "material": 47,
           "indices": 55
         },
         {
@@ -4473,7 +4495,7 @@
             "TEXCOORD_0": 226
           },
           "mode": 4,
-          "material": 47,
+          "material": 48,
           "indices": 56
         },
         {
@@ -4483,7 +4505,7 @@
             "TEXCOORD_0": 229
           },
           "mode": 4,
-          "material": 48,
+          "material": 49,
           "indices": 57
         },
         {
@@ -4493,7 +4515,7 @@
             "TEXCOORD_0": 241
           },
           "mode": 4,
-          "material": 49,
+          "material": 50,
           "indices": 61
         },
         {
@@ -4503,7 +4525,7 @@
             "TEXCOORD_0": 249
           },
           "mode": 4,
-          "material": 50,
+          "material": 51,
           "indices": 63
         },
         {
@@ -4513,7 +4535,7 @@
             "TEXCOORD_0": 256
           },
           "mode": 4,
-          "material": 10,
+          "material": 52,
           "indices": 65
         },
         {
@@ -4523,7 +4545,7 @@
             "TEXCOORD_0": 259
           },
           "mode": 4,
-          "material": 51,
+          "material": 53,
           "indices": 66
         },
         {
@@ -4533,7 +4555,7 @@
             "TEXCOORD_0": 262
           },
           "mode": 4,
-          "material": 52,
+          "material": 54,
           "indices": 67
         }
       ]

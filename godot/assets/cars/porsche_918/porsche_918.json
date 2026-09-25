@@ -67,40 +67,35 @@
  "track_rear": 1.8468,
  "headlights": [
   [
-   -0.343,
-   0.642,
-   -0.76
+   -0.364,
+   0.637,
+   -0.827
   ],
   [
-   0.474,
-   0.542,
-   -1.149
+   0.538,
+   0.544,
+   -1.363
   ]
  ],
  "taillights": [
   [
-   -0.56,
-   0.608,
-   0.113
+   -0.604,
+   0.651,
+   1.815
   ],
   [
-   0.593,
-   0.604,
-   0.114
+   0.612,
+   0.65,
+   1.9
   ]
  ],
  "exhausts": [],
  "classes": [
   "caliper:amdb11_caliper",
-  "caliper:caliper:amdb11_caliper",
   "disc:amdb11_badging",
   "disc:amdb11_brake",
   "disc:amdb11_misc",
   "disc:amdb11_misc_chrome",
-  "disc:disc:amdb11_badging",
-  "disc:disc:amdb11_brake",
-  "disc:disc:amdb11_misc",
-  "disc:disc:amdb11_misc_chrome",
   "glass:P918_glass.0",
   "glass:P918_glasses_r.0",
   "glass:P918_windscreen_ok.2",
@@ -113,18 +108,18 @@
   "interior:P918_movsteer_1.0.5",
   "interior:P918_seat.0",
   "interior:P918_seat_logo.0",
+  "interior:P918_tahook.0",
+  "interior:material",
   "interior:movsteer_1.0.3",
   "interior:movsteer_1.0.7",
-  "interior:other:P918_tahook.0",
-  "interior:other:material",
+  "light_head:P918_basic_light_front.0",
+  "light_head:P918_light_ref_front.0",
   "light_head:left_front_light",
   "light_head:p918_headlight",
-  "light_misc:P918_basic_light_front.0",
-  "light_misc:P918_light_ref_front.0",
   "light_misc:P918_revlight_L",
   "light_signal:p918_signal_L",
   "light_signal:p918_signal_R",
-  "light_tail:p918_ext_details_rim",
+  "light_tail:p918_headlight",
   "light_tail:p918_taillight",
   "other:P918_besi.0",
   "other:P918_black.0",
@@ -146,12 +141,11 @@
   "other:P918_tombol.0",
   "other:Scene_-_Root",
   "other:material",
+  "other:p918_ext_details_rim",
   "paint:P918_paint",
   "rim:918weissach_wheel",
-  "rim:diff_wheel.0",
-  "rim:rim:918weissach_wheel",
-  "rim:rim:diff_wheel.0"
+  "rim:diff_wheel.0"
  ],
- "triangles": 161473,
+ "triangles": 161366,
  "source_triangles": 306716
 }

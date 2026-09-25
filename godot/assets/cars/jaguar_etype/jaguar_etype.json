@@ -65,7 +65,18 @@
  "wheelbase": 2.5502,
  "track_front": 1.4564,
  "track_rear": 1.4564,
- "headlights": [],
+ "headlights": [
+  [
+   -0.67,
+   0.637,
+   -1.76
+  ],
+  [
+   0.691,
+   0.637,
+   -1.76
+  ]
+ ],
  "taillights": [
   [
    -0.428,
@@ -83,7 +94,7 @@
   "glass:Glass",
   "glass:Window_Glass",
   "interior:Interior",
-  "light_misc:Lights",
+  "light_head:Lights",
   "light_reverse:Reverse_Light",
   "light_signal:Left_Indicator",
   "light_signal:Right_Indicator",

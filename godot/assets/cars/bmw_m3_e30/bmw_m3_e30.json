@@ -67,38 +67,38 @@
  "track_rear": 1.4137,
  "headlights": [
   [
-   -0.527,
-   0.587,
-   -1.316
+   -0.534,
+   0.552,
+   -1.902
   ],
   [
-   0.527,
-   0.587,
-   -1.316
+   0.534,
+   0.552,
+   -1.902
   ]
  ],
  "taillights": [
   [
-   -0.551,
-   0.53,
-   0.099
+   -0.528,
+   0.653,
+   2.15
   ],
   [
-   0.551,
-   0.53,
-   0.099
+   0.528,
+   0.653,
+   2.15
   ]
  ],
  "exhausts": [],
  "classes": [
   "caliper:Brembo_Calipers",
-  "caliper:caliper:Brembo_Calipers",
   "chrome:BMW_E30_M3_CHROME",
   "disc:Brake_Disc",
-  "disc:disc:Brake_Disc",
   "glass:BMW_E30_M3_WINDOWS",
   "light_head:BMW_E30_M3_HEADLIGHT_REFLECTOR",
   "light_head:BMW_E30_M3_LENS",
+  "light_head:BMW_E30_M3_TAILLIGHT_REFLECTOR",
+  "light_tail:BMW_E30_M3_LENS",
   "light_tail:BMW_E30_M3_TAILLIGHT_REFLECTOR",
   "other:BMW_E30_M3_BLACKOUT",
   "other:BMW_E30_M3_EMBLEMS",
@@ -106,10 +106,8 @@
   "other:BMW_E30_M3_SIDE_MIRROR",
   "paint:BMW_E30_M3_PAINT",
   "rim:BMW_E30_M3_RIM",
-  "rim:rim:BMW_E30_M3_RIM",
-  "tyre:BMW_E30_M3_TIRE",
-  "tyre:tyre:BMW_E30_M3_TIRE"
+  "tyre:BMW_E30_M3_TIRE"
  ],
- "triangles": 105873,
+ "triangles": 105872,
  "source_triangles": 117253
 }

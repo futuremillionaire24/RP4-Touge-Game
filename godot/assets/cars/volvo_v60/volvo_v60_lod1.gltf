@@ -66,16 +66,16 @@
     {
       "type": "SCALAR",
       "componentType": 5123,
-      "count": 3162,
+      "count": 1245,
       "bufferView": 1,
       "byteOffset": 35704
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
-      "count": 234,
+      "count": 2244,
       "bufferView": 1,
-      "byteOffset": 42028
+      "byteOffset": 38196
     },
     {
       "type": "VEC3",
@@ -156,16 +156,16 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 1382,
+      "count": 549,
       "max": [
-        0.8471072912216187,
-        1.3137739896774292,
-        2.1222927570343018
+        0.843889594078064,
+        0.7550021409988403,
+        -1.743177890777588
       ],
       "min": [
         -0.8416222929954529,
-        0.5548709034919739,
-        -2.1639347076416016
+        0.38246145844459534,
+        -2.163558006286621
       ],
       "bufferView": 4,
       "byteOffset": 0
@@ -173,37 +173,37 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 1382,
+      "count": 549,
       "bufferView": 4,
       "byteOffset": 12
     },
     {
       "type": "VEC4",
       "componentType": 5126,
-      "count": 1382,
+      "count": 549,
       "bufferView": 4,
       "byteOffset": 24
     },
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 1382,
+      "count": 549,
       "bufferView": 4,
       "byteOffset": 40
     },
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 94,
+      "count": 1009,
       "max": [
-        1.0321004390716553,
-        1.0155272483825684,
-        -0.5431430339813232
+        0.8095839619636536,
+        1.369504690170288,
+        2.1222927570343018
       ],
       "min": [
-        -1.0321004390716553,
-        0.9797167181968689,
-        -0.6828210353851318
+        -0.8102472424507141,
+        0.823574423789978,
+        1.6788737773895264
       ],
       "bufferView": 5,
       "byteOffset": 0
@@ -211,21 +211,21 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 94,
+      "count": 1009,
       "bufferView": 5,
       "byteOffset": 12
     },
     {
       "type": "VEC4",
       "componentType": 5126,
-      "count": 94,
+      "count": 1009,
       "bufferView": 5,
       "byteOffset": 24
     },
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 94,
+      "count": 1009,
       "bufferView": 5,
       "byteOffset": 40
     }
@@ -241,34 +241,34 @@
     {
       "buffer": 0,
       "byteOffset": 346176,
-      "byteLength": 42496,
+      "byteLength": 42684,
       "target": 34963
     },
     {
       "buffer": 0,
-      "byteOffset": 388672,
+      "byteOffset": 388860,
       "byteLength": 64080,
       "byteStride": 48,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 452752,
+      "byteOffset": 452940,
       "byteLength": 5808,
       "byteStride": 48,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 458560,
-      "byteLength": 66336,
+      "byteOffset": 458748,
+      "byteLength": 26352,
       "byteStride": 48,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 524896,
-      "byteLength": 4512,
+      "byteOffset": 485100,
+      "byteLength": 48432,
       "byteStride": 48,
       "target": 34962
     }
@@ -276,7 +276,7 @@
   "buffers": [
     {
       "uri": "volvo_v60_lod1.bin",
-      "byteLength": 529408
+      "byteLength": 533532
     }
   ],
   "materials": [

@@ -23,6 +23,7 @@ uniform float model_height = 10.0;
 uniform float sway_from = 1.5;
 uniform float sway_amount = 0.0;
 uniform float lamp_y = 1e6;
+uniform bool bob = false; // boats: heave, roll and pitch on the swell
 
 varying float variation;
 varying vec3 local_pos;
@@ -30,6 +31,10 @@ varying vec3 local_pos;
 void vertex() {
 	variation = INSTANCE_CUSTOM.x;
 	local_pos = VERTEX;
+	if (bob) {
+		float ph = dot(MODEL_MATRIX[3].xz, vec2(0.13, 0.07)) + TIME * 0.7;
+		VERTEX.y += sin(ph) * 0.07 + VERTEX.x * sin(ph * 0.8 + 1.0) * 0.012 + VERTEX.z * sin(ph * 0.6 + 2.0) * 0.004;
+	}
 	if (sway_amount > 0.0) {
 		vec3 wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 		float k = smoothstep(sway_from, model_height, VERTEX.y);

@@ -67,55 +67,52 @@
  "track_rear": 1.7973,
  "headlights": [
   [
-   -0.634,
-   0.555,
-   -1.509
+   -0.639,
+   0.536,
+   -1.878
   ],
   [
-   0.617,
-   0.555,
-   -1.509
+   0.622,
+   0.536,
+   -1.878
   ]
  ],
  "taillights": [
   [
-   -0.602,
-   0.74,
-   1.741
+   -0.6,
+   0.738,
+   1.748
   ],
   [
-   0.584,
-   0.74,
-   1.741
+   0.583,
+   0.738,
+   1.748
   ]
  ],
  "exhausts": [],
  "classes": [
-  "caliper:caliper:calipers",
   "caliper:calipers",
-  "chrome:light_tail:chrome",
-  "glass:light_tail:glass",
+  "chrome:chrome",
+  "glass:glass",
   "glass:pure_black",
   "light_head:white_lights",
   "light_tail:black",
   "light_tail:chrome",
   "light_tail:glass",
-  "light_tail:glass:pure_black",
+  "light_tail:pure_black",
   "light_tail:red_lights",
+  "light_tail:white_lights",
+  "other:black",
   "other:carbon_fiber",
-  "other:glass:pure_black",
   "other:license_plate",
-  "other:light_tail:black",
   "other:matte_black",
+  "other:pure_black",
   "other:secondary",
   "paint:body",
   "rim:material",
-  "rim:rim:material",
-  "rim:rim:wheel",
   "rim:wheel",
-  "tyre:tire",
-  "tyre:tyre:tire"
+  "tyre:tire"
  ],
- "triangles": 108235,
+ "triangles": 108255,
  "source_triangles": 447204
 }

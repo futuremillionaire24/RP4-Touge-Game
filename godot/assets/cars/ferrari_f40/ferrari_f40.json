@@ -67,25 +67,25 @@
  "track_rear": 1.5483,
  "headlights": [
   [
-   -0.634,
-   0.468,
-   -1.904
+   -0.699,
+   0.475,
+   -1.833
   ],
   [
-   0.64,
-   0.468,
-   -1.903
+   0.705,
+   0.475,
+   -1.833
   ]
  ],
  "taillights": [
   [
-   -0.538,
-   0.646,
+   -0.49,
+   0.611,
    2.042
   ],
   [
-   0.543,
-   0.646,
+   0.495,
+   0.611,
    2.042
   ]
  ],
@@ -105,10 +105,12 @@
   "interior:F40_Tappetini",
   "interior:super_gauges",
   "light_head:F40_Headlights",
+  "light_head:F40_Vehiclelight",
   "light_head:super_headlight",
   "light_misc:F40_Vehiclelight",
   "light_reverse:super_reverselight",
   "light_signal:super_signal_L",
+  "light_tail:F40_Vehiclelight",
   "light_tail:super_brakelight",
   "other:F40_Brake",
   "other:F40_Carbon",
@@ -122,13 +124,9 @@
   "other:F40_Strelki",
   "other:Scene_-_Root.002",
   "other:material",
-  "other:other:F40_Brake",
-  "other:other:F40_Mechanics",
-  "other:other:Scene_-_Root.002",
   "paint:F40_Skin",
-  "rim:F40_Rrims",
-  "rim:rim:F40_Rrims"
+  "rim:F40_Rrims"
  ],
- "triangles": 96306,
+ "triangles": 96332,
  "source_triangles": 245552
 }

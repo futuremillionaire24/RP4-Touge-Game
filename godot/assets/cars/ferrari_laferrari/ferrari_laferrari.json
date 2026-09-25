@@ -67,26 +67,26 @@
  "track_rear": 1.6453,
  "headlights": [
   [
-   -0.687,
-   0.662,
-   1.705
+   -0.805,
+   0.585,
+   -1.771
   ],
   [
-   0.638,
-   0.63,
-   1.803
+   0.785,
+   0.574,
+   -1.793
   ]
  ],
  "taillights": [
   [
-   -0.583,
-   0.684,
-   1.837
+   -0.623,
+   0.679,
+   1.89
   ],
   [
-   0.505,
+   0.556,
    0.642,
-   1.846
+   1.899
   ]
  ],
  "exhausts": [],
@@ -97,18 +97,18 @@
   "disc:Disk",
   "glass:Engine_glass",
   "glass:Glasses",
+  "glass:head_lights_glasses.002",
   "interior:Interior_2.001",
   "interior:int_mirror",
   "interior:seat_belt_lock",
   "interior:seats_nuts",
   "light_head:Front_headlights.001",
-  "light_head:Rear_headlights",
-  "light_head:head_lights_glasses.002",
-  "light_head:run_lights",
+  "light_tail:Rear_headlights",
   "light_tail:break_lights.001",
   "light_tail:break_lights_glasses",
   "light_tail:breake_lights_chrom",
   "light_tail:red_light",
+  "light_tail:run_lights",
   "light_tail:tail_lights",
   "other:Carbon_fiber",
   "other:Inside_stickers",
@@ -129,7 +129,6 @@
   "other:black.007",
   "other:black_2",
   "other:hood_black",
-  "other:other:rear_black_something",
   "other:rear_black_something",
   "other:side_mirrors",
   "other:under_carreage",
@@ -165,6 +164,6 @@
   "tyre:visse.012",
   "tyre:visse.013"
  ],
- "triangles": 156061,
+ "triangles": 156569,
  "source_triangles": 582188
 }

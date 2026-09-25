@@ -40,7 +40,7 @@ const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies(
 const DEFAULT_RX = {
 	reverse: /reverse|retro/i,
 	signal: /signal|indicator|blinker|turn_?l|orange|amber|clignot|frecce/i,
-	tail: /tail|rear.?light|rear_?lamp|brake.?light|breake?_?light|posterior|stop.?l|red.?light|redlight|lightred|glassred|red_lights|feu.?ar|lucipost/i,
+	tail: /(?<!de)tail|rear.?light|rear_?lamp|brake.?light|breake?_?light|posterior|stop.?l|red.?light|redlight|lightred|glassred|red_lights|feu.?ar|lucipost/i,
 	head: /head.?light|headlamp|hd_?light|front.?light|anterior|fari|phare|low.?beam|high.?beam|hl_front|projector|drl|running.?light|run_lights|lens/i,
 	glass: /glass|window|windscreen|windshield|vetro|verre|vitre|win_glass|\bglas\b/i,
 	tyre: /tire|tyre|rubber|pneu|gomma|rezina|michelin|reifen/i,
@@ -55,6 +55,8 @@ const DEFAULT_RX = {
 const CLASS_ORDER = ['paint', 'reverse', 'signal', 'tail', 'head', 'glass', 'tyre', 'caliper', 'disc', 'rim', 'interior', 'chrome', 'light'];
 
 function classify(name, cfg) {
+	// cfg.other: materials that must stay plain (e.g. trim atlases the defaults take for lamps).
+	if (cfg.other && new RegExp(cfg.other, 'i').test(name)) return 'other';
 	for (const cls of CLASS_ORDER) {
 		const key = cls === 'light' ? null : cls;
 		if (key && cfg[key] && new RegExp(cfg[key], 'i').test(name)) return map(cls);
@@ -499,6 +501,40 @@ async function bake(key, cfg, isTraffic) {
 			w.box = { mn: [w.box.mn[0] + dx, w.box.mn[1] + dy, w.box.mn[2] + dz], mx: [w.box.mx[0] + dx, w.box.mx[1] + dy, w.box.mx[2] + dz] };
 		}
 
+	// Lamp classes per island. Many models share one lamp material between the front and rear
+	// lights: pieces in the front third become headlights, the rear third taillights. "Lamp"
+	// materials that cover the whole car with lots of geometry are trim atlases picked up by a
+	// node name - they stay plain.
+	{
+		const half = (cfg.length || 4.5) / 2;
+		const zOf = (i) => {
+			let z = 0;
+			for (const v of i.verts) z += i.part.P[v * 3 + 2];
+			return z / Math.max(1, i.verts.size);
+		};
+		const stats = new Map();
+		for (const i of isl) {
+			i.cls = i.part.cls;
+			if (!i.cls.startsWith('light_') || i.wheel !== undefined) continue;
+			i.z = zOf(i);
+			const s = stats.get(i.part.matName) || { tris: 0, zmin: Infinity, zmax: -Infinity };
+			s.tris += i.tris.length;
+			s.zmin = Math.min(s.zmin, i.z);
+			s.zmax = Math.max(s.zmax, i.z);
+			stats.set(i.part.matName, s);
+		}
+		for (const i of isl) {
+			if (i.z === undefined) continue;
+			const s = stats.get(i.part.matName);
+			if (s.tris > 20000 && s.zmax - s.zmin > 3.0) i.cls = 'other';
+			else if (['light_head', 'light_tail', 'light_misc'].includes(i.cls)) {
+				if (i.z < -half * 0.35) i.cls = 'light_head';
+				else if (i.z > half * 0.35) i.cls = 'light_tail';
+			}
+			if (process.env.CARBAKE_DEBUG) console.log('  lamp', i.part.matName, i.part.cls, '->', i.cls, 'z', i.z.toFixed(2), 'tris', i.tris.length);
+		}
+	}
+
 	if (isTraffic) {
 		// Two LODs: near (<= 45 m) and far; the traffic view splits instances by distance.
 		const outDir = path.join(OUT, key);
@@ -513,9 +549,9 @@ async function bake(key, cfg, isTraffic) {
 	const buckets = new Map();
 	for (const i of isl) {
 		const grp = i.wheel === undefined ? 'Body' : `${['Wheel_FL', 'Wheel_FR', 'Wheel_RL', 'Wheel_RR'][i.wheel]}/${i.caliper ? 'Caliper' : 'Spin'}`;
-		const bk = `${grp}\u0000${i.part.cls}\u0000${i.part.matName}`;
+		const bk = `${grp}\u0000${i.cls}\u0000${i.part.matName}`;
 		let b = buckets.get(bk);
-		if (!b) buckets.set(bk, (b = { grp, cls: i.part.cls, mat: i.part.mat, items: [] }));
+		if (!b) buckets.set(bk, (b = { grp, cls: i.cls, mat: i.part.mat, items: [] }));
 		b.items.push(i);
 	}
 
@@ -554,6 +590,7 @@ async function bake(key, cfg, isTraffic) {
 		return (nodes[grp] = n);
 	};
 	const matClone = new Map();
+	const srcName = new Map();
 	let triOut = 0;
 	for (const b of buckets.values()) {
 		// Merge islands into one vertex/index set.
@@ -633,8 +670,10 @@ async function bake(key, cfg, isTraffic) {
 		// Material tagged with its class (cloned when one source material serves two classes).
 		let mat = b.mat;
 		if (mat) {
-			const tag = `${b.cls}:${mat.getName() || 'mat'}`;
-			const ck = `${mat.getName()}\u0000${b.cls}`;
+			// Key on the source name: the first bucket renames the shared material in place.
+			if (!srcName.has(mat)) srcName.set(mat, mat.getName() || 'mat');
+			const tag = `${b.cls}:${srcName.get(mat)}`;
+			const ck = `${srcName.get(mat)}\u0000${b.cls}`;
 			if (!matClone.has(ck)) {
 				const already = [...matClone.values()].includes(mat);
 				const m = already ? mat.clone() : mat;
@@ -660,7 +699,9 @@ async function bake(key, cfg, isTraffic) {
 	// Drop everything the old scene referenced, strip decoder-only extensions.
 	for (const e of r0.listExtensionsUsed())
 		if (['KHR_draco_mesh_compression', 'EXT_meshopt_compression', 'KHR_mesh_quantization'].includes(e.extensionName)) e.dispose();
-	await doc.transform(prune(), dedup());
+	// keepUniqueNames: class-tagged clones of one material ("light_head:x" / "light_tail:x") are
+	// otherwise identical and would be merged back into one.
+	await doc.transform(prune(), dedup({ keepUniqueNames: true }));
 	// Textures: fit inside texture_max, WebP -> PNG (JPEG stays JPEG). Godot VRAM-compresses on import.
 	// Resolution by what the texture is on: the body and wheels are seen close up, the cabin
 	// through tinted glass. Keeps each car's GPU texture memory to a few MB on the device.
@@ -743,8 +784,8 @@ async function bake(key, cfg, isTraffic) {
 		wheelbase: wheels ? +(((wheels[2].c[2] + wheels[3].c[2]) - (wheels[0].c[2] + wheels[1].c[2])) / 2).toFixed(4) : null,
 		track_front: wheels ? +Math.abs(wheels[1].c[0] - wheels[0].c[0]).toFixed(4) : null,
 		track_rear: wheels ? +Math.abs(wheels[3].c[0] - wheels[2].c[0]).toFixed(4) : null,
-		headlights: anchors((i) => i.part.cls === 'light_head'),
-		taillights: anchors((i) => i.part.cls === 'light_tail'),
+		headlights: anchors((i) => i.cls === 'light_head'),
+		taillights: anchors((i) => i.cls === 'light_tail'),
 		exhausts: anchors((i) => /exhaust|pipe|scarico|muffler|auspuff/i.test(`${i.part.node}|${i.part.matName}`) && center(i.box)[2] > 0),
 		classes: [...new Set([...matClone.values()].map((m) => m.getName()))].sort(),
 		triangles: Math.round(triOut),
@@ -793,7 +834,7 @@ async function writeTrafficLite(key, suffix, budget, credit, parts, isl, wheels,
 	const surf = {};
 	for (const s of LITE_SURFACES) surf[s] = { P: [], N: [], C: [], U2: [], I: [] };
 	for (const i of isl) {
-		const cls = i.part.cls;
+		const cls = i.cls || i.part.cls;
 		let s = 'body';
 		if (cls === 'paint') s = 'paint';
 		else if (cls === 'glass') s = 'glass';

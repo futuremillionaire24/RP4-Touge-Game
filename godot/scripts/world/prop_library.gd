@@ -6,7 +6,7 @@ extends RefCounted
 ## prop_model shader; the rest are procedural: one surface with vertex colours and a material id
 ## in UV.x, all sharing prop.gdshader.
 
-enum Type { TREE_PLANE, TREE_PINE, TREE_PALM, TREE_CYPRESS, STREET_LAMP, HIGHWAY_LAMP, UTILITY_POLE, KIOSK, PIER, CONTAINER, ROCK, AC_UNIT, WATER_TANK, TRAFFIC_LIGHT, CONE, SIGN_CURVE, TREE_OLIVE, BUSH }
+enum Type { TREE_PLANE, TREE_PINE, TREE_PALM, TREE_CYPRESS, STREET_LAMP, HIGHWAY_LAMP, UTILITY_POLE, KIOSK, PIER, CONTAINER, ROCK, AC_UNIT, WATER_TANK, TRAFFIC_LIGHT, CONE, SIGN_CURVE, TREE_OLIVE, BUSH, YACHT, BENCH, BIN, BOLLARD, HYDRANT }
 
 const SHADER := preload("res://shaders/prop.gdshader")
 const MODEL_SHADER := preload("res://shaders/prop_model.gdshader")
@@ -24,6 +24,11 @@ const MODELS := {
 	Type.HIGHWAY_LAMP: {"key": "street_lamp", "lamp_y": 6.6},
 	Type.SIGN_CURVE: {"key": "sign_curve"},
 	Type.CONE: {"key": "cone"},
+	Type.YACHT: {"key": "yacht", "bob": true},
+	Type.BENCH: {"key": "bench"},
+	Type.BIN: {"key": "bin"},
+	Type.BOLLARD: {"key": "bollard"},
+	Type.HYDRANT: {"key": "hydrant"},
 }
 ## Extra model scale per type (the highway lamp reuses the street lamp, taller).
 const MODEL_SCALE := {Type.HIGHWAY_LAMP: 1.3}
@@ -34,6 +39,7 @@ const VIS_RANGE := {
 	Type.STREET_LAMP: 400.0, Type.HIGHWAY_LAMP: 600.0, Type.UTILITY_POLE: 400.0, Type.KIOSK: 150.0,
 	Type.PIER: 1500.0, Type.CONTAINER: 700.0, Type.ROCK: 300.0, Type.AC_UNIT: 180.0, Type.WATER_TANK: 300.0,
 	Type.TRAFFIC_LIGHT: 250.0, Type.CONE: 120.0, Type.SIGN_CURVE: 220.0, Type.TREE_OLIVE: 500.0, Type.BUSH: 220.0,
+	Type.YACHT: 1200.0, Type.BENCH: 110.0, Type.BIN: 90.0, Type.BOLLARD: 90.0, Type.HYDRANT: 80.0,
 }
 
 static var _meshes := {}
@@ -85,6 +91,7 @@ static func _model_mesh(t: int) -> Mesh:
 		mat.set_shader_parameter("sway_from", aabb.end.y * 0.2)
 		mat.set_shader_parameter("sway_amount", float(def.get("sway", 0.0)))
 		mat.set_shader_parameter("lamp_y", float(def.get("lamp_y", 1e6)))
+		mat.set_shader_parameter("bob", bool(def.get("bob", false)))
 		m.surface_set_material(s, mat)
 	scene.free()
 	_model_meshes[t] = m
@@ -202,7 +209,7 @@ static func multimesh_instance(t: int, data: PackedFloat32Array) -> MultiMeshIns
 		mmi.material_override = material()
 	mmi.visibility_range_end = VIS_RANGE.get(t, 400.0)
 	mmi.visibility_range_end_margin = 20.0
-	var shadows := t in [Type.TREE_PLANE, Type.TREE_PINE, Type.TREE_PALM, Type.TREE_CYPRESS, Type.TREE_OLIVE, Type.STREET_LAMP, Type.HIGHWAY_LAMP, Type.PIER, Type.CONTAINER, Type.UTILITY_POLE]
+	var shadows := t in [Type.TREE_PLANE, Type.TREE_PINE, Type.TREE_PALM, Type.TREE_CYPRESS, Type.TREE_OLIVE, Type.STREET_LAMP, Type.HIGHWAY_LAMP, Type.PIER, Type.CONTAINER, Type.UTILITY_POLE, Type.YACHT, Type.BENCH]
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return mmi
 
