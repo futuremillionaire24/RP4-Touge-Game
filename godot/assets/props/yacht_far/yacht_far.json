@@ -1,0 +1,17 @@
+{
+ "key": "yacht_far",
+ "credit": {
+  "title": "Yacht",
+  "author": "Sergei",
+  "author_url": "https://sketchfab.com/sergeif",
+  "license": "CC Attribution",
+  "license_url": "http://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/yacht-0dd451f295d049cea20c17d3ffa87ee3"
+ },
+ "size": [
+  6.11,
+  11.64,
+  30
+ ],
+ "triangles": 190
+}

@@ -7,16 +7,16 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 6759,
+      "count": 1212,
       "max": [
-        4.844122886657715,
-        12.412099838256836,
-        6.748227596282959
+        4.072327613830566,
+        12.20778751373291,
+        5.705171585083008
       ],
       "min": [
-        -8.452779769897461,
+        -7.581613540649414,
         0,
-        -6.308571815490723
+        -4.458918571472168
       ],
       "bufferView": 0,
       "byteOffset": 0
@@ -24,44 +24,44 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 6759,
+      "count": 1212,
       "bufferView": 0,
       "byteOffset": 12
     },
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 6759,
+      "count": 1212,
       "bufferView": 0,
       "byteOffset": 24
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
-      "count": 11340,
+      "count": 2514,
       "bufferView": 1,
       "byteOffset": 0
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
-      "count": 2772,
+      "count": 4668,
       "bufferView": 1,
-      "byteOffset": 22680
+      "byteOffset": 5028
     },
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 728,
+      "count": 1234,
       "max": [
-        10.697456359863281,
-        13.504162788391113,
-        10.320719718933105
+        10.811845779418945,
+        13.166921615600586,
+        9.818216323852539
       ],
       "min": [
-        -11.056292533874512,
-        6.027952671051025,
-        -10.370244979858398
+        -10.384180068969727,
+        6.128421306610107,
+        -9.811545372009277
       ],
       "bufferView": 2,
       "byteOffset": 0
@@ -69,14 +69,14 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 728,
+      "count": 1234,
       "bufferView": 2,
       "byteOffset": 12
     },
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 728,
+      "count": 1234,
       "bufferView": 2,
       "byteOffset": 24
     }
@@ -85,20 +85,20 @@
     {
       "buffer": 0,
       "byteOffset": 0,
-      "byteLength": 216288,
+      "byteLength": 38784,
       "byteStride": 32,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 216288,
-      "byteLength": 28224,
+      "byteOffset": 38784,
+      "byteLength": 14364,
       "target": 34963
     },
     {
       "buffer": 0,
-      "byteOffset": 244512,
-      "byteLength": 23296,
+      "byteOffset": 53148,
+      "byteLength": 39488,
       "byteStride": 32,
       "target": 34962
     }
@@ -144,7 +144,7 @@
     {
       "name": "tree_pine.bin",
       "uri": "tree_pine.bin",
-      "byteLength": 267808
+      "byteLength": 92636
     }
   ],
   "materials": [

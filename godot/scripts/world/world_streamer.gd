@@ -33,10 +33,12 @@ func setup(p_world: NTWorld, p_sim: NTSim) -> void:
 	var tier: int = Settings.get_value("graphics", "tier", Settings.Tier.HIGH)
 	var dd: float = Settings.get_value("graphics", "draw_distance", 1.0)
 	match tier:
-		Settings.Tier.LOW: rings = [1, 2, 3, 5]
-		Settings.Tier.MEDIUM: rings = [1, 2, 3, 6]
-		Settings.Tier.ULTRA: rings = [1, 3, 5, 9]
-		_: rings = [1, 2, 4, 7]
+		# Chebyshev radii: the outer ring edge sits at (r + 0.5) x 256 m. The height fog swallows
+		# most of the far ring; every ring beyond is ~(2r+1)^2 chunks of draw calls on a Mali-G77.
+		Settings.Tier.LOW: rings = [1, 1, 2, 3]
+		Settings.Tier.MEDIUM: rings = [1, 2, 3, 4]
+		Settings.Tier.ULTRA: rings = [1, 2, 4, 7]
+		_: rings = [1, 2, 3, 5]
 	rings[3] = int(round(rings[3] * dd))
 
 ## Blocks nothing: call, then wait for `initial_load_done` before releasing the player.
@@ -170,13 +172,14 @@ func _integrate(d: Dictionary) -> void:
 		var groups: PackedInt32Array = mesh.get_meta("surface_groups")
 		for s in range(groups.size()):
 			mi.set_surface_override_material(s, WorldMaterials.get_material(groups[s]))
-		# Far LODs don't need to cast shadows (they're beyond the shadow distance anyway).
-		if d.lod >= 2:
+		# Only the nearest ring casts: the shadow cascades end within ~160-220 m, and every caster
+		# is drawn again per cascade.
+		if d.lod >= 1:
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		node.add_child(mi)
 	var props: Dictionary = d.get("props", {})
 	for t in props.keys():
-		node.add_child(PropLibrary.multimesh_instance(int(t), props[t]))
+		PropLibrary.add_instances(node, int(t), props[t], d.lod)
 	add_child(node)
 	var had: Dictionary = _chunks.get(key, {})
 	if not had.is_empty():

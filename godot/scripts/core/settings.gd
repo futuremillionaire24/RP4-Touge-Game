@@ -21,7 +21,7 @@ func _defaults() -> Dictionary:
 			"resolution_floor": 0.8,
 			"dynamic_resolution": true,
 			"msaa": 2, # Viewport.MSAA_4X
-			"shadows": 2, # 0 off, 1 low, 2 high, 3 ultra
+			"shadows": 1, # 0 off, 1 low, 2 high, 3 ultra (RP4 60 fps budget: low)
 			"reflections": 2, # 0 probe only, 1 + planar low, 2 planar
 			"draw_distance": 1.0,
 			"traffic_density": 1.0,

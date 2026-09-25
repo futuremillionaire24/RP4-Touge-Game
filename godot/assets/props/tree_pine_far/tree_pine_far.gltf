@@ -1,0 +1,226 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.0",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 91,
+      "max": [
+        2.05932354927063,
+        11.338778495788574,
+        2.8636417388916016
+      ],
+      "min": [
+        -7.341520309448242,
+        0,
+        -1.4340496063232422
+      ],
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 91,
+      "bufferView": 0,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 91,
+      "bufferView": 0,
+      "byteOffset": 24
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 213,
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 432,
+      "bufferView": 1,
+      "byteOffset": 428
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 114,
+      "max": [
+        10.270981788635254,
+        12.31292724609375,
+        9.054396629333496
+      ],
+      "min": [
+        -9.113022804260254,
+        6.420844554901123,
+        -6.921157360076904
+      ],
+      "bufferView": 2,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 114,
+      "bufferView": 2,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 114,
+      "bufferView": 2,
+      "byteOffset": 24
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 2912,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 2912,
+      "byteLength": 1292,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 4204,
+      "byteLength": 3648,
+      "byteStride": 32,
+      "target": 34962
+    }
+  ],
+  "samplers": [
+    {
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "source": 0,
+      "sampler": 0
+    },
+    {
+      "source": 1,
+      "sampler": 0
+    },
+    {
+      "source": 2,
+      "sampler": 0
+    }
+  ],
+  "images": [
+    {
+      "name": "tree_pine_far_0",
+      "mimeType": "image/jpeg",
+      "uri": "tree_pine_far_0.jpg"
+    },
+    {
+      "name": "tree_pine_far_1",
+      "mimeType": "image/jpeg",
+      "uri": "tree_pine_far_1.jpg"
+    },
+    {
+      "name": "tree_pine_far_2",
+      "mimeType": "image/png",
+      "uri": "tree_pine_far_2.png"
+    }
+  ],
+  "buffers": [
+    {
+      "name": "tree_pine_far.bin",
+      "uri": "tree_pine_far.bin",
+      "byteLength": 7852
+    }
+  ],
+  "materials": [
+    {
+      "name": "Umbrella_Pine_Bark_Material",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.37868078482875195,
+          0.37868078482875195,
+          0.37868078482875195,
+          1
+        ],
+        "roughnessFactor": 0.5,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 0
+        }
+      },
+      "normalTexture": {
+        "index": 1
+      }
+    },
+    {
+      "name": "Umbrella_Pine_Leaves_Material",
+      "alphaMode": "MASK",
+      "alphaCutoff": 0.4,
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.5,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 2
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "tree_pine_far",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 3
+        },
+        {
+          "attributes": {
+            "POSITION": 5,
+            "NORMAL": 6,
+            "TEXCOORD_0": 7
+          },
+          "mode": 4,
+          "material": 1,
+          "indices": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "tree_pine_far",
+      "mesh": 0
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ]
+}

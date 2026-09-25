@@ -45,21 +45,14 @@
     {
       "type": "SCALAR",
       "componentType": 5123,
-      "count": 1359,
+      "count": 1641,
       "bufferView": 1,
       "byteOffset": 2792
     },
     {
-      "type": "SCALAR",
-      "componentType": 5123,
-      "count": 255,
-      "bufferView": 1,
-      "byteOffset": 5512
-    },
-    {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 615,
+      "count": 723,
       "max": [
         1.1927300691604614,
         2.109375238418579,
@@ -76,46 +69,15 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 615,
+      "count": 723,
       "bufferView": 2,
       "byteOffset": 12
     },
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 615,
+      "count": 723,
       "bufferView": 2,
-      "byteOffset": 24
-    },
-    {
-      "type": "VEC3",
-      "componentType": 5126,
-      "count": 102,
-      "max": [
-        1.0721601247787476,
-        2.1006433963775635,
-        0.8755087852478027
-      ],
-      "min": [
-        -0.8727426528930664,
-        1.079959750175476,
-        -1.2522488832473755
-      ],
-      "bufferView": 3,
-      "byteOffset": 0
-    },
-    {
-      "type": "VEC3",
-      "componentType": 5126,
-      "count": 102,
-      "bufferView": 3,
-      "byteOffset": 12
-    },
-    {
-      "type": "VEC2",
-      "componentType": 5126,
-      "count": 102,
-      "bufferView": 3,
       "byteOffset": 24
     }
   ],
@@ -130,20 +92,13 @@
     {
       "buffer": 0,
       "byteOffset": 16736,
-      "byteLength": 6024,
+      "byteLength": 6076,
       "target": 34963
     },
     {
       "buffer": 0,
-      "byteOffset": 22760,
-      "byteLength": 19680,
-      "byteStride": 32,
-      "target": 34962
-    },
-    {
-      "buffer": 0,
-      "byteOffset": 42440,
-      "byteLength": 3264,
+      "byteOffset": 22812,
+      "byteLength": 23136,
       "byteStride": 32,
       "target": 34962
     }
@@ -166,18 +121,6 @@
     {
       "source": 2,
       "sampler": 0
-    },
-    {
-      "source": 3,
-      "sampler": 0
-    },
-    {
-      "source": 4,
-      "sampler": 0
-    },
-    {
-      "source": 5,
-      "sampler": 0
     }
   ],
   "images": [
@@ -192,31 +135,16 @@
       "uri": "bush_1.jpg"
     },
     {
-      "name": "bush_2",
+      "name": "bush_atlas2",
       "mimeType": "image/png",
-      "uri": "bush_2.png"
-    },
-    {
-      "name": "bush_3",
-      "mimeType": "image/jpeg",
-      "uri": "bush_3.jpg"
-    },
-    {
-      "name": "bush_4",
-      "mimeType": "image/png",
-      "uri": "bush_4.png"
-    },
-    {
-      "name": "bush_5",
-      "mimeType": "image/jpeg",
-      "uri": "bush_5.jpg"
+      "uri": "bush_atlas2.png"
     }
   ],
   "buffers": [
     {
       "name": "bush.bin",
       "uri": "bush.bin",
-      "byteLength": 45704
+      "byteLength": 45948
     }
   ],
   "materials": [
@@ -243,24 +171,6 @@
         "baseColorTexture": {
           "index": 2
         }
-      },
-      "normalTexture": {
-        "index": 3
-      }
-    },
-    {
-      "name": "BS09_Flower01_su",
-      "alphaMode": "MASK",
-      "alphaCutoff": 0.4,
-      "doubleSided": true,
-      "pbrMetallicRoughness": {
-        "metallicFactor": 0,
-        "baseColorTexture": {
-          "index": 4
-        }
-      },
-      "normalTexture": {
-        "index": 5
       }
     }
   ],
@@ -280,23 +190,13 @@
         },
         {
           "attributes": {
-            "POSITION": 6,
-            "NORMAL": 7,
-            "TEXCOORD_0": 8
+            "POSITION": 5,
+            "NORMAL": 6,
+            "TEXCOORD_0": 7
           },
           "mode": 4,
           "material": 1,
           "indices": 4
-        },
-        {
-          "attributes": {
-            "POSITION": 9,
-            "NORMAL": 10,
-            "TEXCOORD_0": 11
-          },
-          "mode": 4,
-          "material": 2,
-          "indices": 5
         }
       ]
     }

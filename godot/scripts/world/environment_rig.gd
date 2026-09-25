@@ -9,13 +9,15 @@ var world_env: WorldEnvironment
 var env: Environment
 ## Photographic day-cycle sky (sky_hdri.gdshader), driven by SkyWeather.
 var sky_mat: ShaderMaterial
+## The shadow setting wants sun shadows; SkyWeather still switches them off at night.
+var shadows_wanted := true
 
 func _ready() -> void:
 	sun = DirectionalLight3D.new()
 	sun.name = "Sun"
 	sun.light_energy = 1.50
 	sun.light_color = Color(1.0, 0.97, 0.90) # Warm Mediterranean sunlight
-	apply_shadow_quality(int(Settings.get_value("graphics", "shadows", 2)))
+	apply_shadow_quality(int(Settings.get_value("graphics", "shadows", 1)))
 	Settings.changed.connect(_on_settings_changed)
 	sun.shadow_blur = 1.0
 	sun.shadow_bias = 0.035
@@ -68,7 +70,7 @@ func _ready() -> void:
 
 func _on_settings_changed(section: String) -> void:
 	if section == "graphics":
-		apply_shadow_quality(int(Settings.get_value("graphics", "shadows", 2)))
+		apply_shadow_quality(int(Settings.get_value("graphics", "shadows", 1)))
 
 ## Graphics "shadows" setting: 0 off, 1 low (2 cascades to 160 m, the original mobile budget),
 ## 2 high (4 cascades to 220 m), 3 ultra (4 cascades to 280 m so far cliffs and skyline blocks keep
@@ -77,6 +79,7 @@ func _on_settings_changed(section: String) -> void:
 func apply_shadow_quality(q: int) -> void:
 	if sun == null:
 		return
+	shadows_wanted = q > 0
 	sun.shadow_enabled = q > 0
 	if q <= 1:
 		sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS

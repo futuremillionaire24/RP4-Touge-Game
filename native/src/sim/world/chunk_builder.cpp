@@ -1124,6 +1124,40 @@ void scatter_harbour(Ctx &c) {
 
 } // namespace
 
+// Far rings are drawn from 500 m to ~1.3 km: every surface costs a draw call and kerbs, rails,
+// posts, walls, tunnel liners and signs are sub-pixel there. Keep what reads at distance (terrain,
+// which carries the road corridors in its carve tint, buildings, roofs, water, bridge decks) and,
+// on the nearer far ring, the carriageways with the junction patches merged in (same material).
+void append_group(MeshData &dst, MeshData &src) {
+	int base = dst.vertex_count();
+	dst.positions.insert(dst.positions.end(), src.positions.begin(), src.positions.end());
+	dst.normals.insert(dst.normals.end(), src.normals.begin(), src.normals.end());
+	dst.uvs.insert(dst.uvs.end(), src.uvs.begin(), src.uvs.end());
+	dst.uv2s.insert(dst.uv2s.end(), src.uv2s.begin(), src.uv2s.end());
+	dst.colors.insert(dst.colors.end(), src.colors.begin(), src.colors.end());
+	for (int32_t i : src.indices) dst.indices.push_back(i + base);
+	src.clear();
+}
+
+void simplify_far(ChunkOutput &out) {
+	if (out.lod == 1) {
+		// 256-640 m: kerb faces, guardrail posts, tyre walls and tunnel strip lights are sub-pixel.
+		for (int g : {(int)GROUP_CURB, (int)GROUP_POST, (int)GROUP_TIREWALL, (int)WG_TUNNEL_LIGHT}) out.groups[g].clear();
+		append_group(out.groups[GROUP_ROAD], out.groups[WG_JUNCTION]);
+		append_group(out.groups[GROUP_SHOULDER], out.groups[WG_SIDEWALK]);
+	}
+	if (out.lod < 2) return;
+	for (int g : {(int)GROUP_CURB, (int)GROUP_RAIL, (int)GROUP_POST, (int)GROUP_WALL, (int)GROUP_TIREWALL, (int)WG_TUNNEL, (int)WG_TUNNEL_LIGHT, (int)WG_NEON,
+				 (int)GROUP_SHOULDER, (int)WG_SIDEWALK})
+		out.groups[g].clear();
+	if (out.lod >= 3) {
+		out.groups[GROUP_ROAD].clear();
+		out.groups[WG_JUNCTION].clear();
+	} else {
+		append_group(out.groups[GROUP_ROAD], out.groups[WG_JUNCTION]);
+	}
+}
+
 void build_chunk(const World &w, int cx, int cz, const ChunkOptions &opt, ChunkOutput &out) {
 	out = ChunkOutput();
 	out.cx = cx;
@@ -1150,6 +1184,7 @@ void build_chunk(const World &w, int cx, int cz, const ChunkOptions &opt, ChunkO
 		build_buildings(c);
 		if (opt.props) scatter_baked(c);
 		if (opt.props && out.min_y < 0.5) scatter_harbour(c);
+		simplify_far(out);
 		return;
 	}
 	build_junctions(c);

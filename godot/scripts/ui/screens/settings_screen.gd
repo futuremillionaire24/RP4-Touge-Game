@@ -142,7 +142,7 @@ func _apply_tier(tier: int) -> void:
 	var presets := {
 		Settings.Tier.LOW: {"supersample_max": 1.0, "draw_distance": 0.7, "foliage": 0.4, "traffic_density": 0.6, "shadows": 1, "particles": 0.5},
 		Settings.Tier.MEDIUM: {"supersample_max": 1.1, "draw_distance": 0.85, "foliage": 0.7, "traffic_density": 0.8, "shadows": 1, "particles": 0.75},
-		Settings.Tier.HIGH: {"supersample_max": 1.3, "draw_distance": 1.0, "foliage": 1.0, "traffic_density": 1.0, "shadows": 2, "particles": 1.0},
+		Settings.Tier.HIGH: {"supersample_max": 1.3, "draw_distance": 1.0, "foliage": 1.0, "traffic_density": 1.0, "shadows": 1, "particles": 1.0},
 		Settings.Tier.ULTRA: {"supersample_max": 1.4, "draw_distance": 1.3, "foliage": 1.0, "traffic_density": 1.3, "shadows": 3, "particles": 1.0},
 	}
 	if not presets.has(tier):

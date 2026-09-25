@@ -45,85 +45,9 @@
     {
       "type": "SCALAR",
       "componentType": 5123,
-      "count": 15,
-      "bufferView": 1,
-      "byteOffset": 2648
-    },
-    {
-      "type": "SCALAR",
-      "componentType": 5123,
-      "count": 15,
-      "bufferView": 1,
-      "byteOffset": 2680
-    },
-    {
-      "type": "SCALAR",
-      "componentType": 5123,
       "count": 3513,
       "bufferView": 1,
-      "byteOffset": 2712
-    },
-    {
-      "type": "VEC3",
-      "componentType": 5126,
-      "count": 9,
-      "max": [
-        -0.11970638483762741,
-        1.5487444400787354,
-        -0.2264794260263443
-      ],
-      "min": [
-        -0.3692847490310669,
-        1.3912233114242554,
-        -0.5576856732368469
-      ],
-      "bufferView": 2,
-      "byteOffset": 0
-    },
-    {
-      "type": "VEC3",
-      "componentType": 5126,
-      "count": 9,
-      "bufferView": 2,
-      "byteOffset": 12
-    },
-    {
-      "type": "VEC2",
-      "componentType": 5126,
-      "count": 9,
-      "bufferView": 2,
-      "byteOffset": 24
-    },
-    {
-      "type": "VEC3",
-      "componentType": 5126,
-      "count": 10,
-      "max": [
-        0.13264495134353638,
-        11.66690444946289,
-        0.07121776044368744
-      ],
-      "min": [
-        -0.2388189136981964,
-        1.0881080627441406,
-        -0.5523398518562317
-      ],
-      "bufferView": 3,
-      "byteOffset": 0
-    },
-    {
-      "type": "VEC3",
-      "componentType": 5126,
-      "count": 10,
-      "bufferView": 3,
-      "byteOffset": 12
-    },
-    {
-      "type": "VEC2",
-      "componentType": 5126,
-      "count": 10,
-      "bufferView": 3,
-      "byteOffset": 24
+      "byteOffset": 2648
     },
     {
       "type": "VEC3",
@@ -139,21 +63,21 @@
         0.9757135510444641,
         -1.6205708980560303
       ],
-      "bufferView": 4,
+      "bufferView": 2,
       "byteOffset": 0
     },
     {
       "type": "VEC3",
       "componentType": 5126,
       "count": 1053,
-      "bufferView": 4,
+      "bufferView": 2,
       "byteOffset": 12
     },
     {
       "type": "VEC2",
       "componentType": 5126,
       "count": 1053,
-      "bufferView": 4,
+      "bufferView": 2,
       "byteOffset": 24
     }
   ],
@@ -168,26 +92,12 @@
     {
       "buffer": 0,
       "byteOffset": 14144,
-      "byteLength": 9740,
+      "byteLength": 9676,
       "target": 34963
     },
     {
       "buffer": 0,
-      "byteOffset": 23884,
-      "byteLength": 288,
-      "byteStride": 32,
-      "target": 34962
-    },
-    {
-      "buffer": 0,
-      "byteOffset": 24172,
-      "byteLength": 320,
-      "byteStride": 32,
-      "target": 34962
-    },
-    {
-      "buffer": 0,
-      "byteOffset": 24492,
+      "byteOffset": 23820,
       "byteLength": 33696,
       "byteStride": 32,
       "target": 34962
@@ -243,7 +153,7 @@
     {
       "name": "tree_cypress.bin",
       "uri": "tree_cypress.bin",
-      "byteLength": 58188
+      "byteLength": 57516
     }
   ],
   "materials": [
@@ -259,34 +169,6 @@
       },
       "normalTexture": {
         "index": 1
-      }
-    },
-    {
-      "name": "Cypress_bark.1",
-      "doubleSided": true,
-      "pbrMetallicRoughness": {
-        "baseColorFactor": [
-          0.588,
-          0.588,
-          0.588,
-          1
-        ],
-        "roughnessFactor": 0.6,
-        "metallicFactor": 0
-      }
-    },
-    {
-      "name": "Cypress_bark.2",
-      "doubleSided": true,
-      "pbrMetallicRoughness": {
-        "baseColorFactor": [
-          0.588,
-          0.588,
-          0.588,
-          1
-        ],
-        "roughnessFactor": 0.6,
-        "metallicFactor": 0
       }
     },
     {
@@ -322,33 +204,13 @@
         },
         {
           "attributes": {
-            "POSITION": 7,
-            "NORMAL": 8,
-            "TEXCOORD_0": 9
+            "POSITION": 5,
+            "NORMAL": 6,
+            "TEXCOORD_0": 7
           },
           "mode": 4,
           "material": 1,
           "indices": 4
-        },
-        {
-          "attributes": {
-            "POSITION": 10,
-            "NORMAL": 11,
-            "TEXCOORD_0": 12
-          },
-          "mode": 4,
-          "material": 2,
-          "indices": 5
-        },
-        {
-          "attributes": {
-            "POSITION": 13,
-            "NORMAL": 14,
-            "TEXCOORD_0": 15
-          },
-          "mode": 4,
-          "material": 3,
-          "indices": 6
         }
       ]
     }
