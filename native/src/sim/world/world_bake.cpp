@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cstring>
 #include <thread>
+#include <unordered_map>
 
 namespace nt {
 
@@ -115,6 +116,284 @@ void World::index_nodes() {
 		if (d.node_a >= 0) node_roads_[d.node_a].push_back(i);
 		if (d.node_b >= 0) node_roads_[d.node_b].push_back(i);
 	}
+}
+
+// The baker smooths each edge's height profile on its own, so the roads meeting at a junction can
+// arrive metres apart in height. Bring every leg's end to their common mean and blend the change
+// back along each road under ~6% extra grade (the baked counterpart of weld_endpoints). Legs
+// further apart than a storey are different levels that merely share a node: left alone.
+void World::weld_baked_junctions() {
+	struct End {
+		Road *road;
+		bool at_start;
+	};
+	// Legs are found by their mouths (the road's trimmed end sits on the mouth's midpoint). Roads
+	// carry no bounds yet at this stage, so match on the end points directly.
+	std::vector<std::vector<End>> legs(junctions.size());
+	for (size_t ji = 0; ji < junctions.size(); ++ji) {
+		const Intersection &j = junctions[ji];
+		int n = (int)j.poly.size();
+		if (n < 3) continue;
+		std::vector<End> &ends = legs[ji];
+		for (int k = 0; k + 1 < n; k += 2) {
+			Vec3 mouth = (j.poly[k] + j.poly[k + 1]) * 0.5;
+			End best{nullptr, false};
+			real best_d = 3.5;
+			for (Road &r : roads) {
+				if (r.samples.size() < 2 || r.def.closed) continue;
+				for (bool st : {true, false}) {
+					const Vec3 &c = st ? r.samples.front().rs.center : r.samples.back().rs.center;
+					real d = (c - mouth).flat().length();
+					if (d < best_d) {
+						best_d = d;
+						best = {&r, st};
+					}
+				}
+			}
+			if (best.road) ends.push_back(best);
+		}
+	}
+	// A few relaxation passes: short links between neighbouring junctions get pulled by both ends.
+	for (int pass = 0; pass < 3; ++pass) {
+		for (const std::vector<End> &ends : legs) {
+			if (ends.size() < 2) continue;
+			real lo = 1e9, hi = -1e9, sum = 0.0;
+			for (const End &e : ends) {
+				real y = e.at_start ? e.road->samples.front().rs.center.y : e.road->samples.back().rs.center.y;
+				lo = std::min(lo, y);
+				hi = std::max(hi, y);
+				sum += y;
+			}
+			if (hi - lo > 6.0 || hi - lo < 0.05) continue;
+			real target = sum / ends.size();
+			for (const End &e : ends) {
+				std::vector<RoadSampleX> &sm = e.road->samples;
+				int m = (int)sm.size();
+				real delta = target - (e.at_start ? sm.front().rs.center.y : sm.back().rs.center.y);
+				// Blend over enough distance to stay under ~6% extra grade (short links: all of it).
+				int len = std::min(std::max((int)(std::fabs(delta) / 0.06 / 3.0), 10), m);
+				for (int k = 0; k < len; ++k) {
+					int idx = e.at_start ? k : m - 1 - k;
+					sm[idx].rs.center.y += delta * (1.0 - smoothstep(0.0, (real)len, (real)k));
+				}
+			}
+		}
+	}
+}
+
+// Junction polygons are baked flat at the node's height, but the roads that meet there were
+// trimmed back along their own grade, so on Monaco's slopes a road mouth can sit metres above or
+// below the patch - a step that launches cars. Lift every leg mouth (the polygon's vertex pairs)
+// to the end of the road that meets it, and the centre to their mean, so the fan joins the
+// carriageways seamlessly (render, collision and the terrain carve all follow).
+void World::fit_baked_junctions() {
+	for (Intersection &j : junctions) {
+		int n = (int)j.poly.size();
+		if (n < 3) continue;
+		real sum = 0.0;
+		int fitted = 0;
+		for (int k = 0; k + 1 < n; k += 2) {
+			Vec3 mouth = (j.poly[k] + j.poly[k + 1]) * 0.5;
+			const RoadSample *best = nullptr;
+			real best_d = 3.5;
+			for (const Road &r : roads) {
+				if (r.samples.size() < 2 || r.def.closed) continue;
+				if (r.bmax.x < mouth.x - 40 || r.bmin.x > mouth.x + 40 || r.bmax.z < mouth.z - 40 || r.bmin.z > mouth.z + 40) continue;
+				for (const RoadSampleX *e : {&r.samples.front(), &r.samples.back()}) {
+					real d = (e->rs.center - mouth).flat().length();
+					if (d < best_d && std::fabs(e->rs.center.y - j.center.y) < 8.0) {
+						best_d = d;
+						best = &e->rs;
+					}
+				}
+			}
+			for (int q = k; q <= k + 1; ++q) {
+				Vec3 &p = j.poly[q];
+				if (best) {
+					// Follow the road's banking across the mouth.
+					Vec3 off = (p - best->center).flat();
+					real up_y = std::max(best->up.y, 0.5);
+					p.y = best->center.y - (best->up.x * off.x + best->up.z * off.z) / up_y;
+				} else {
+					p.y = j.center.y;
+				}
+			}
+			if (best) {
+				sum += best->center.y;
+				fitted++;
+			}
+		}
+		if (fitted > 0) j.center.y = sum / fitted;
+	}
+}
+
+// A junction fan must not lay a second surface over some other road (not one of its legs) at a
+// different height: that makes a lip or a ledge in that road. Drop the fan triangles that cover
+// such a carriageway; the road's own surface carries the car there.
+void World::clip_junction_overlaps() {
+	auto in_tri = [](const Vec3 &p, const Vec3 &a, const Vec3 &b, const Vec3 &c, real &y) {
+		real d = (b.z - c.z) * (a.x - c.x) + (c.x - b.x) * (a.z - c.z);
+		if (std::fabs(d) < 1e-9) return false;
+		real l1 = ((b.z - c.z) * (p.x - c.x) + (c.x - b.x) * (p.z - c.z)) / d;
+		real l2 = ((c.z - a.z) * (p.x - c.x) + (a.x - c.x) * (p.z - c.z)) / d;
+		real l3 = 1.0 - l1 - l2;
+		if (l1 < 0 || l2 < 0 || l3 < 0) return false;
+		y = l1 * a.y + l2 * b.y + l3 * c.y;
+		return true;
+	};
+	for (Intersection &j : junctions) {
+		int n = (int)j.poly.size();
+		if (n < 3) continue;
+		j.skip.assign(n, 0);
+		std::vector<int> leg_roads;
+		for (int l : j.legs)
+			if (l >= 0 && l < (int)road_of_def.size() && road_of_def[l] >= 0) leg_roads.push_back(road_of_def[l]);
+		real reach = j.half_x + 8.0;
+		for (int ri = 0; ri < (int)roads.size(); ++ri) {
+			const Road &r = roads[ri];
+			if (std::find(leg_roads.begin(), leg_roads.end(), ri) != leg_roads.end()) continue;
+			if (r.bmax.x < j.center.x - reach || r.bmin.x > j.center.x + reach || r.bmax.z < j.center.z - reach || r.bmin.z > j.center.z + reach) continue;
+			// A road ending on one of the patch's mouths joins it (an unlisted leg): leave it.
+			bool joins = false;
+			for (int k = 0; k + 1 < n && !joins; k += 2) {
+				Vec3 mouth = (j.poly[k] + j.poly[k + 1]) * 0.5;
+				joins = (r.samples.front().rs.center - mouth).flat().length() < 3.5 || (r.samples.back().rs.center - mouth).flat().length() < 3.5;
+			}
+			if (joins) continue;
+			for (const RoadSampleX &s : r.samples) {
+				if (s.type == ST_TUNNEL || (s.rs.center - j.center).flat().length() > reach) continue;
+				Vec3 right = s.rs.tangent.cross(Vec3(0, 1, 0)).normalized();
+				for (real f : {-0.7, 0.0, 0.7}) {
+					Vec3 p = s.rs.center + right * (f * (f < 0 ? s.rs.width_left : s.rs.width_right));
+					for (int k = 0; k < n; ++k) {
+						real y;
+						if (!in_tri(p, j.center, j.poly[k], j.poly[(k + 1) % n], y)) continue;
+						// Well above/below is a crossing on another level (bridge, underpass): harmless.
+						real dy = std::fabs(y - s.rs.center.y);
+						if (dy > 0.2 && dy < 4.0) j.skip[k] = 1;
+					}
+				}
+			}
+		}
+	}
+}
+
+// Street circuits (the Circuit de Monaco): red/white racing kerbs on the inside of every real
+// corner (radius under ~70 m) and on the exit side of the tight ones, instead of city kerbs.
+void World::dress_circuits() {
+	for (const Route &rt : routes) {
+		if (rt.id != "monaco_gp") continue;
+		for (std::string name : rt.roads) {
+			if (!name.empty() && name[0] == '~') name = name.substr(1);
+			int ri = road_by_name(name);
+			if (ri < 0) continue;
+			std::vector<RoadSampleX> &sm = roads[ri].samples;
+			int n = (int)sm.size();
+			std::vector<uint8_t> want(n, 0);
+			for (int i = 0; i < n; ++i) {
+				const Vec3 &pa = sm[std::max(i - 3, 0)].rs.center, &pb = sm[i].rs.center, &pc = sm[std::min(i + 3, n - 1)].rs.center;
+				Vec3 ab = (pb - pa).flat(), bc = (pc - pb).flat(), ac = (pc - pa).flat();
+				real den = ab.length() * bc.length() * ac.length();
+				real k = den > 1e-6 ? 2.0 * (ab.x * bc.z - ab.z * bc.x) / den : 0.0;
+				if (std::fabs(k) < 1.0 / 70.0 || sm[i].type == ST_TUNNEL) continue;
+				// k > 0 turns towards the right-hand side (chevrons go on the left, the outside).
+				want[i] |= k > 0 ? 2 : 1;
+				if (std::fabs(k) > 1.0 / 25.0) want[i] |= k > 0 ? 1 : 2; // hairpins: exit kerb too
+			}
+			for (int i = 0; i < n; ++i) {
+				uint8_t w = 0;
+				for (int q = std::max(i - 2, 0); q <= std::min(i + 2, n - 1); ++q) w |= want[q];
+				if (!w) continue;
+				RoadSample &s = sm[i].rs;
+				s.race_kerb = w;
+				if (w & 1) s.curb_left = true;
+				if (w & 2) s.curb_right = true;
+			}
+		}
+	}
+}
+
+// Port Hercule, Fontvieille and the urban seafront meet the sea at quay and sea walls, not at a
+// sloping beach: stand the ground at deck height along the water and deepen the berth beside it
+// (the chunk builder puts the wall face on the boundary). Beaches and natural shore stay as baked.
+static bool walled(uint8_t lc) { return lc == LAND_PORT || lc == LAND_URBAN; }
+void World::shape_quays() {
+	const real deck = 0.9;
+	const real c = terrain.cell();
+	for (int iz = 0; iz < terrain.height(); ++iz)
+		for (int ix = 0; ix < terrain.width(); ++ix) {
+			real x = terrain.min_x() + ix * c, z = terrain.min_z() + iz * c;
+			uint8_t lc = land_at(x, z);
+			bool edge = false;
+			for (int dz = -1; dz <= 1 && !edge; ++dz)
+				for (int dx = -1; dx <= 1 && !edge; ++dx) {
+					uint8_t o = land_at(x + dx * c, z + dz * c);
+					edge = lc == LAND_SEA ? walled(o) : (walled(lc) && o == LAND_SEA);
+				}
+			if (!edge) continue;
+			float &h = terrain.at(ix, iz);
+			if (lc == LAND_SEA) h = std::min<float>(h, -4.5f);
+			else if (h < deck) h = (float)deck;
+		}
+}
+
+namespace {
+bool in_ring(const std::vector<Vec3> &ring, real x, real z) {
+	bool in = false;
+	for (size_t a = 0, b = ring.size() - 1; a < ring.size(); b = a++) {
+		const Vec3 &p = ring[a], &q = ring[b];
+		if ((p.z > z) != (q.z > z) && x < (q.x - p.x) * (z - p.z) / (q.z - p.z) + p.x) in = !in;
+	}
+	return in;
+}
+} // namespace
+
+// OpenStreetMap footprints sometimes overlap a carriageway (buildings bridging a street, arcades,
+// imprecise traces). Their solid walls would stand across the road, so drop any building whose
+// footprint covers a surface-level road sample at its own height. Buildings over a tunnel (the
+// Fairmont over the Monaco tunnel) keep standing, but start above the bore.
+void World::clear_buildings_off_roads() {
+	const real cell = 32.0;
+	std::unordered_map<int64_t, std::vector<const RoadSampleX *>> grid;
+	auto key = [&](int i, int k) { return ((int64_t)i << 32) ^ (int64_t)(uint32_t)k; };
+	for (const Road &r : roads)
+		for (const RoadSampleX &s : r.samples)
+			grid[key((int)std::floor(s.rs.center.x / cell), (int)std::floor(s.rs.center.z / cell))].push_back(&s);
+	size_t kept = 0;
+	for (size_t bi = 0; bi < buildings.size(); ++bi) {
+		Building &b = buildings[bi];
+		bool hit = false;
+		int i0 = (int)std::floor((b.center.x - b.radius - 8.0) / cell), i1 = (int)std::floor((b.center.x + b.radius + 8.0) / cell);
+		int k0 = (int)std::floor((b.center.z - b.radius - 8.0) / cell), k1 = (int)std::floor((b.center.z + b.radius + 8.0) / cell);
+		for (int i = i0; i <= i1 && !hit; ++i)
+			for (int k = k0; k <= k1 && !hit; ++k) {
+				auto it = grid.find(key(i, k));
+				if (it == grid.end()) continue;
+				for (const RoadSampleX *s : it->second) {
+					const RoadSample &rs = s->rs;
+					if (rs.center.y < b.base - 3.0 || rs.center.y > b.top) continue;
+					if ((rs.center - b.center).flat().length() > b.radius + std::max(rs.width_left, rs.width_right)) continue;
+					Vec3 right = rs.tangent.cross(Vec3(0, 1, 0)).normalized();
+					// The carriageway itself (a little inside the edges, so kerb-hugging walls stay).
+					for (real f : {-0.8, 0.0, 0.8}) {
+						real w = f < 0 ? rs.width_left : rs.width_right;
+						Vec3 p = rs.center + right * (f * w);
+						if (!in_ring(b.ring, p.x, p.z)) continue;
+						if (s->type == ST_TUNNEL) {
+							b.base = std::max(b.base, rs.center.y + 8.0); // tunnel crown (7 m) + slab
+							break;
+						}
+						hit = true;
+						break;
+					}
+					if (hit) break;
+				}
+			}
+		if (hit || b.top - b.base < 3.0) continue;
+		if (kept != bi) buildings[kept] = std::move(buildings[bi]);
+		kept++;
+	}
+	buildings.resize(kept);
 }
 
 bool World::build_from_bake(const uint8_t *data, size_t size, std::string &error) {
@@ -293,10 +572,19 @@ bool World::build_from_bake(const uint8_t *data, size_t size, std::string &error
 		process_road(road);
 		if (road.samples.size() >= 2) roads.push_back(std::move(road));
 	}
+	weld_baked_junctions();
 	for (Road &road : roads) process_road(road);
 	index_nodes();
+	road_of_def.assign(defs_.size(), -1);
+	for (int i = 0; i < (int)roads.size(); ++i)
+		if (roads[i].def.id >= 0 && roads[i].def.id < (int)road_of_def.size()) road_of_def[roads[i].def.id] = i;
 	open_merges();
+	fit_baked_junctions();
+	clip_junction_overlaps();
+	clear_buildings_off_roads();
+	dress_circuits();
 	carve_roads();
+	shape_quays();
 
 	// POIs: baked ones (snapped to roads) + collectibles scattered along the network.
 	for (Poi &p : baked_pois) {

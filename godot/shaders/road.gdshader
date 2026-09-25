@@ -6,6 +6,7 @@ render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_sc
 
 #include "res://shaders/include/nt_noise.gdshaderinc"
 #include "res://shaders/include/env_layers.gdshaderinc"
+#include "res://shaders/include/lamp_pools.gdshaderinc"
 
 global uniform float nt_wetness;
 global uniform float nt_rain;
@@ -56,6 +57,25 @@ float junction_marks(int style, vec2 uv, vec2 size, out vec3 col) {
 				* step(z_back, m.x) * step(m.x, size.x - z_back);
 			mark = max(mark, max(stop_line_x, stop_line_z));
 		}
+	} else if (style == 5 || style == 6) {
+		// Leg mouth (baked junctions): uv.x 0..1 across the mouth, 0 = the inbound (right-hand)
+		// half's kerb; uv.y metres in from the mouth; size.x mouth width (m).
+		float w = size.x;
+		float x = uv.x * w;
+		float y = uv.y;
+		float inb = step(0.25, x) * step(x, w * 0.5 - 0.1); // inbound half, clear of the kerb
+		float aa = fwidth(y) + 0.01;
+		if (style == 5) {
+			// Stop line (0.3 m) across the inbound half, then a zebra: 0.5 m bars parallel to traffic.
+			float stop_l = smoothstep(0.25 - aa, 0.25 + aa, y) * (1.0 - smoothstep(0.55 - aa, 0.55 + aa, y)) * inb;
+			float zb = smoothstep(1.4 - aa, 1.4 + aa, y) * (1.0 - smoothstep(4.4 - aa, 4.4 + aa, y)) * step(0.4, x) * step(x, w - 0.4);
+			float bars = step(0.5, fract(x / 1.0 + 0.25));
+			mark = max(stop_l, zb * bars);
+		} else {
+			// French give-way (cedez-le-passage): dashed transverse line, 0.5 m dashes and gaps.
+			float line_y = smoothstep(0.3 - aa, 0.3 + aa, y) * (1.0 - smoothstep(0.8 - aa, 0.8 + aa, y));
+			mark = line_y * inb * step(0.5, fract(x / 1.0));
+		}
 	} else if (style == 3) {
 		// Parking bays: 2.5 m wide, 5.5 m deep rows with a 7 m aisle.
 		float row = mod(m.y, 18.0);
@@ -90,14 +110,7 @@ void fragment() {
 		rgh = mix(rgh, 0.03, pud);
 		vec2 ripj = nt_ripples(wpj, TIME, nt_rain) * (0.25 + pud * 0.75);
 		NORMAL_MAP = normalize(vec3(ripj, 1.0)) * 0.5 + 0.5;
-		// Night ambient glow from intersection corner street lamps
-		if (nt_night > 0.02) {
-			vec2 jm = UV * size;
-			float dj1 = length(jm - vec2(1.2, 1.2));
-			float dj2 = length(jm - vec2(size.x - 1.2, size.y - 1.2));
-			float jpool = (exp(-dj1 * dj1 / 32.0) + exp(-dj2 * dj2 / 32.0)) * nt_night * 0.45;
-			alb += vec3(1.0, 0.78, 0.48) * jpool;
-		}
+		if (nt_night > 0.02) EMISSION = alb * lamp_pool_light(world_pos) * nt_night;
 		ALBEDO = alb;
 		ROUGHNESS = rgh;
 		SPECULAR = mix(0.5, 0.65, wetj);
@@ -190,18 +203,8 @@ void fragment() {
 	albedo = mix(albedo, vec3(0.85, 0.87, 0.91), snow_cover);
 	rough = mix(rough, 0.72, snow_cover);
 
-	// ---- Night street lamp ground light pools (Riviera warm sodium glow) ----
-	if (nt_night > 0.02) {
-		float lamp_pitch = 26.0;
-		float lamp_u = mod(along_m, lamp_pitch);
-		// Left side lamps at u = 0, right side lamps at u = 13 (staggered)
-		float d_left = length(vec2(across_m - 0.4, lamp_u));
-		float d_right = length(vec2(width - 0.4 - across_m, abs(lamp_u - lamp_pitch * 0.5)));
-		float pool_l = exp(-d_left * d_left / 20.0);
-		float pool_r = exp(-d_right * d_right / 20.0);
-		vec3 lamp_warm = vec3(1.0, 0.78, 0.48);
-		albedo += lamp_warm * (pool_l + pool_r) * nt_night * 0.40;
-	}
+	// ---- Night: pools of light under the street lamps (LightPool feeds the positions) ----
+	vec3 pools = nt_night > 0.02 ? lamp_pool_light(world_pos) * nt_night : vec3(0.0);
 
 	ALBEDO = albedo;
 	ROUGHNESS = rough;
@@ -209,7 +212,8 @@ void fragment() {
 	SPECULAR = mix(0.55, 0.90, wet_surface + puddle * 0.15 + stones * 0.1);
 	CLEARCOAT = puddle * 0.9;
 	CLEARCOAT_ROUGHNESS = 0.02;
-	EMISSION = cat_eye * vec3(1.0, 0.88, 0.45) * 3.5;  // Brighter, warmer cat-eyes
+	// Cat-eyes are retro-reflectors: they only shine back once it's dark (headlights).
+	EMISSION = cat_eye * vec3(1.0, 0.88, 0.45) * 2.0 * nt_night + albedo * pools;
 	AO = COLOR.r;
 	AO_LIGHT_AFFECT = 0.4;
 	}

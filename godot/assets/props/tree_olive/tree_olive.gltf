@@ -7,16 +7,16 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 4415,
+      "count": 1272,
       "max": [
-        3.0572004318237305,
-        6.5,
-        3.1311752796173096
+        3.3020501136779785,
+        6.253849029541016,
+        3.512953996658325
       ],
       "min": [
-        -3.028548002243042,
-        1.5992647409439087,
-        -3.0721452236175537
+        -2.995295286178589,
+        1.085450291633606,
+        -3.026902437210083
       ],
       "bufferView": 0,
       "byteOffset": 0
@@ -24,44 +24,44 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 4415,
+      "count": 1272,
       "bufferView": 0,
       "byteOffset": 12
     },
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 4415,
+      "count": 1272,
       "bufferView": 0,
       "byteOffset": 24
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
-      "count": 5163,
+      "count": 4662,
       "bufferView": 1,
       "byteOffset": 0
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
-      "count": 1431,
+      "count": 2451,
       "bufferView": 1,
-      "byteOffset": 10328
+      "byteOffset": 9324
     },
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 607,
+      "count": 1022,
       "max": [
-        2.505892753601074,
-        6.2248969078063965,
-        2.3427178859710693
+        2.7093677520751953,
+        5.740952491760254,
+        3.126342535018921
       ],
       "min": [
-        -2.20383882522583,
-        0.003958848770707846,
-        -2.0740907192230225
+        -2.8557486534118652,
+        0,
+        -3.5248749256134033
       ],
       "bufferView": 2,
       "byteOffset": 0
@@ -69,14 +69,14 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 607,
+      "count": 1022,
       "bufferView": 2,
       "byteOffset": 12
     },
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 607,
+      "count": 1022,
       "bufferView": 2,
       "byteOffset": 24
     }
@@ -85,20 +85,20 @@
     {
       "buffer": 0,
       "byteOffset": 0,
-      "byteLength": 141280,
+      "byteLength": 40704,
       "byteStride": 32,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 141280,
-      "byteLength": 13192,
+      "byteOffset": 40704,
+      "byteLength": 14228,
       "target": 34963
     },
     {
       "buffer": 0,
-      "byteOffset": 154472,
-      "byteLength": 19424,
+      "byteOffset": 54932,
+      "byteLength": 32704,
       "byteStride": 32,
       "target": 34962
     }
@@ -153,16 +153,17 @@
     {
       "name": "tree_olive.bin",
       "uri": "tree_olive.bin",
-      "byteLength": 173896
+      "byteLength": 87636
     }
   ],
   "materials": [
     {
-      "name": "M_Branch.004",
+      "name": "olive-leaves",
       "alphaMode": "MASK",
       "alphaCutoff": 0.4,
       "doubleSided": true,
       "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8011823178082373,
         "metallicFactor": 0,
         "baseColorTexture": {
           "index": 0
@@ -173,9 +174,10 @@
       }
     },
     {
-      "name": "M_Bark.004",
+      "name": "olive-tree-bark",
       "doubleSided": true,
       "pbrMetallicRoughness": {
+        "roughnessFactor": 0.9781426498102782,
         "metallicFactor": 0,
         "baseColorTexture": {
           "index": 2

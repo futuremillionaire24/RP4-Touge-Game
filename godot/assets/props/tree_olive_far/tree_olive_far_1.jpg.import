@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://3b87rqj72d7f"
-path="res://.godot/imported/tree_palm_0.jpg-cf3939bcad47d62caee899d97f0fd3df.ctex"
+uid="uid://dcmnybweiqlma"
+path="res://.godot/imported/tree_olive_far_1.jpg-e8a56fb1565a84c65575eb669f2b96ae.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/props/tree_palm/tree_palm_0.jpg"
-dest_files=["res://.godot/imported/tree_palm_0.jpg-cf3939bcad47d62caee899d97f0fd3df.ctex"]
+source_file="res://assets/props/tree_olive_far/tree_olive_far_1.jpg"
+dest_files=["res://.godot/imported/tree_olive_far_1.jpg-e8a56fb1565a84c65575eb669f2b96ae.ctex"]
 
 [params]
 

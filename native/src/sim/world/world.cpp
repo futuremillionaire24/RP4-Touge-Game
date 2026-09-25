@@ -704,6 +704,9 @@ void World::classify_and_furnish(Road &r, const std::vector<Vec3> &pts, const st
 			real dd = r.samples[k].rs.distance;
 			real ground_gap = r.samples[k].terrain_y - r.samples[k].rs.center.y;
 			if ((dd < 25.0 || dist - dd < 25.0) && ground_gap < 9.0) r.samples[k].portal = 1;
+			// Too little cover for a bore (a smoothed-DEM hillside, a rock gallery): the ground
+			// would stand inside the carriageway, so open it along the whole stretch.
+			if (ground_gap < 3.5) r.samples[k].portal = 1;
 		}
 	// Banking on fast curved roads (never on city grids).
 	if (d.kind == RK_EXPRESSWAY || d.kind == RK_TOUGE || d.kind == RK_COAST || d.kind == RK_RAMP) {
@@ -752,7 +755,7 @@ void World::weld_endpoints() {
 			int n = (int)r.samples.size();
 			real delta = y - (ends[g].at_start ? r.samples.front().rs.center.y : r.samples.back().rs.center.y);
 			// Blend over enough distance to stay under ~6% extra grade (never a cliff ramp).
-			int len = std::clamp((int)(std::fabs(delta) / 0.06 / 3.0), 10, n);
+			int len = std::min(std::max((int)(std::fabs(delta) / 0.06 / 3.0), 10), n);
 			for (int k = 0; k < len; ++k) {
 				int idx = ends[g].at_start ? k : n - 1 - k;
 				real w = 1.0 - smoothstep(0.0, (real)len, (real)k);
@@ -843,9 +846,8 @@ void World::carve_roads() {
 			// Polygon junction: flatten a fan of strips from the centre to every edge midpoint.
 			for (size_t k = 0; k < j.poly.size(); ++k) {
 				const Vec3 &a = j.poly[k], &b = j.poly[(k + 1) % j.poly.size()];
-				Vec3 mid = (a + b) * 0.5;
+				Vec3 mid = (a + b) * 0.5; // baked mouths follow their roads (fit_baked_junctions)
 				Vec3 c = j.center;
-				mid.y = j.center.y;
 				terrain.carve_segment(c, mid, std::max(2.5, distance(a, b) * 0.5), 6.0, 5);
 			}
 			continue;
@@ -856,6 +858,27 @@ void World::carve_roads() {
 		Vec3 b = j.center + (along_x ? Vec3(j.half_x, 0, 0) : Vec3(0, 0, j.half_z));
 		terrain.carve_segment(a, b, (along_x ? j.half_z : j.half_x) + 2.0, 8.0, 5);
 	}
+	if (!baked) return;
+	// Clearance pass on the real map: carves blend by weight and the last full-weight one wins,
+	// so a neighbouring road or a junction fan could leave ground standing inside a carriageway.
+	// Nothing may sit above a surface road - reach far enough that bilinear interpolation from
+	// the next grid vertex out can't lift the terrain back through the road edge either.
+	const real reach = 0.75 * terrain.cell();
+	for (const Road &r : roads) {
+		int n = (int)r.samples.size();
+		for (int i = 0; i + 1 < n; ++i) {
+			const RoadSampleX &a = r.samples[i], &b = r.samples[i + 1];
+			if (a.type != ST_GROUND || b.type != ST_GROUND) continue;
+			real hw = std::max(a.rs.width_left, a.rs.width_right);
+			terrain.keep_below(a.rs.center, b.rs.center, hw + reach, 0.35);
+		}
+	}
+	for (const Intersection &j : junctions)
+		for (size_t k = 0; k < j.poly.size(); ++k) {
+			const Vec3 &a = j.poly[k], &b = j.poly[(k + 1) % j.poly.size()];
+			Vec3 mid = (a + b) * 0.5;
+			terrain.keep_below(j.center, mid, std::max(2.5, distance(a, b) * 0.5) + reach, 0.35);
+		}
 }
 
 // ---------------------------------------------------------------------------------------------

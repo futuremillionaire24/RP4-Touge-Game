@@ -60,8 +60,63 @@ static func is_model(t: int) -> bool:
 ## Real prop mesh for a baked key: the glTF's mesh with each surface's material swapped for a
 ## prop_model ShaderMaterial carrying its texture/colour/cutout.
 static func _model_mesh(t: int) -> Mesh:
-	var def: Dictionary = MODELS[t]
-	var key: String = def.key
+	var m := _model_mesh_key(MODELS[t].key, MODELS[t])
+	if m:
+		_model_meshes[t] = m
+	return m
+
+## Low-poly stand-in for chunks beyond the nearest ring (tools/carbake props.json "<key>_far":
+## ~200 triangles, 128 px textures). Full trees at 600 m cost millions of triangles a frame.
+## "" = the procedural mesh (the street lamps' ~50-triangle pole).
+const FAR_KEYS := {
+	Type.TREE_PLANE: "tree_plane_far", Type.TREE_PINE: "tree_pine_far", Type.TREE_PALM: "tree_palm_far",
+	Type.TREE_CYPRESS: "tree_cypress_far", Type.TREE_OLIVE: "tree_olive_far", Type.YACHT: "yacht_far",
+	Type.STREET_LAMP: "", Type.HIGHWAY_LAMP: "",
+}
+## Types dense enough near the camera (harbour yachts, palm promenades, lamp rows) to be split into
+## CELL-sized batches with a near/far switch at NEAR_RANGE inside the nearest ring too.
+const CELL_LOD := [Type.YACHT, Type.TREE_PALM, Type.TREE_PLANE, Type.TREE_PINE, Type.TREE_OLIVE, Type.TREE_CYPRESS, Type.STREET_LAMP, Type.HIGHWAY_LAMP]
+const CELL := 128.0
+const NEAR_RANGE := 200.0
+static var _far_meshes := {}
+static var _far_procedural := {}
+
+static func far_mesh(t: int) -> Mesh:
+	if not FAR_KEYS.has(t):
+		return mesh(t)
+	if not _far_meshes.has(t):
+		var m: Mesh = null
+		if FAR_KEYS[t] != "":
+			m = _model_mesh_key(FAR_KEYS[t], MODELS[t])
+		if m == null:
+			m = _procedural_mesh(t)
+			_far_procedural[t] = true
+		_far_meshes[t] = m
+	return _far_meshes[t]
+
+## Adds the MultiMeshes for one prop type of a chunk to `node`. Nearest ring: CELL_LOD types are
+## batched per cell, full model within NEAR_RANGE and the far mesh beyond; other rings: far mesh.
+static func add_instances(node: Node3D, t: int, data: PackedFloat32Array, lod: int) -> void:
+	if lod >= 1 or not CELL_LOD.has(t) or not FAR_KEYS.has(t):
+		node.add_child(multimesh_instance(t, data, lod))
+		return
+	var cells := {}
+	for i in range(0, data.size(), 8):
+		var k := Vector2i(floori(data[i] / CELL), floori(data[i + 2] / CELL))
+		if not cells.has(k):
+			cells[k] = PackedFloat32Array()
+		cells[k].append_array(data.slice(i, i + 8))
+	for k in cells:
+		var near := multimesh_instance(t, cells[k], 0)
+		near.visibility_range_end = NEAR_RANGE
+		near.visibility_range_end_margin = 10.0
+		node.add_child(near)
+		var far := multimesh_instance(t, cells[k], 1)
+		far.visibility_range_begin = NEAR_RANGE
+		far.visibility_range_begin_margin = 10.0
+		node.add_child(far)
+
+static func _model_mesh_key(key: String, def: Dictionary) -> Mesh:
 	var path := "res://assets/props/%s/%s.gltf" % [key, key]
 	if not ResourceLoader.exists(path):
 		return null
@@ -76,7 +131,7 @@ static func _model_mesh(t: int) -> Mesh:
 	for mn in mesh_nodes:
 		var mi := mn as MeshInstance3D
 		if mi.mesh:
-			var box := mi.transform * mi.mesh.get_aabb()
+			var box := _scene_xform(mi, scene) * mi.mesh.get_aabb()
 			if not has_aabb:
 				combined_aabb = box
 				has_aabb = true
@@ -92,25 +147,30 @@ static func _model_mesh(t: int) -> Mesh:
 		var src: Mesh = mi.mesh
 		if src == null:
 			continue
-		var xform: Transform3D = mi.transform
+		# Bake the node's full transform from the scene root (nested nodes, not just the local one).
+		var xform := _scene_xform(mi, scene)
 		var is_ident := xform.is_equal_approx(Transform3D.IDENTITY)
+		var nbasis := xform.basis.inverse().transposed() # normals under non-uniform scale
 		for s in range(src.get_surface_count()):
 			var arrays := src.surface_get_arrays(s)
 			if not is_ident:
 				var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-				var new_verts := PackedVector3Array()
-				new_verts.resize(verts.size())
 				for vi in range(verts.size()):
-					new_verts[vi] = xform * verts[vi]
-				arrays[Mesh.ARRAY_VERTEX] = new_verts
-				var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
-				if not normals.is_empty():
-					var new_normals := PackedVector3Array()
-					new_normals.resize(normals.size())
-					var basis := xform.basis.orthonormalized()
+					verts[vi] = xform * verts[vi]
+				arrays[Mesh.ARRAY_VERTEX] = verts
+				if arrays[Mesh.ARRAY_NORMAL] is PackedVector3Array:
+					var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
 					for ni in range(normals.size()):
-						new_normals[ni] = basis * normals[ni]
-					arrays[Mesh.ARRAY_NORMAL] = new_normals
+						normals[ni] = (nbasis * normals[ni]).normalized()
+					arrays[Mesh.ARRAY_NORMAL] = normals
+				if arrays[Mesh.ARRAY_TANGENT] is PackedFloat32Array:
+					var tang: PackedFloat32Array = arrays[Mesh.ARRAY_TANGENT]
+					for ti in range(0, tang.size(), 4):
+						var tv := (xform.basis * Vector3(tang[ti], tang[ti + 1], tang[ti + 2])).normalized()
+						tang[ti] = tv.x
+						tang[ti + 1] = tv.y
+						tang[ti + 2] = tv.z
+					arrays[Mesh.ARRAY_TANGENT] = tang
 
 			var sm := src.surface_get_material(s) as BaseMaterial3D
 			var mat := ShaderMaterial.new()
@@ -137,8 +197,18 @@ static func _model_mesh(t: int) -> Mesh:
 	scene.free()
 	if m.get_surface_count() == 0:
 		return null
-	_model_meshes[t] = m
 	return m
+
+## Transform of `node` relative to the instantiated scene root (the scene is never in the tree,
+## so global_transform isn't available).
+static func _scene_xform(node: Node, root: Node) -> Transform3D:
+	var t := Transform3D.IDENTITY
+	var n := node
+	while n != null and n != root:
+		if n is Node3D:
+			t = (n as Node3D).transform * t
+		n = n.get_parent()
+	return t
 
 static func mesh(t: int) -> Mesh:
 	if _meshes.has(t):
@@ -148,6 +218,12 @@ static func mesh(t: int) -> Mesh:
 		if mm:
 			_meshes[t] = mm
 			return mm
+	var pm := _procedural_mesh(t)
+	_meshes[t] = pm
+	return pm
+
+## The built-in low-poly mesh for a type (vertex colours + material id in UV.x, prop.gdshader).
+static func _procedural_mesh(t: int) -> Mesh:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var b := Builder.new(st)
@@ -221,20 +297,19 @@ static func mesh(t: int) -> Mesh:
 		Type.BUSH:
 			b.blob(Vector3(0, 0.6, 0), Vector3(1.2, 0.8, 1.2), 1, Color(0.18, 0.32, 0.1, 0.8), 1, 51)
 	st.generate_tangents()
-	var m := st.commit()
-	_meshes[t] = m
-	return m
+	return st.commit()
 
 ## Builds a MultiMeshInstance3D for one prop type from packed instances
-## (x, y, z, yaw, sx, sy, sz, color) as produced by NTWorld.build_chunk.
-static func multimesh_instance(t: int, data: PackedFloat32Array) -> MultiMeshInstance3D:
+## (x, y, z, yaw, sx, sy, sz, color) as produced by NTWorld.build_chunk. `lod` is the chunk's
+## ring: beyond the nearest one trees use their far mesh and nothing casts shadows.
+static func multimesh_instance(t: int, data: PackedFloat32Array, lod := 0) -> MultiMeshInstance3D:
 	var count := data.size() / 8
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.use_custom_data = true
-	mm.mesh = mesh(t)
+	mm.mesh = far_mesh(t) if lod >= 1 else mesh(t)
 	mm.instance_count = count
-	var model := is_model(t)
+	var model := is_model(t) and not (lod >= 1 and _far_procedural.has(t))
 	var extra: float = MODEL_SCALE.get(t, 1.0) if model else 1.0
 	for i in range(count):
 		var o := i * 8
@@ -253,7 +328,7 @@ static func multimesh_instance(t: int, data: PackedFloat32Array) -> MultiMeshIns
 	mmi.visibility_range_end = VIS_RANGE.get(t, 400.0)
 	mmi.visibility_range_end_margin = 20.0
 	var shadows := t in [Type.TREE_PLANE, Type.TREE_PINE, Type.TREE_PALM, Type.TREE_CYPRESS, Type.TREE_OLIVE, Type.STREET_LAMP, Type.HIGHWAY_LAMP, Type.PIER, Type.CONTAINER, Type.UTILITY_POLE, Type.YACHT, Type.BENCH]
-	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows and lod == 0 else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return mmi
 
 ## Primitive helpers writing into one SurfaceTool (flat-shaded faces, UV.x = material id).

@@ -152,6 +152,66 @@ async function bakeProp(key, c) {
 		if (c.cards !== false && (mat.getAlphaMode() !== 'OPAQUE' || hasAlpha)) cardMats.add(mat);
 		else if (hasAlpha || mat.getAlphaMode() !== 'OPAQUE') alphaMats.add(mat);
 	}
+	// Every material is a draw call per prop batch. Drop slivers (< 1% of the triangles, e.g. two
+	// 5-triangle bark variants) and, with "atlas", pack the textures of each render mode side by
+	// side into one strip (only when every u stays in 0..1: tiling is kept along v, the full height).
+	{
+		const tris = new Map();
+		let all = 0;
+		for (const p of parts) (tris.set(p.mat, (tris.get(p.mat) || 0) + p.I.length / 3)), (all += p.I.length / 3);
+		for (const [mat, t] of tris) if (byMat.size > 1 && t < all * 0.01) byMat.delete(mat);
+		for (let k = parts.length - 1; k >= 0; k--) if (!byMat.has(parts[k].mat)) parts.splice(k, 1);
+	}
+	const atlasOf = new Map(); // material -> atlas image buffer (first material of each packed group)
+	if (c.atlas) {
+		for (const cut of [false, true]) {
+			const group = [...byMat.keys()].filter((m) => m && baseTex(m)?.getImage() && (cardMats.has(m) || alphaMats.has(m)) === cut);
+			if (group.length < 2) continue;
+			// Per material: how many whole repeats its u spans (bark wrapped round a trunk tiles 2-4x);
+			// that many copies go side by side. Cards that overshoot 0..1 by a hair are clamped.
+			const span = new Map();
+			let uOk = true;
+			for (const m of group) {
+				let lo = 1e9, hi = -1e9;
+				for (const p of byMat.get(m)) for (let i = 0; i < p.UV.length; i += 2) (lo = Math.min(lo, p.UV[i])), (hi = Math.max(hi, p.UV[i]));
+				let a = Math.floor(lo + 1e-3), b = Math.ceil(hi - 1e-3);
+				if (lo > -0.2 && hi < 1.2) (a = 0), (b = 1);
+				if (b - a < 1 || b - a > 4) {
+					console.log(`  ${key}: no atlas (${m.getName()} u ${lo.toFixed(3)}..${hi.toFixed(3)})`);
+					uOk = false;
+				}
+				span.set(m, [a, b]);
+			}
+			if (!uOk) continue;
+			const H = Math.min(c.texture_max * 2, 1024);
+			const imgs = [];
+			for (const m of group) {
+				const meta = await sharp(baseTex(m).getImage()).metadata();
+				const w = Math.max(8, Math.round((meta.width / meta.height) * H));
+				const [a, b] = span.get(m);
+				const one = await sharp(baseTex(m).getImage()).resize(w, H, { fit: 'fill' }).png().toBuffer();
+				for (let r = 0; r < b - a; r++) imgs.push({ m: r === 0 ? m : null, w, buf: one, a, b });
+			}
+			const W = imgs.reduce((a, b) => a + b.w, 0);
+			let x = 0;
+			for (const im of imgs) {
+				if (im.m)
+					for (const p of byMat.get(im.m))
+						for (let i = 0; i < p.UV.length; i += 2) p.UV[i] = (x + (Math.min(Math.max(p.UV[i], im.a), im.b) - im.a) * im.w) / W;
+				x += im.w;
+			}
+			const atlas = await sharp({ create: { width: W, height: H, channels: 4, background: { r: 0, g: 0, b: 0, alpha: cut ? 0 : 1 } } })
+				.composite(imgs.reduce((acc, im) => (acc.push({ input: im.buf, left: acc.x, top: 0 }), (acc.x += im.w), acc), Object.assign([], { x: 0 })))
+				.png()
+				.toBuffer();
+			const head = group[0];
+			for (const m of group.slice(1)) {
+				byMat.get(head).push(...byMat.get(m));
+				byMat.delete(m);
+			}
+			atlasOf.set(head, atlas);
+		}
+	}
 	let total = 0, cardTris = 0;
 	for (const p of parts) {
 		total += p.I.length / 3;
@@ -238,6 +298,33 @@ async function bakeProp(key, c) {
 				if (si.length >= 3) If = si;
 				if (If.length <= target * 1.15) break;
 			}
+			// Many disconnected pieces (branch-by-branch bark) defeat edge collapse: keep the biggest
+			// pieces - trunk and main limbs - up to the budget and drop the twigs.
+			if (If.length > target * 2) {
+				const par = Int32Array.from({ length: Pf.length / 3 }, (_, k) => k);
+				const find = (a) => {
+					while (par[a] !== a) a = par[a] = par[par[a]];
+					return a;
+				};
+				for (let t = 0; t < If.length; t += 3) {
+					const a = find(If[t]);
+					par[find(If[t + 1])] = a;
+					par[find(If[t + 2])] = a;
+				}
+				const islands = new Map();
+				for (let t = 0; t < If.length; t += 3) {
+					const k = find(If[t]);
+					if (!islands.has(k)) islands.set(k, []);
+					islands.get(k).push(t);
+				}
+				const bySize = [...islands.values()].sort((a, b) => b.length - a.length);
+				const out = [];
+				for (const tris of bySize) {
+					if (out.length / 3 + tris.length > target / 3 && out.length) break;
+					for (const t of tris) out.push(If[t], If[t + 1], If[t + 2]);
+				}
+				If = Uint32Array.from(out);
+			}
 		}
 		const nv = Pf.length / 3;
 		const remap = new Int32Array(nv).fill(-1);
@@ -259,7 +346,17 @@ async function bakeProp(key, c) {
 			m2.setRoughnessFactor(sg ? 1 - sg.getGlossinessFactor() * 0.5 : mat.getRoughnessFactor()).setMetallicFactor(sg ? 0 : mat.getMetallicFactor());
 			const cut = card || alphaMats.has(mat);
 			m2.setAlphaMode(cut ? 'MASK' : mat.getAlphaMode()).setAlphaCutoff(cut ? 0.4 : mat.getAlphaCutoff()).setDoubleSided(cut || mat.getDoubleSided());
+			if (atlasOf.has(mat)) {
+				const meta = await sharp(atlasOf.get(mat)).metadata();
+				const alpha = m2.getAlphaMode() !== 'OPAQUE';
+				let sh = sharp(atlasOf.get(mat)).resize({ width: Math.min(meta.width, c.texture_max * 4), height: c.texture_max * 2, fit: 'inside', withoutEnlargement: true });
+				const img = alpha ? await sh.png().toBuffer() : await sh.jpeg({ quality: 88 }).toBuffer();
+				const nt = doc.createTexture(`${key}_atlas${texMap.size}`).setImage(img).setMimeType(alpha ? 'image/png' : 'image/jpeg').setURI(`${key}_atlas${texMap.size}.${alpha ? 'png' : 'jpg'}`);
+				texMap.set(nt, nt);
+				m2.setBaseColorTexture(nt);
+			}
 			for (const [getter, setter] of [['base', 'setBaseColorTexture'], ['getNormalTexture', 'setNormalTexture']]) {
+				if (atlasOf.has(mat)) break; // packed: colour only
 				const t = getter === 'base' ? baseTex(mat) : mat[getter]();
 				if (!t || !t.getImage()) continue;
 				if (!texMap.has(t)) {

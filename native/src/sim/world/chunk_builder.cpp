@@ -19,8 +19,18 @@ struct Ctx {
 	Vec3 mn, mx;
 	std::vector<const RoadSampleX *> nearby; // road samples within the chunk (+margin)
 	std::vector<const RoadSampleX *> tunnels;
+	std::vector<const Building *> near_buildings; // baked footprints in/around the chunk
 	bool in_chunk(real x, real z) const { return x >= mn.x && x < mx.x && z >= mn.z && z < mx.z; }
 };
+
+bool point_in_ring(const std::vector<Vec3> &ring, real x, real z) {
+	bool in = false;
+	for (size_t a = 0, b = ring.size() - 1; a < ring.size(); b = a++) {
+		const Vec3 &p = ring[a], &q = ring[b];
+		if ((p.z > z) != (q.z > z) && x < (q.x - p.x) * (z - p.z) / (q.z - p.z) + p.x) in = !in;
+	}
+	return in;
+}
 
 void add_prop(Ctx &c, PropType t, const Vec3 &p, real yaw, const Vec3 &scale, real color) {
 	if (!c.opt.props) return;
@@ -154,6 +164,54 @@ void build_terrain(Ctx &c) {
 
 // ---- Roads, tunnels, bridges, roadside furniture ---------------------------------------
 
+// Concrete portal at a tunnel mouth: a headwall wider and taller than the hole the terrain opens
+// around the bore (tunnel_hole: road width + 3 m, 11 m up), filled in around the arch, and splayed
+// wingwalls retaining the approach cutting. `face` = -1 at an entry (faces back down the road),
+// +1 at an exit. GROUP_WALL, UV2.x = 2 (wall shader: portal concrete), UV2.y = metres from the arch
+// edge (hazard chevrons), UV = metres.
+void tunnel_portal(Ctx &c, const RoadSample &s, const Vec3 &right, real out_l, real out_r, real crown, real face) {
+	MeshData &m = c.out.groups[GROUP_WALL];
+	Vec3 fwd = s.tangent.flat().normalized() * face; // out of the bore
+	const real W = std::max(out_l, out_r) + 5.0, H = crown + 5.0;
+	auto at = [&](real x, real y) { return s.center + right * x + Vec3(0, y, 0); };
+	auto arch = [&](real a) {
+		real x = -std::cos(a) * (a < PI * 0.5 ? out_l : out_r);
+		return Vec2{x, 1.0 + std::sin(a) * (crown - 1.0)};
+	};
+	auto q = [&](Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, real d0, real d1, real d2, real d3) {
+		int i = m.vertex_count();
+		Vec2 ps[4] = {p0, p1, p2, p3};
+		real ds[4] = {d0, d1, d2, d3};
+		for (int k = 0; k < 4; ++k) m.add_vertex(at(ps[k].x, ps[k].y), fwd, ps[k].x, ps[k].y, 2.0, ds[k], 0.9);
+		Vec3 fn = (at(p1.x, p1.y) - at(p0.x, p0.y)).cross(at(p2.x, p2.y) - at(p0.x, p0.y));
+		if (fn.dot(fwd) >= 0) m.add_quad(i, i + 1, i + 2, i + 3);
+		else m.add_quad(i, i + 3, i + 2, i + 1);
+	};
+	// Piers either side of the opening, then the face above the arch, one strip per arch segment.
+	q({-W, -1.0}, {-out_l, -1.0}, {-out_l, H}, {-W, H}, W - out_l, 0.0, 0.0, W - out_l);
+	q({out_r, -1.0}, {W, -1.0}, {W, H}, {out_r, H}, 0.0, W - out_r, W - out_r, 0.0);
+	const int arc = 8;
+	for (int k = 0; k < arc; ++k) {
+		Vec2 p0 = arch(PI * k / arc), p1 = arch(PI * (k + 1) / arc);
+		q(p0, p1, {p1.x, H}, {p0.x, H}, 0.0, 0.0, H - p1.y, H - p0.y);
+	}
+	// Wingwalls: along the approach (straight, so kept short enough for curved approaches),
+	// stepping down from the headwall to 2 m. Left out where a junction sits at the mouth. Portal
+	// pieces are visual only (no collision): they must never close a carriageway.
+	const real L = 8.0;
+	for (const Intersection &j : c.w.junctions)
+		if ((j.center - s.center).flat().length() < j.half_x + L + 4.0) return;
+	for (real side : {-1.0, 1.0}) {
+		real x = side < 0 ? -(out_l + 0.2) : out_r + 0.2;
+		Vec3 b0 = at(x, -1.0), t0 = at(x, H);
+		Vec3 b1 = b0 + fwd * L, t1 = b1 + Vec3(0, 3.0, 0);
+		Vec3 n = right * -side; // faces the road
+		quad(m, b0, b1, t1, t0, n, {0, -1.0f}, {(float)L, -1.0f}, {(float)L, 2.0f}, {0, (float)H}, 2.0, 3.0, 0.85);
+		Vec3 back = right * (side * 0.4);
+		quad(m, t0, t1, t1 + back, t0 + back, Vec3(0, 1, 0), {0, 0}, {(float)L, 0}, {(float)L, 0.4f}, {0, 0.4f}, 2.0, 3.0, 1.0);
+	}
+}
+
 void build_roads(Ctx &c) {
 	const World &w = c.w;
 	for (const World::RoadSpan &span : w.roads_in_chunk(c.out.cx, c.out.cz)) {
@@ -237,27 +295,13 @@ void build_roads(Ctx &c) {
 					last_lamp = s.distance;
 					add_light(c, s.center + Vec3(0, crown - 0.6, 0), 0.8, 0.12);
 				}
-				// Concrete tunnel portal headwalls at entry and exit
-				if (i == 0 || r.samples[i - 1].type != ST_TUNNEL) {
-					MeshData &wm = c.out.groups[GROUP_WALL];
-					Vec3 pl = s.center - right * (out_l + 2.5);
-					Vec3 pr = s.center + right * (out_r + 2.5);
-					Vec3 top_l = pl + Vec3(0, crown + 2.0, 0);
-					Vec3 top_r = pr + Vec3(0, crown + 2.0, 0);
-					quad(wm, top_l, top_r, pr + Vec3(0, crown, 0), pl + Vec3(0, crown, 0), -s.tangent, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.9);
-					quad(wm, pl + Vec3(0, crown, 0), s.center - right * out_l + Vec3(0, crown, 0), s.center - right * out_l, pl, -s.tangent, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.9);
-					quad(wm, s.center + right * out_r + Vec3(0, crown, 0), pr + Vec3(0, crown, 0), pr, s.center + right * out_r, -s.tangent, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.9);
-				}
-				if (nx == n - 1 || r.samples[nx].type != ST_TUNNEL) {
-					MeshData &wm = c.out.groups[GROUP_WALL];
-					Vec3 pl = s1.center - right1 * (out_l + 2.5);
-					Vec3 pr = s1.center + right1 * (out_r + 2.5);
-					Vec3 top_l = pl + Vec3(0, crown + 2.0, 0);
-					Vec3 top_r = pr + Vec3(0, crown + 2.0, 0);
-					quad(wm, top_r, top_l, pl + Vec3(0, crown, 0), pr + Vec3(0, crown, 0), s1.tangent, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.9);
-					quad(wm, s1.center - right1 * out_l + Vec3(0, crown, 0), pl + Vec3(0, crown, 0), pl, s1.center - right1 * out_l, s1.tangent, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.9);
-					quad(wm, pr + Vec3(0, crown, 0), s1.center + right1 * out_r + Vec3(0, crown, 0), s1.center + right1 * out_r, pr, s1.tangent, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.9);
-				}
+				// Portals where a real bore meets daylight: not where a tunnel runs on into the next
+				// road, and not on shallow galleries (under ~3.5 m of cover the ground is opened instead).
+				auto bored = [&](const RoadSampleX &q) { return q.terrain_y - q.rs.center.y >= 3.5; };
+				bool entry = (i == 0 ? sx.portal != 0 : r.samples[i - 1].type != ST_TUNNEL) && bored(sx);
+				bool exit = (nx == n - 1 ? (r.samples[nx].type != ST_TUNNEL || r.samples[nx].portal) : r.samples[nx].type != ST_TUNNEL) && bored(sx);
+				if (entry) tunnel_portal(c, s, right, out_l, out_r, crown, -1.0);
+				if (exit) tunnel_portal(c, s1, right1, out_l, out_r, crown, 1.0);
 				continue;
 			}
 			if (sx.type == ST_BRIDGE && i + 1 < n) {
@@ -278,26 +322,27 @@ void build_roads(Ctx &c) {
 				}
 			}
 
-			if (sx.type == ST_GROUND && i + 1 < n) {
-				// Retaining walls on steep hillside cuts and drop-offs
+			if (sx.type == ST_GROUND && i + 1 < n && r.samples[nx].type == ST_GROUND) {
+				// Murs de soutenement: dressed limestone where the road is cut into the slope (up to
+				// 6 m, with a coping stone) and where it stands on fill above a drop (down to 8 m).
+				// Built on the verge line; GROUP_WALL, UV2.x = 1 (wall shader: limestone), UV = metres.
 				MeshData &wm = c.out.groups[GROUP_WALL];
-				Vec3 l0 = s.center - right * out_l, r0 = s.center + right * out_r;
-				Vec3 l1 = s1.center - right1 * out_l, r1 = s1.center + right1 * out_r;
-				real hl0 = w.terrain.sample(l0.x, l0.z), hr0 = w.terrain.sample(r0.x, r0.z);
-				real hl1 = w.terrain.sample(l1.x, l1.z), hr1 = w.terrain.sample(r1.x, r1.z);
-				if (hl0 > l0.y + 1.2 && hl1 > l1.y + 1.2) {
-					real cut0 = std::min(hl0 - l0.y, 6.0), cut1 = std::min(hl1 - l1.y, 6.0);
-					quad(wm, l0, l1, l1 + Vec3(0, cut1, 0), l0 + Vec3(0, cut0, 0), right, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.85);
-				} else if (l0.y > hl0 + 1.2 && l1.y > hl1 + 1.2) {
-					real drop0 = std::min(l0.y - hl0, 8.0), drop1 = std::min(l1.y - hl1, 8.0);
-					quad(wm, l1 - Vec3(0, drop1, 0), l0 - Vec3(0, drop0, 0), l0, l1, -right, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.85);
-				}
-				if (hr0 > r0.y + 1.2 && hr1 > r1.y + 1.2) {
-					real cut0 = std::min(hr0 - r0.y, 6.0), cut1 = std::min(hr1 - r1.y, 6.0);
-					quad(wm, r1, r0, r0 + Vec3(0, cut0, 0), r1 + Vec3(0, cut1, 0), -right, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.85);
-				} else if (r0.y > hr0 + 1.2 && r1.y > hr1 + 1.2) {
-					real drop0 = std::min(r0.y - hr0, 8.0), drop1 = std::min(r1.y - hr1, 8.0);
-					quad(wm, r0 - Vec3(0, drop0, 0), r1 - Vec3(0, drop1, 0), r1, r0, right, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.85);
+				real v0 = s.distance, v1 = s1.distance;
+				for (real side : {-1.0, 1.0}) {
+					real o = side < 0 ? out_l : out_r;
+					Vec3 e0 = s.center + right * (side * o), e1 = s1.center + right1 * (side * o);
+					real h0 = w.terrain.sample(e0.x, e0.z), h1 = w.terrain.sample(e1.x, e1.z);
+					Vec3 face_n = right * -side; // toward the road
+					if (h0 > e0.y + 1.2 && h1 > e1.y + 1.2) {
+						real c0 = std::min(h0 - e0.y, 6.0), c1 = std::min(h1 - e1.y, 6.0);
+						Vec3 t0 = e0 + Vec3(0, c0, 0), t1 = e1 + Vec3(0, c1, 0);
+						quad(wm, e0 - Vec3(0, 0.3, 0), e1 - Vec3(0, 0.3, 0), t1, t0, face_n, {(float)v0, -0.3f}, {(float)v1, -0.3f}, {(float)v1, (float)c1}, {(float)v0, (float)c0}, 1.0, 0.0, 0.85);
+						Vec3 back = right * (side * 0.45);
+						quad(wm, t0, t1, t1 + back, t0 + back, Vec3(0, 1, 0), {(float)v0, 0}, {(float)v1, 0}, {(float)v1, 0.45f}, {(float)v0, 0.45f}, 1.0, 1.0, 1.0);
+					} else if (e0.y > h0 + 1.2 && e1.y > h1 + 1.2) {
+						real d0 = std::min(e0.y - h0, 8.0), d1 = std::min(e1.y - h1, 8.0);
+						quad(wm, e0 - Vec3(0, d0 + 0.5, 0), e1 - Vec3(0, d1 + 0.5, 0), e1, e0, -face_n, {(float)v0, (float)-d0}, {(float)v1, (float)-d1}, {(float)v1, 0}, {(float)v0, 0}, 1.0, 0.0, 0.85);
+					}
 				}
 			}
 
@@ -686,27 +731,48 @@ void build_junction_polys(Ctx &c) {
 		if (j.poly.size() < 3 || !c.in_chunk(j.center.x, j.center.z)) continue;
 		MeshData &m = c.out.groups[WG_JUNCTION];
 		Vec3 up(0, 1, 0);
-		real code = 80.0 + j.style;
 		real span = std::max(j.half_x * 2.0, 2.0);
-		int base = m.vertex_count();
-		m.add_vertex(j.center, up, 0.5, 0.5, code, span, 1.0, 0, 0, span);
-		for (const Vec3 &p : j.poly) {
-			Vec3 q(p.x, j.center.y, p.z);
-			real u = 0.5 + (p.x - j.center.x) / span, v = 0.5 + (p.z - j.center.z) / span;
-			m.add_vertex(q, up, u, v, code, span, 1.0, 0, 0, span);
-		}
 		int n = (int)j.poly.size();
-		for (int k = 0; k < n; ++k) {
-			int a = base + 1 + k, b = base + 1 + (k + 1) % n;
+		// The polygon is a fan of mouth triangles (centre + one leg's mouth edge) and corner
+		// triangles between legs. Mouth triangles carry leg-local UVs so the road shader can lay
+		// markings square to that leg: UV.x 0..1 across the mouth (0 = the inbound, right-hand
+		// half's kerb), UV.y metres in from the mouth, UV2.y mouth width. Code 85: stop line +
+		// zebra (major junctions), 86: dashed give-way line (roundabout entries), 80: plain.
+		auto tri = [&](const Vec3 &a, const Vec3 &b, const Vec3 &cc, Vec2 ua, Vec2 ub, Vec2 uc, real code, real width) {
+			int base = m.vertex_count();
+			m.add_vertex(a, up, ua.x, ua.y, code, width, 1.0, 0, 0, span);
+			m.add_vertex(b, up, ub.x, ub.y, code, width, 1.0, 0, 0, span);
+			m.add_vertex(cc, up, uc.x, uc.y, code, width, 1.0, 0, 0, span);
 			// Counter-clockwise seen from above.
-			Vec3 pa = j.poly[k], pb = j.poly[(k + 1) % n];
-			real cross = (pa.x - j.center.x) * (pb.z - j.center.z) - (pa.z - j.center.z) * (pb.x - j.center.x);
-			if (cross < 0) {
-				m.indices.insert(m.indices.end(), {base, a, b});
-			} else {
-				m.indices.insert(m.indices.end(), {base, b, a});
+			real cross = (b.x - a.x) * (cc.z - a.z) - (b.z - a.z) * (cc.x - a.x);
+			if (cross < 0) m.indices.insert(m.indices.end(), {base, base + 1, base + 2});
+			else m.indices.insert(m.indices.end(), {base, base + 2, base + 1});
+			if (c.opt.collision) c.out.collision.add_tri(a, b, cc, j.surface, COL_ALL);
+		};
+		auto plain_uv = [&](const Vec3 &p) { return Vec2{0.5 + (p.x - j.center.x) / span, 0.5 + (p.z - j.center.z) / span}; };
+		for (int k = 0; k < n; ++k) {
+			if (k < (int)j.skip.size() && j.skip[k]) continue;
+			const Vec3 &pa = j.poly[k], &pb = j.poly[(k + 1) % n];
+			bool mouth = (k % 2) == 0 && n % 2 == 0;
+			real code = 80.0;
+			if (mouth) {
+				int leg = k / 2;
+				int ri = leg < (int)j.legs.size() && j.legs[leg] >= 0 && j.legs[leg] < (int)c.w.road_of_def.size() ? c.w.road_of_def[j.legs[leg]] : -1;
+				bool ring = ri >= 0 && c.w.roads[ri].def.roundabout;
+				if (j.style == 1) code = 85.0;
+				else if (j.style == 3 && !ring && ri >= 0) code = 86.0;
 			}
-			if (c.opt.collision) c.out.collision.add_tri(j.center, Vec3(pa.x, j.center.y, pa.z), Vec3(pb.x, j.center.y, pb.z), j.surface, COL_ALL);
+			if (code > 80.5) {
+				Vec3 edge = (pb - pa).flat();
+				real width = edge.length();
+				Vec3 mid = (pa + pb) * 0.5;
+				Vec3 inward = Vec3(-edge.z, 0, edge.x) / std::max(width, 1e-3);
+				if (inward.dot((j.center - mid).flat()) < 0) inward = -inward;
+				real depth = (j.center - mid).flat().dot(inward);
+				tri(pa, pb, j.center, {0, 0}, {1, 0}, {0.5, depth}, code, width);
+			} else {
+				tri(pa, pb, j.center, plain_uv(pa), plain_uv(pb), {0.5, 0.5}, 80.0, span);
+			}
 		}
 		if (j.style == 1) {
 			for (int k = 1; k < n; k += 2) {
@@ -782,6 +848,41 @@ void build_buildings(Ctx &c) {
 		real anchor = clampr(gmax - b.base, 0.0, std::max(0.0, h - 3.0));
 		// UV2: x = style + seed * 0.98 (seed in the fraction), y = ground-floor anchor (m).
 		real style_seed = b.style + seedf * 0.98;
+		// Real depth where the chase cam grazes a facade: a projecting roof cornice on classic
+		// styles and continuous balconies (balcons filants) on Monaco apartment blocks. Only on
+		// walls that face the open (not a party wall against the next building). Trim pieces tell
+		// the facade shader what they are through UV2.x + 10 * kind (1 moulding, 2 parapet, 3 glass).
+		bool cornice = c.opt.lod <= 1 && h > 4.0 && b.style != 4 && b.style != 6;
+		bool balconies = c.opt.lod == 0 && b.style == 2 && seedf >= 0.55 && h >= 10.0;
+		std::vector<uint8_t> open_edge;
+		std::vector<Vec3> miter;
+		if (cornice || balconies) {
+			open_edge.assign(n, 1);
+			std::vector<Vec3> en(n);
+			for (int k = 0; k < n; ++k) {
+				Vec3 d = b.ring[(k + 1) % n] - b.ring[k];
+				real l = d.flat().length();
+				en[k] = l > 1e-3 ? Vec3(d.z, 0, -d.x) * (sgn / l) : Vec3();
+				Vec3 probe = (b.ring[k] + b.ring[(k + 1) % n]) * 0.5 + en[k] * 1.2;
+				for (const Building *o : c.near_buildings) {
+					if (o == &b || (o->center - probe).flat().length() > o->radius + 0.5) continue;
+					if (point_in_ring(o->ring, probe.x, probe.z)) {
+						open_edge[k] = 0;
+						break;
+					}
+				}
+			}
+			// Mitred corner offsets so cornices close around corners (1 m = unit outward push).
+			miter.resize(n);
+			for (int k = 0; k < n; ++k) {
+				Vec3 np = en[(k + n - 1) % n], nn = en[k];
+				Vec3 mdir = (np + nn).flat();
+				real ml = mdir.length();
+				if (ml < 1e-3) { miter[k] = nn; continue; }
+				mdir = mdir / ml;
+				miter[k] = mdir / std::max(mdir.dot(nn), 0.5);
+			}
+		}
 		for (int k = 0; k < n; ++k) {
 			Vec3 a(b.ring[k].x, b.base, b.ring[k].z), bb(b.ring[(k + 1) % n].x, b.base, b.ring[(k + 1) % n].z);
 			real len = distance(a, bb);
@@ -800,29 +901,56 @@ void build_buildings(Ctx &c) {
 			if (fn.dot(nrm) >= 0) m.add_quad(i, i + 1, i + 2, i + 3);
 			else m.add_quad(i, i + 3, i + 2, i + 1);
 
-			// Procedural roof cornices: projecting eave along building top (LOD 0 & 1)
-			if (c.opt.lod <= 1 && h > 4.0) {
-				Vec3 c_a = a + top + nrm * 0.45;
-				Vec3 c_bb = bb + top + nrm * 0.45;
-				Vec3 c_a_dn = c_a - Vec3(0, 0.35, 0);
-				Vec3 c_bb_dn = c_bb - Vec3(0, 0.35, 0);
-				Vec3 wall_a = a + top - Vec3(0, 0.35, 0);
-				Vec3 wall_bb = bb + top - Vec3(0, 0.35, 0);
-				// Fascia
-				quad_color(m, c_a, c_bb, c_bb_dn, c_a_dn, nrm, {u, h}, {u + len, h}, {u + len, h - 0.35}, {u, h - 0.35}, style_seed, anchor, cr * 0.95, cg * 0.95, cb * 0.95, ha);
-				// Underside
-				quad_color(m, c_a_dn, c_bb_dn, wall_bb, wall_a, Vec3(0, -1, 0), {u, 0}, {u + len, 0}, {u + len, 0.45}, {u, 0.45}, style_seed, anchor, cr * 0.7, cg * 0.7, cb * 0.7, ha);
+			if (cornice && open_edge[k]) {
+				// Eave: 0.45 m out, 0.35 m deep, with top and soffit so it reads from the street
+				// and from the corniche roads above.
+				const real P = 0.45, D = 0.35;
+				real kind = style_seed + 10.0;
+				Vec3 wa = a + top, wb = bb + top;
+				Vec3 oa = wa + miter[k] * P, ob = wb + miter[(k + 1) % n] * P;
+				Vec3 dn(0, -D, 0);
+				quad_color(m, oa + dn, ob + dn, ob, oa, nrm, {u, h - D}, {u + len, h - D}, {u + len, h}, {u, h}, kind, anchor, cr, cg, cb, ha);
+				quad_color(m, wa + dn, wb + dn, ob + dn, oa + dn, Vec3(0, -1, 0), {u, 0}, {u + len, 0}, {u + len, P}, {u, P}, kind, anchor, cr, cg, cb, ha);
+				quad_color(m, wa, oa, ob, wb, Vec3(0, 1, 0), {u, 0}, {u, P}, {u + len, P}, {u + len, 0}, kind, anchor, cr, cg, cb, ha);
 			}
-
-			// Extruded balconies for apartment buildings (LOD 0 & 1)
-			if (c.opt.lod <= 1 && (b.style == 1 || b.style == 2) && h >= 9.0 && len > 3.0) {
-				for (real fy = anchor + 3.2; fy + 2.8 < h; fy += 6.2) {
-					Vec3 ba = a + Vec3(0, fy, 0), bbb = bb + Vec3(0, fy, 0);
-					Vec3 b_out_a = ba + nrm * 0.85, b_out_b = bbb + nrm * 0.85;
-					// Balcony slab top
-					quad_color(m, ba, bbb, b_out_b, b_out_a, Vec3(0, 1, 0), {u, 0}, {u + len, 0}, {u + len, 0.85}, {u, 0.85}, style_seed, anchor, cr * 0.9, cg * 0.9, cb * 0.9, ha);
-					// Front railing
-					quad_color(m, b_out_a, b_out_b, b_out_b + Vec3(0, 0.9, 0), b_out_a + Vec3(0, 0.9, 0), nrm, {u, 0}, {u + len, 0}, {u + len, 0.9}, {u, 0.9}, style_seed, anchor, 0.25, 0.25, 0.25, ha);
+			bool street = false;
+			if (balconies && open_edge[k] && len >= 5.0) {
+				// Balconies face the street (or the sea front): a road within ~25 m out front.
+				Vec3 front = (a + bb) * 0.5 + nrm * 12.0;
+				for (const RoadSampleX *rsx : c.nearby)
+					if (sqr(rsx->rs.center.x - front.x) + sqr(rsx->rs.center.z - front.z) < 14.0 * 14.0) {
+						street = true;
+						break;
+					}
+			}
+			if (street) {
+				// Continuous balcony per floor, on the facade shader's floor grid (style 2: ground
+				// floor 4.2 m, then 3.05 m storeys; windows stop 0.7 m under the roof line).
+				const real gf = 4.2, fh = 3.05, Dp = 0.9, T = 0.1;
+				bool glass = seedf > 0.8;
+				real kind_slab = style_seed + 10.0, kind_front = style_seed + (glass ? 30.0 : 20.0);
+				Vec3 A = a + dir * 0.3, B = bb - dir * 0.3;
+				int floors = 0;
+				for (real fy = anchor + gf; fy + fh < h - 0.7 && floors < 14; fy += fh, ++floors) {
+					real y0 = fy - 0.02, y1 = fy + 0.16, yr = fy + 1.05;
+					Vec3 A0 = A + Vec3(0, y0, 0), B0 = B + Vec3(0, y0, 0);
+					Vec3 Ao = A0 + nrm * Dp, Bo = B0 + nrm * Dp; // outer bottom edge
+					Vec3 Ai = Ao - nrm * T, Bi = Bo - nrm * T; // parapet inner face
+					Vec3 up1(0, y1 - y0, 0), upr(0, yr - y0, 0);
+					real l2 = distance(A, B);
+					// Soffit, parapet front (UV.y = metres up from the slab bottom), parapet cap and back, slab top.
+					quad_color(m, A0, B0, Bo, Ao, Vec3(0, -1, 0), {u, 0}, {u + l2, 0}, {u + l2, Dp}, {u, Dp}, kind_slab, anchor, cr, cg, cb, ha);
+					quad_color(m, Ao, Bo, Bo + upr, Ao + upr, nrm, {u, 0}, {u + l2, 0}, {u + l2, yr - y0}, {u, yr - y0}, kind_front, anchor, cr, cg, cb, ha);
+					quad_color(m, Ai + upr, Ao + upr, Bo + upr, Bi + upr, Vec3(0, 1, 0), {u, yr - y0}, {u, yr - y0}, {u + l2, yr - y0}, {u + l2, yr - y0}, kind_front, anchor, cr, cg, cb, ha);
+					quad_color(m, Bi + up1, Ai + up1, Ai + upr, Bi + upr, -nrm, {u + l2, y1 - y0}, {u, y1 - y0}, {u, yr - y0}, {u + l2, yr - y0}, kind_front, anchor, cr, cg, cb, ha);
+					quad_color(m, A0 + up1, Ai + up1, Bi + up1, B0 + up1, Vec3(0, 1, 0), {u, 0}, {u, Dp}, {u + l2, Dp}, {u + l2, 0}, kind_slab, anchor, cr, cg, cb, ha);
+					// End caps.
+					for (int e = 0; e < 2; ++e) {
+						Vec3 W = e ? B0 : A0, O = e ? Bo : Ao, I = e ? Bi : Ai;
+						Vec3 en_cap = e ? dir : -dir;
+						quad_color(m, W, O, O + up1, W + up1, en_cap, {0, 0}, {Dp, 0}, {Dp, y1 - y0}, {0, y1 - y0}, kind_slab, anchor, cr, cg, cb, ha);
+						quad_color(m, I + up1, O + up1, O + upr, I + upr, en_cap, {0, y1 - y0}, {T, y1 - y0}, {T, yr - y0}, {0, yr - y0}, kind_front, anchor, cr, cg, cb, ha);
+					}
 				}
 			}
 
@@ -948,6 +1076,54 @@ void scatter_baked(Ctx &c) {
 		}
 }
 
+// Quay and sea walls: marching squares over the sea mask on a 4 m grid; every boundary segment
+// whose land side is port or urban gets a concrete wall from the berth floor to the deck (and a
+// coping kerb), with bollards along the port quays. GROUP_WALL, UV2.x = 0 (concrete).
+void build_quays(Ctx &c) {
+	const World &w = c.w;
+	const real step = 4.0, deck = 0.9, floor_y = -4.5;
+	MeshData &m = c.out.groups[GROUP_WALL];
+	Rng rng(w.seed * 31 + (uint64_t)(c.out.cx * 131 + c.out.cz * 977));
+	auto sea = [&](real x, real z) { return w.is_sea(x, z); };
+	auto walled = [&](real x, real z) { uint8_t l = w.land_at(x, z); return l == LAND_PORT || l == LAND_URBAN; };
+	for (real z = c.mn.z; z < c.mx.z; z += step)
+		for (real x = c.mn.x; x < c.mx.x; x += step) {
+			bool s00 = sea(x, z), s10 = sea(x + step, z), s01 = sea(x, z + step), s11 = sea(x + step, z + step);
+			int k = s00 + s10 + s01 + s11;
+			if (k == 0 || k == 4) continue;
+			// Edge midpoints where the mask flips; pair them up into segments.
+			Vec3 pts[4];
+			int np = 0;
+			if (s00 != s10) pts[np++] = Vec3(x + step * 0.5, 0, z);
+			if (s10 != s11) pts[np++] = Vec3(x + step, 0, z + step * 0.5);
+			if (s11 != s01) pts[np++] = Vec3(x + step * 0.5, 0, z + step);
+			if (s01 != s00) pts[np++] = Vec3(x, 0, z + step * 0.5);
+			for (int q = 0; q + 1 < np; q += 2) {
+				Vec3 a = pts[q], b = pts[q + 1];
+				Vec3 mid = (a + b) * 0.5, along = (b - a).flat();
+				real len = along.length();
+				if (len < 0.5) continue;
+				Vec3 n = Vec3(-along.z, 0, along.x) / len; // one of the two sides
+				if (!sea(mid.x + n.x * 2.0, mid.z + n.z * 2.0)) n = -n; // n faces the water
+				Vec3 land = mid - n * 2.0;
+				if (!walled(land.x, land.z)) continue;
+				Vec3 a0(a.x, floor_y, a.z), b0(b.x, floor_y, b.z), a1(a.x, deck + 0.15, a.z), b1(b.x, deck + 0.15, b.z);
+				quad(m, a0, b0, b1, a1, n, {(float)a.x, (float)floor_y}, {(float)b.x, (float)floor_y}, {(float)b.x, (float)deck}, {(float)a.x, (float)deck}, 0.0, 0.0, 0.8);
+				// Coping stone along the edge (0.35 m on to the quay).
+				Vec3 in = -n * 0.35;
+				quad(m, a1, b1, b1 + in, a1 + in, Vec3(0, 1, 0), {(float)a.x, 0}, {(float)b.x, 0}, {(float)b.x, 0.35f}, {(float)a.x, 0.35f}, 0.0, 0.0, 1.0);
+				if (c.opt.collision) {
+					c.out.collision.add_tri(a0, b0, b1, SURF_CONCRETE, COL_SOLID);
+					c.out.collision.add_tri(a0, b1, a1, SURF_CONCRETE, COL_SOLID);
+				}
+				if (w.land_at(land.x, land.z) == LAND_PORT && rng.chance(len / 9.0)) {
+					Vec3 p = mid - n * 0.7;
+					add_prop(c, PROP_BOLLARD, Vec3(p.x, deck, p.z), std::atan2(n.x, n.z), Vec3(1.3, 0.8, 1.3), rng.next());
+				}
+			}
+		}
+}
+
 // Yachts moored Mediterranean-style (stern to the quay) along the port quays: walk the water
 // 2-5 m off LAND_PORT edges and fit boats side by side with a hull's width of clearance.
 void scatter_harbour(Ctx &c) {
@@ -996,12 +1172,46 @@ void scatter_harbour(Ctx &c) {
 
 } // namespace
 
+// Far rings are drawn from 500 m to ~1.3 km: every surface costs a draw call and kerbs, rails,
+// posts, walls, tunnel liners and signs are sub-pixel there. Keep what reads at distance (terrain,
+// which carries the road corridors in its carve tint, buildings, roofs, water, bridge decks) and,
+// on the nearer far ring, the carriageways with the junction patches merged in (same material).
+void append_group(MeshData &dst, MeshData &src) {
+	int base = dst.vertex_count();
+	dst.positions.insert(dst.positions.end(), src.positions.begin(), src.positions.end());
+	dst.normals.insert(dst.normals.end(), src.normals.begin(), src.normals.end());
+	dst.uvs.insert(dst.uvs.end(), src.uvs.begin(), src.uvs.end());
+	dst.uv2s.insert(dst.uv2s.end(), src.uv2s.begin(), src.uv2s.end());
+	dst.colors.insert(dst.colors.end(), src.colors.begin(), src.colors.end());
+	for (int32_t i : src.indices) dst.indices.push_back(i + base);
+	src.clear();
+}
+
+void simplify_far(ChunkOutput &out) {
+	if (out.lod == 1) {
+		// 256-640 m: kerb faces, guardrail posts, tyre walls and tunnel strip lights are sub-pixel.
+		for (int g : {(int)GROUP_CURB, (int)GROUP_POST, (int)GROUP_TIREWALL, (int)WG_TUNNEL_LIGHT}) out.groups[g].clear();
+		append_group(out.groups[GROUP_ROAD], out.groups[WG_JUNCTION]);
+		append_group(out.groups[GROUP_SHOULDER], out.groups[WG_SIDEWALK]);
+	}
+	if (out.lod < 2) return;
+	for (int g : {(int)GROUP_CURB, (int)GROUP_RAIL, (int)GROUP_POST, (int)GROUP_WALL, (int)GROUP_TIREWALL, (int)WG_TUNNEL, (int)WG_TUNNEL_LIGHT, (int)WG_NEON,
+				 (int)GROUP_SHOULDER, (int)WG_SIDEWALK})
+		out.groups[g].clear();
+	if (out.lod >= 3) {
+		out.groups[GROUP_ROAD].clear();
+		out.groups[WG_JUNCTION].clear();
+	} else {
+		append_group(out.groups[GROUP_ROAD], out.groups[WG_JUNCTION]);
+	}
+}
+
 void build_chunk(const World &w, int cx, int cz, const ChunkOptions &opt, ChunkOutput &out) {
 	out = ChunkOutput();
 	out.cx = cx;
 	out.cz = cz;
 	out.lod = opt.lod;
-	Ctx c{w, opt, out, Vec3(), Vec3(), {}, {}};
+	Ctx c{w, opt, out, Vec3(), Vec3(), {}, {}, {}};
 	w.chunk_bounds(cx, cz, c.mn, c.mx);
 	out.center = Vec3((c.mn.x + c.mx.x) * 0.5, 0, (c.mn.z + c.mx.z) * 0.5);
 	const real margin = 30.0;
@@ -1016,10 +1226,14 @@ void build_chunk(const World &w, int cx, int cz, const ChunkOptions &opt, ChunkO
 	build_terrain(c);
 	build_roads(c);
 	if (w.baked) {
+		for (const Building &b : w.buildings)
+			if (b.center.x > c.mn.x - 60 && b.center.x < c.mx.x + 60 && b.center.z > c.mn.z - 60 && b.center.z < c.mx.z + 60) c.near_buildings.push_back(&b);
 		build_junction_polys(c);
 		build_buildings(c);
 		if (opt.props) scatter_baked(c);
 		if (opt.props && out.min_y < 0.5) scatter_harbour(c);
+		if (opt.lod <= 1 && out.min_y < 0.5) build_quays(c);
+		simplify_far(out);
 		return;
 	}
 	build_junctions(c);

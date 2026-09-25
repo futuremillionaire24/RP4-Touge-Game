@@ -207,6 +207,9 @@ func _update_lighting(delta: float) -> void:
 	# ---- Sun or moon direction with slight night-time movement ----
 	var light_dir := sd if elev > -0.05 else Vector3(-sd.x, -sd.y, sd.z).normalized()
 	sun.look_at_from_position(Vector3.ZERO, -light_dir, Vector3.UP)
+	RenderingServer.global_shader_parameter_set("nt_sun_dir", sd)
+	# Moonlight (~6% of the sun) casts barely visible shadows for a whole extra depth pass.
+	sun.shadow_enabled = env_rig.shadows_wanted and night < 0.6
 
 	# ---- Golden hour: rich warm palette (GT7-style dramatic sunset/sunrise) ----
 	var golden := smoothstep(0.4, 0.0, absf(elev)) * (1.0 - night)

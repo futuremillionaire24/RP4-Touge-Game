@@ -7,16 +7,16 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 515,
+      "count": 3937,
       "max": [
-        0.49995356798171997,
-        9.608659744262695,
-        0.5483327507972717
+        8.14007568359375,
+        10.9976224899292,
+        8.172464370727539
       ],
       "min": [
-        -0.4673503637313843,
+        -8.237290382385254,
         0,
-        -0.4189712107181549
+        -8.19946575164795
       ],
       "bufferView": 0,
       "byteOffset": 0
@@ -24,83 +24,38 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 515,
+      "count": 3937,
       "bufferView": 0,
       "byteOffset": 12
     },
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 515,
+      "count": 3937,
       "bufferView": 0,
       "byteOffset": 24
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
-      "count": 2730,
+      "count": 9000,
       "bufferView": 1,
       "byteOffset": 0
-    },
-    {
-      "type": "SCALAR",
-      "componentType": 5123,
-      "count": 4860,
-      "bufferView": 1,
-      "byteOffset": 5460
-    },
-    {
-      "type": "VEC3",
-      "componentType": 5126,
-      "count": 617,
-      "max": [
-        2.5619678497314453,
-        10.550241470336914,
-        2.144681692123413
-      ],
-      "min": [
-        -2.8596529960632324,
-        5.242793083190918,
-        -2.456899881362915
-      ],
-      "bufferView": 2,
-      "byteOffset": 0
-    },
-    {
-      "type": "VEC3",
-      "componentType": 5126,
-      "count": 617,
-      "bufferView": 2,
-      "byteOffset": 12
-    },
-    {
-      "type": "VEC2",
-      "componentType": 5126,
-      "count": 617,
-      "bufferView": 2,
-      "byteOffset": 24
     }
   ],
   "bufferViews": [
     {
       "buffer": 0,
       "byteOffset": 0,
-      "byteLength": 16480,
+      "byteLength": 125984,
       "byteStride": 32,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 16480,
-      "byteLength": 15180,
+      "byteOffset": 125984,
+      "byteLength": 18000,
       "target": 34963
-    },
-    {
-      "buffer": 0,
-      "byteOffset": 31660,
-      "byteLength": 19744,
-      "byteStride": 32,
-      "target": 34962
     }
   ],
   "samplers": [
@@ -113,53 +68,31 @@
     {
       "source": 0,
       "sampler": 0
-    },
-    {
-      "source": 1,
-      "sampler": 0
     }
   ],
   "images": [
     {
-      "name": "tree_palm_0",
+      "name": "tree_palm_atlas0",
       "mimeType": "image/jpeg",
-      "uri": "tree_palm_0.jpg"
-    },
-    {
-      "name": "tree_palm_1",
-      "mimeType": "image/png",
-      "uri": "tree_palm_1.png"
+      "uri": "tree_palm_atlas0.jpg"
     }
   ],
   "buffers": [
     {
       "name": "tree_palm.bin",
       "uri": "tree_palm.bin",
-      "byteLength": 51404
+      "byteLength": 143984
     }
   ],
   "materials": [
     {
-      "name": "Plam_4_Trunk",
+      "name": "Phoenix_leaf_stk",
       "doubleSided": true,
       "pbrMetallicRoughness": {
-        "roughnessFactor": 0.6,
+        "roughnessFactor": 0.8593146362921875,
         "metallicFactor": 0,
         "baseColorTexture": {
           "index": 0
-        }
-      }
-    },
-    {
-      "name": "Palm_4_Leaf",
-      "alphaMode": "MASK",
-      "alphaCutoff": 0.4,
-      "doubleSided": true,
-      "pbrMetallicRoughness": {
-        "roughnessFactor": 0.6,
-        "metallicFactor": 0,
-        "baseColorTexture": {
-          "index": 1
         }
       }
     }
@@ -177,16 +110,6 @@
           "mode": 4,
           "material": 0,
           "indices": 3
-        },
-        {
-          "attributes": {
-            "POSITION": 5,
-            "NORMAL": 6,
-            "TEXCOORD_0": 7
-          },
-          "mode": 4,
-          "material": 1,
-          "indices": 4
         }
       ]
     }

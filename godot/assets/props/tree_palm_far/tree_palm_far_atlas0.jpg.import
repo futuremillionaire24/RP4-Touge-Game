@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://std0sjps2sli"
-path="res://.godot/imported/tree_pine_3.jpg-9ec5447b588997a9742c3d2e462428c4.ctex"
+uid="uid://cn27k4sepdsmd"
+path="res://.godot/imported/tree_palm_far_atlas0.jpg-898f3466aab28779cbb91a702d54c482.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/props/tree_pine/tree_pine_3.jpg"
-dest_files=["res://.godot/imported/tree_pine_3.jpg-9ec5447b588997a9742c3d2e462428c4.ctex"]
+source_file="res://assets/props/tree_palm_far/tree_palm_far_atlas0.jpg"
+dest_files=["res://.godot/imported/tree_palm_far_atlas0.jpg-898f3466aab28779cbb91a702d54c482.ctex"]
 
 [params]
 

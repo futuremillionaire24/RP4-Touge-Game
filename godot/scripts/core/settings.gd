@@ -5,7 +5,7 @@ extends Node
 signal changed(section: String)
 
 var PATH := "user://settings.json" # "-- profile=<name>" isolates test runs
-const VERSION := 1
+const VERSION := 2
 
 enum Tier { LOW, MEDIUM, HIGH, ULTRA, CUSTOM }
 
@@ -21,7 +21,7 @@ func _defaults() -> Dictionary:
 			"resolution_floor": 0.8,
 			"dynamic_resolution": true,
 			"msaa": 2, # Viewport.MSAA_4X
-			"shadows": 2, # 0 off, 1 low, 2 high, 3 ultra
+			"shadows": 1, # 0 off, 1 low, 2 high, 3 ultra (RP4 60 fps budget: low)
 			"reflections": 2, # 0 probe only, 1 + planar low, 2 planar
 			"draw_distance": 1.0,
 			"traffic_density": 1.0,
@@ -108,6 +108,9 @@ func load_settings() -> void:
 			for k in parsed[sec].keys():
 				if data[sec].has(k):
 					data[sec][k] = parsed[sec][k]
+	# v2: the RP4 free-roam budget - 4 shadow cascades only on Ultra (older saves stored "high").
+	if int(parsed.get("version", 1)) < 2 and int(data.graphics.tier) != Tier.ULTRA:
+		data.graphics.shadows = mini(int(data.graphics.shadows), 1)
 
 func save_settings() -> void:
 	var tmp := PATH + ".tmp"

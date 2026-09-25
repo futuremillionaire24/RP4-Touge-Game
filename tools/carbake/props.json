@@ -2,11 +2,16 @@
 	"_doc": "World props (vegetation, street furniture). pick = regex on node names inside the source (kept with their descendants); height = real height in metres (model is scaled to it); budget = triangles; texture_max = px. Output godot/assets/props/<key>/<key>.gltf, ground at y=0, centred on x/z.",
 	"props": {
 		"tree_plane": { "uid": "c0c3aa73cc9945d2a36c01a0d8d6d4bb", "pick": "^Linden_LOD0$", "height": 13.0, "cards": false, "budget": 3200, "texture_max": 512 },
-		"tree_pine": { "uid": "240ce9cf0ad3474f809a59f9446e63cd", "pick": "^PineTree_1$", "height": 14.0, "budget": 2600, "texture_max": 512 },
-		"tree_palm": { "uid": "917c18d6b2d04d33950dea6e20bc074f", "pick": "^Tree_1$", "height": 10.5, "budget": 2600, "texture_max": 512 },
+		"tree_plane_far": { "uid": "c0c3aa73cc9945d2a36c01a0d8d6d4bb", "pick": "^Linden_LOD0$", "height": 13.0, "cards": false, "budget": 220, "texture_max": 128 },
+		"tree_pine": { "uid": "0de584cdb07a408c8e411d892cb2c9a7", "pick": "^Umbrella Pine Main$", "height": 13.0, "budget": 2400, "texture_max": 512 },
+		"tree_pine_far": { "uid": "0de584cdb07a408c8e411d892cb2c9a7", "pick": "^Umbrella Pine Main$", "height": 13.0, "budget": 220, "texture_max": 128 },
+		"tree_palm": { "uid": "622ffb9dc2904166a1b6f58de6cee854", "pick": "Phoenix (leaflet average|leaf stk|crownshaft RT|trunk)_0$", "height": 11.0, "atlas": true, "budget": 3000, "texture_max": 512 },
+		"tree_palm_far": { "uid": "622ffb9dc2904166a1b6f58de6cee854", "pick": "Phoenix (leaflet average|leaf stk|crownshaft RT|trunk)_0$", "height": 11.0, "atlas": true, "budget": 220, "texture_max": 128 },
 		"tree_cypress": { "uid": "249d8cb553a8469e9d645713f8e96ed1", "pick": "^Cypress_V2_test$", "height": 12.0, "budget": 1800, "texture_max": 512 },
-		"tree_olive": { "uid": "748ebed1c5f244bb8f470c4ad5557431", "pick": "^Oak01_LOD0$", "height": 6.5, "cards": false, "budget": 2200, "texture_max": 512 },
-		"bush": { "uid": "240ce9cf0ad3474f809a59f9446e63cd", "pick": "^ConiferousShrub_3$", "height": 1.7, "budget": 500, "texture_max": 256 },
+		"tree_cypress_far": { "uid": "249d8cb553a8469e9d645713f8e96ed1", "pick": "^Cypress_V2_test$", "height": 12.0, "budget": 220, "texture_max": 128 },
+		"tree_olive": { "uid": "6328df8a0f214143a880a72b86db2ab4", "pick": "^olive-tree\\.obj", "height": 6.0, "budget": 2400, "texture_max": 512 },
+		"tree_olive_far": { "uid": "6328df8a0f214143a880a72b86db2ab4", "pick": "^olive-tree\\.obj", "height": 6.0, "budget": 220, "texture_max": 128 },
+		"bush": { "uid": "3821ea730a7240f083351e7c09d3627b", "pick": "^MESH_BS09_NeriumOleander_M_LOD2_23$", "height": 2.2, "atlas": true, "budget": 800, "texture_max": 256 },
 		"rock": { "uid": "240ce9cf0ad3474f809a59f9446e63cd", "pick": "^BoulderOutcropPlainMedium_12$", "height": 1.6, "budget": 500, "texture_max": 512 },
 		"street_lamp": { "uid": "8013d8e6af4645d1a7c3d5b24054bfc8", "pick": "^Street Light_54$", "height": 7.5, "anchor": "base", "arm": true, "budget": 900, "texture_max": 256 },
 		"sign_curve": { "uid": "25ebbe36a9274344bd779a55d97bfca3", "pick": "^Warning_TurnLeft_LOD0$", "height": 2.3, "turn": 180, "budget": 200, "texture_max": 256 },
@@ -15,6 +20,7 @@
 		"bench": { "uid": "8013d8e6af4645d1a7c3d5b24054bfc8", "pick": "^(Wood Bench_36|Bench Support_37)$", "height": 0.85, "budget": 400, "texture_max": 256 },
 		"bin": { "uid": "8013d8e6af4645d1a7c3d5b24054bfc8", "pick": "^Red Trash Can_40$", "height": 1.0, "budget": 300, "texture_max": 256 },
 		"hydrant": { "uid": "8013d8e6af4645d1a7c3d5b24054bfc8", "pick": "^Fire Hydrant_52$", "height": 0.8, "budget": 300, "texture_max": 256 },
-		"yacht": { "uid": "0dd451f295d049cea20c17d3ffa87ee3", "pick": "^korpus1$", "length": 30.0, "budget": 6000, "texture_max": 1024, "waterline": 0.18 }
+		"yacht": { "uid": "0dd451f295d049cea20c17d3ffa87ee3", "pick": "^korpus1$", "length": 30.0, "budget": 2500, "texture_max": 1024, "waterline": 0.18 },
+		"yacht_far": { "uid": "0dd451f295d049cea20c17d3ffa87ee3", "pick": "^korpus1$", "length": 30.0, "budget": 250, "texture_max": 256, "waterline": 0.18 }
 	}
 }

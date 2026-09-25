@@ -29,6 +29,7 @@ public:
 	std::vector<Intersection> junctions;
 	std::vector<Block> blocks;
 	std::vector<Poi> pois;
+	std::vector<int> road_of_def; // baked: RoadDef::id (baker edge index) -> index in `roads`, -1 if dropped
 	uint64_t seed = 1;
 	// Baked map (tools/mapbake) data.
 	bool baked = false;
@@ -82,6 +83,12 @@ private:
 	void weld_endpoints();
 	void make_touge(const Vec3 &base, const Vec3 &summit, int hairpins, real leg_len, uint64_t s, const char *name, bool descent_fast);
 	void index_nodes();
+	void weld_baked_junctions();
+	void fit_baked_junctions();
+	void clear_buildings_off_roads();
+	void clip_junction_overlaps();
+	void dress_circuits();
+	void shape_quays();
 	real bake_height(real x, real z) const;
 	std::vector<RoadDef> defs_;
 	// Baked grids.

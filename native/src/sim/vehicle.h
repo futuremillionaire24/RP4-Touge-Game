@@ -99,6 +99,7 @@ struct VehicleParams {
 	real spool_rate = 2.5; // 1/s
 	int cylinders = 4;
 	real hybrid_boost_nm = 0.0; // electric assist torque at low rpm
+	real hybrid_power_kw = 0.0; // > 0: the assist is power-limited (constant power at speed) instead of fading out by 5000 rpm
 
 	// Transmission.
 	int gear_count = 5;

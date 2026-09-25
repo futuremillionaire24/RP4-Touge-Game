@@ -131,8 +131,14 @@ real Vehicle::engine_torque_at(real rpm, real throttle, real boost) const {
 	real base = params.torque_curve.eval(rpm);
 	real boosted = base * (1.0 + boost * params.boost_gain);
 	if (params.hybrid_boost_nm > 0.0) {
-		// Electric motor fills the bottom end, fading out by 5000 rpm.
-		boosted += params.hybrid_boost_nm * (1.0 - smoothstep(1500.0, 5000.0, rpm));
+		if (params.hybrid_power_kw > 0.0) {
+			// E-motors: full torque low down, then their rated power all the way up the rev range.
+			real w = std::max(rpm, 500.0) * TAU / 60.0;
+			boosted += std::min(params.hybrid_boost_nm, params.hybrid_power_kw * 1000.0 / w);
+		} else {
+			// Electric motor fills the bottom end, fading out by 5000 rpm.
+			boosted += params.hybrid_boost_nm * (1.0 - smoothstep(1500.0, 5000.0, rpm));
+		}
 	}
 	real power_loss = 1.0;
 	if (assists.mechanical_damage) power_loss = 1.0 - 0.35 * saturate(state.damage.front);

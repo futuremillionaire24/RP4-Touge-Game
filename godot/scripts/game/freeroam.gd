@@ -273,7 +273,31 @@ func _setup_autodrive(id: int, road: Dictionary) -> void:
 	sim.reset_car(id, _spawn_xform, 0.0)
 	driver.enabled = false
 
+## Tunnel acoustics: the engine and tyres echo off the bore (AudioMix's reverb send), fading in
+## and out over ~0.4 s at the portals. Road type sampled 4x a second under the player.
+var _acoustic_timer := 0.0
+var _tunnel_target := 0.0
+var _tunnel_amount := 0.0
+
+func _update_acoustics(delta: float) -> void:
+	_acoustic_timer -= delta
+	if _acoustic_timer <= 0.0:
+		_acoustic_timer = 0.25
+		var road := world.nearest_road(player.global_position, 12.0)
+		_tunnel_target = 0.0
+		if not road.is_empty() and absf(player.global_position.y - (road.position as Vector3).y) < 4.0:
+			match int(road.type):
+				2: _tunnel_target = 1.0 # bored tunnel
+				1: _tunnel_target = 0.0 # bridge: open air
+	_tunnel_amount = move_toward(_tunnel_amount, _tunnel_target, delta / 0.4)
+	if absf(_tunnel_amount - AudioMix.tunnel_amount) > 0.01:
+		AudioMix.set_tunnel(_tunnel_amount)
+
+func _exit_tree() -> void:
+	AudioMix.set_tunnel(0.0)
+
 func _play_update(delta: float) -> void:
+	_update_acoustics(delta)
 	# Dynamic time-sliced reflection probe update (10 Hz on 60 FPS target).
 	_probe_tick += 1
 	if _probe_tick % 6 == 0 and _car_probe:

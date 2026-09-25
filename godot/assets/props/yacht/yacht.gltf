@@ -7,16 +7,16 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 7208,
+      "count": 4177,
       "max": [
-        3.0525290966033936,
-        9.54858112335205,
-        15
+        3.051565170288086,
+        9.092889785766602,
+        14.960927963256836
       ],
       "min": [
-        -3.0525290966033936,
-        -2.0960299968719482,
-        -15
+        -3.051565408706665,
+        -2.078165292739868,
+        -14.938529968261719
       ],
       "bufferView": 0,
       "byteOffset": 0
@@ -24,21 +24,21 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 7208,
+      "count": 4177,
       "bufferView": 0,
       "byteOffset": 12
     },
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 7208,
+      "count": 4177,
       "bufferView": 0,
       "byteOffset": 24
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
-      "count": 18000,
+      "count": 8514,
       "bufferView": 1,
       "byteOffset": 0
     }
@@ -47,14 +47,14 @@
     {
       "buffer": 0,
       "byteOffset": 0,
-      "byteLength": 230656,
+      "byteLength": 133664,
       "byteStride": 32,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 230656,
-      "byteLength": 36000,
+      "byteOffset": 133664,
+      "byteLength": 17028,
       "target": 34963
     }
   ],
@@ -90,7 +90,7 @@
     {
       "name": "yacht.bin",
       "uri": "yacht.bin",
-      "byteLength": 266656
+      "byteLength": 150692
     }
   ],
   "materials": [
