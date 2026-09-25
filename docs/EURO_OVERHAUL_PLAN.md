@@ -115,6 +115,7 @@ On-device (RP4 via adb) profiling to hold 60 fps; LOD/visibility ranges; APK ≤
   utility poles; lamp classes fixed on all cars (front/back split); MSAA kept by the perf governor.
   Remaining: guard-rail texture, landmark buildings (Casino, Palace, Oceanographic Museum), night
   frame-rate dip (54 fps desktop) to profile on the RP4.
+  *Comprehensive Environment Overhaul Plan:* see [environment_overhaul_plan.md](file:///C:/Users/sidsh/.gemini/antigravity-ide/brain/3555297d-5564-43f4-880b-885cfdfa3018/environment_overhaul_plan.md) covering geometric balconies/cornices, cliff retaining walls, tunnel portals, multi-mesh foliage fix, and 4-cascade shadows.
 - **C — in progress.** Done: Barlow/Barlow Condensed type (OFL), FH4 theme (white focus slabs,
   magenta accents, class plates), tile + tile-grid + LB/RB tab widgets, tabbed hub (Campaign / Cars /
   My Festival / Options), tile-based events browser with filters and route card, credits screen

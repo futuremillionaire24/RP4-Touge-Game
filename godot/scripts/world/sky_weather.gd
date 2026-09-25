@@ -59,12 +59,13 @@ func set_weather(w: int, instant := false) -> void:
 	weather_changed.emit(W_NAMES[w])
 
 func _next_weather() -> int:
-	# Markov-ish transitions that feel like Japanese weather fronts.
+	# Mediterranean coastal transitions: predominantly clear azure skies, warm golden-hour periods,
+	# and occasional dramatic maritime showers or sea mist.
 	match weather:
-		W.CLEAR: return [W.CLEAR, W.OVERCAST, W.FOG][_rng.randi_range(0, 2) if _rng.randf() < 0.5 else 0]
-		W.OVERCAST: return [W.DRIZZLE, W.CLEARING, W.RAIN][_rng.randi_range(0, 2)]
+		W.CLEAR: return W.CLEAR if _rng.randf() < 0.72 else ([W.OVERCAST, W.CLEARING][_rng.randi_range(0, 1)])
+		W.OVERCAST: return [W.CLEARING, W.DRIZZLE, W.RAIN][_rng.randi_range(0, 2)]
 		W.DRIZZLE: return [W.RAIN, W.CLEARING][_rng.randi_range(0, 1)]
-		W.RAIN: return [W.STORM, W.DRIZZLE, W.CLEARING][_rng.randi_range(0, 2)]
+		W.RAIN: return [W.CLEARING, W.DRIZZLE, W.STORM][_rng.randi_range(0, 2)]
 		W.STORM: return W.RAIN
 		W.CLEARING: return W.CLEAR
 		W.FOG: return W.CLEARING

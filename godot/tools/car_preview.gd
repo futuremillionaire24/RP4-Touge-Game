@@ -5,6 +5,7 @@ extends Node3D
 ## Usage: godot --path . --resolution 1334x750 -- scene=car_preview out=D:/dir [cars=a,b]
 
 var out_dir := "user://car_preview"
+var tile_mode := false
 var cars: PackedStringArray = []
 var cam: Camera3D
 var asset_root := "res://assets/cars"
@@ -16,12 +17,16 @@ func _ready() -> void:
 			out_dir = kv[1]
 		elif kv.size() == 2 and kv[0] == "cars":
 			cars = kv[1].split(",")
+		elif a == "tiles":
+			tile_mode = true
+			out_dir = "res://assets/ui/cars"
 		elif a == "props":
 			asset_root = "res://assets/props" # tools/carbake/props.mjs output; the arrow marks +Z
 	if cars.is_empty():
 		for d in DirAccess.get_directories_at(asset_root):
 			cars.append(d)
-	DirAccess.make_dir_recursive_absolute(out_dir)
+	var absolute_out := ProjectSettings.globalize_path(out_dir) if out_dir.begins_with("res://") else out_dir
+	DirAccess.make_dir_recursive_absolute(absolute_out)
 	var env := Environment.new()
 	var sky := Sky.new()
 	var psm := ProceduralSkyMaterial.new()
@@ -94,7 +99,8 @@ func _ready() -> void:
 			arrow.rotation_degrees = Vector3(90, 0, 0)
 			arrow.position = Vector3(0, bb.end.y + 0.4, bb.end.z + 0.3)
 		var shots: Array[Image] = []
-		for v in [[Vector3(0.62, 0.32, -0.72), 1.0], [Vector3(1, 0.12, 0), 1.0], [Vector3(0.001, 1, 0.0), 1.0]]:
+		var views := [[Vector3(0.62, 0.32, -0.72), 1.0]] if tile_mode else [[Vector3(0.62, 0.32, -0.72), 1.0], [Vector3(1, 0.12, 0), 1.0], [Vector3(0.001, 1, 0.0), 1.0]]
+		for v in views:
 			var dir: Vector3 = (v[0] as Vector3).normalized()
 			var c := bb.get_center()
 			var dist := bb.size.length() * 1.15
@@ -105,11 +111,15 @@ func _ready() -> void:
 			shots.append(get_viewport().get_texture().get_image())
 		var w := shots[0].get_width()
 		var h := shots[0].get_height()
-		var sheet := Image.create(w * 3, h, false, shots[0].get_format())
-		for i in range(3):
-			sheet.blit_rect(shots[i], Rect2i(0, 0, w, h), Vector2i(w * i, 0))
-		sheet.resize(w * 3 / 2, h / 2, Image.INTERPOLATE_LANCZOS)
-		sheet.save_png(out_dir.path_join("%s.png" % key))
+		if tile_mode:
+			shots[0].resize(640, 360, Image.INTERPOLATE_LANCZOS)
+			shots[0].save_webp(absolute_out.path_join("%s.webp" % key), 0.86)
+		else:
+			var sheet := Image.create(w * 3, h, false, shots[0].get_format())
+			for i in range(3):
+				sheet.blit_rect(shots[i], Rect2i(0, 0, w, h), Vector2i(w * i, 0))
+			sheet.resize(w * 3 / 2, h / 2, Image.INTERPOLATE_LANCZOS)
+			sheet.save_png(absolute_out.path_join("%s.png" % key))
 		print("PREVIEW ", key, " aabb ", bb)
 		car.queue_free()
 		marks.queue_free()
@@ -125,3 +135,5 @@ func _aabb(n: Node) -> AABB:
 		out = b if first else out.merge(b)
 		first = false
 	return out
+
+

@@ -110,11 +110,11 @@ VehicleInput AIDriver::drive(const Vehicle &car, const std::vector<CarSnapshot> 
 	if (s.speed() < 1.5 && reverse_time_ <= 0.0) stuck_time_ += dt;
 	else if (s.speed() > 4.0) stuck_time_ = 0.0;
 	// Progress watchdog: a car shuffling back and forth in a corner never trips the speed test,
-	// but it also never gets anywhere.
+	// but it also never gets anywhere. Only fire if speed is low and net progress stalled.
 	progress_timer_ += dt;
-	if (progress_timer_ > 8.0) {
+	if (progress_timer_ > 10.0) {
 		real now = line_->distance_at(index_);
-		if (std::fabs(now - progress_mark_) < 8.0 && (line_->closed() || index_ < line_->size() - 20)) {
+		if (s.speed() < 2.0 && std::fabs(now - progress_mark_) < 6.0 && (line_->closed() || index_ < line_->size() - 20)) {
 			respawn_ = true;
 			respawn_reason_ = 4;
 		}
@@ -217,7 +217,10 @@ VehicleInput AIDriver::drive(const Vehicle &car, const std::vector<CarSnapshot> 
 	// Drift back to the racing line when clear.
 	if (!blocked && nearest_ahead > 25.0 && defend_cooldown_ < 4.0) offset_target_ = move_toward(offset_target_, 0.0, 0.6 * dt);
 	if (mistake_kind_ == 2) offset_target_ += (index_ % 2 ? 1.0 : -1.0) * 0.9 * dt;
-	offset_target_ = clampr(offset_target_, -width_l - base_offset, width_r - base_offset);
+	real margin = P.half_extents.x + 0.3;
+	real max_l = std::max(0.0, width_l - margin);
+	real max_r = std::max(0.0, width_r - margin);
+	offset_target_ = clampr(offset_target_, -max_l - base_offset, max_r - base_offset);
 	offset_ = move_toward(offset_, offset_target_, 1.8 * dt);
 
 	// ---- Speed target from the profile ---------------------------------------------------
@@ -276,10 +279,10 @@ VehicleInput AIDriver::drive(const Vehicle &car, const std::vector<CarSnapshot> 
 	// ---- Throttle / brake -----------------------------------------------------------------
 	real err = vt - v;
 	real brake_ff = a_req / std::max(decel_, 1.0);
-	if (brake_ff > 0.35 || err < -1.0) {
+	if (brake_ff > 0.16 || err < -0.8) {
 		in.throttle = 0.0;
-		in.brake = clampr(std::max(brake_ff * 1.15, -err * 0.2), 0.0, 1.0);
-	} else if (brake_ff > 0.12) {
+		in.brake = clampr(std::max(brake_ff * 1.15, -err * 0.25), 0.0, 1.0);
+	} else if (brake_ff > 0.06) {
 		in.throttle = 0.0; // lift and coast into the braking zone
 	} else if (err > 0.0) {
 		in.throttle = clampr(0.35 + err * 0.3, 0.0, 1.0);

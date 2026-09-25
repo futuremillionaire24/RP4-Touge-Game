@@ -1,6 +1,6 @@
-class_name RecordsScreen
+﻿class_name RecordsScreen
 extends MenuScreen
-## Festival stats and per-event records, plus collection progress (Omamori, barns, rivals).
+## Festival stats and per-event records, plus collection progress, barn finds and rivals.
 
 func build() -> void:
 	var col := make_column(600)
@@ -17,14 +17,14 @@ func build() -> void:
 	_stat(list, "Best drift score", str(int(s.get("drift_score", 0))))
 	_stat(list, "Near misses", str(int(s.get("near_misses", 0))))
 	_stat(list, "Cars owned", str(Profile.data.garage.size()))
-	_stat(list, "Festival collectibles", "%d / 30" % Profile.data.omamori.size())
+	_stat(list, "Festival finds", "%d / 40" % Profile.data.omamori.size())
 	_stat(list, "Rivals beaten", "%d / %d" % [Profile.data.rivals_beaten.size(), RivalData.RIVALS.size()])
 	_section(list, "Event records")
 	for ev in EventData.all():
 		var rec: Dictionary = Profile.data.records.get(ev.id, {})
-		var v := "—"
+		var v := "â€”"
 		if not rec.is_empty():
-			v = "P%d  ·  %s" % [int(rec.best_pos), UIKit.time_str(float(rec.best_time))]
+			v = "P%d  Â·  %s" % [int(rec.best_pos), UIKit.time_str(float(rec.best_time))]
 		_stat(list, ev.name, v, UIKit.AMBER if int(rec.get("best_pos", 99)) == 1 else UIKit.CYAN)
 	set_hints([["B", "Back"]])
 	stage.frame_offset = 2.2
@@ -44,3 +44,4 @@ func _stat(list: VBoxContainer, title: String, value: String, color := UIKit.CYA
 func leave() -> void:
 	super.leave()
 	stage.frame_offset = 1.3
+

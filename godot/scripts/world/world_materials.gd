@@ -49,12 +49,7 @@ static func get_material(group: int) -> Material:
 		Group.CURB:
 			m = _shader("res://shaders/curb.gdshader")
 		Group.RAIL:
-			var s := StandardMaterial3D.new()
-			s.albedo_color = Color(0.72, 0.74, 0.76)
-			s.metallic = 0.85
-			s.roughness = 0.35
-			s.cull_mode = BaseMaterial3D.CULL_DISABLED
-			m = s
+			m = _shader("res://shaders/rail.gdshader")
 		Group.WALL, Group.DECK:
 			var s := StandardMaterial3D.new()
 			s.albedo_color = Color(0.6, 0.59, 0.56)

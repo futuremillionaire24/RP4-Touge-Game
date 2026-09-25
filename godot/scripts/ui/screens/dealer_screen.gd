@@ -1,51 +1,62 @@
-class_name DealerScreen
+﻿class_name DealerScreen
 extends MenuScreen
-## Dealership: the full roster sorted by PI. Shop cars can be bought; barn finds and the
-## championship car show how to earn them. Buying offers to switch to the new car.
+## European Auto Show: browse the full roster as car tiles, preview models and buy eligible cars.
 
-var _list: VBoxContainer
+var _scroll: ScrollContainer
+var _list: UITileGrid
 var _stats: CarStatsPanel
 var _blurb: Label
 
 func build() -> void:
 	var col := make_column(560)
-	col.add_child(UIKit.header("Auto Show & Dealership", "", "European grand tourers, rally legends and supercars"))
-	_list = make_list(col, 440)
-	_blurb = UIKit.label("", 17, UIKit.DIM)
-	_blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_blurb.custom_minimum_size = Vector2(540, 0)
-	col.add_child(_blurb)
+	col.add_child(UIKit.header("European Auto Show", "", "A curated collection of grand tourers and road legends"))
+	_scroll = ScrollContainer.new()
+	_scroll.position = Vector2(44, 142)
+	_scroll.size = Vector2(760, 500)
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.follow_focus = true
+	add_child(_scroll)
+	_list = UITileGrid.new(Vector2(228, 112), 10)
+	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_scroll.add_child(_list)
 	_stats = CarStatsPanel.new()
-	_stats.position = Vector2(870, 470)
+	_stats.position = Vector2(870, 440)
 	add_child(_stats)
-	set_hints([["A", "Buy"], ["RS", "Look around"], ["B", "Back"]])
+	_blurb = UIKit.label("", 17, UIKit.DIM)
+	_blurb.position = Vector2(870, 610)
+	_blurb.size = Vector2(410, 92)
+	_blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	add_child(_blurb)
+	set_hints([["A", "Buy / unlock"], ["RS", "Look around"], ["B", "Back"]])
 
 func refresh() -> void:
-	for c in _list.get_children():
-		c.queue_free()
+	_list.clear()
 	var keys := CarData.keys()
 	keys.sort_custom(func(a, b): return CarData.STOCK_PI[a] < CarData.STOCK_PI[b])
-	var first: UIRow = null
-	for key in keys:
+	var first: UITile = null
+	for index in range(keys.size()):
+		var key: String = keys[index]
 		var car := CarData.get_car(key)
 		var pi := int(CarData.STOCK_PI[key])
-		var row := UIRow.new(car.name)
-		row.set_value(CarData.class_label(pi), CarData.CLASS_COLORS[CarData.pi_class(pi)])
-		var unlock: String = car.unlock
 		var owned := Profile.owns(key)
-		match unlock:
-			"barn":
-				row.set_sub("BARN FIND" if not owned else "OWNED", UIKit.DIM if not owned else UIKit.GREEN)
-			"championship":
-				row.set_sub("CHAMPIONSHIP PRIZE" if not owned else "OWNED", UIKit.NEON if not owned else UIKit.GREEN)
-			_:
-				var price := int(car.price)
-				row.set_sub(("OWNED · " if owned else "") + UIKit.money(price), UIKit.GREEN if int(Profile.data.credits) >= price else UIKit.RED)
-		row.on_focus = _preview.bind(key)
-		row.on_accept = _buy.bind(key)
-		_list.add_child(row)
+		var tile := UITile.new(car.name, car.maker)
+		tile.set_image(UIKit.art("cars", key))
+		tile.set_tint(Color.from_hsv(float(index) / maxf(1.0, float(keys.size())), 0.58, 0.58))
+		tile.set_badge(UIKit.class_badge(pi, 18))
+		if owned:
+			tile.add_tag("OWNED", UIKit.GREEN)
+		elif car.unlock == "barn":
+			tile.add_tag("BARN FIND", UIKit.AMBER)
+		elif car.unlock == "championship":
+			tile.add_tag("CHAMPIONSHIP", UIKit.NEON)
+		else:
+			tile.set_info(UIKit.money(int(car.price)), UIKit.GREEN if int(Profile.data.credits) >= int(car.price) else UIKit.RED)
+		tile.on_focus = _preview.bind(key)
+		tile.on_accept = _buy.bind(key)
+		_list.add_tile(tile, index % 3, int(index / 3))
 		if first == null:
-			first = row
+			first = tile
+	_list.link_focus()
 	if first and is_inside_tree():
 		first.call_deferred("grab_focus")
 
@@ -55,20 +66,23 @@ func _preview(key: String) -> void:
 	_stats.show_build(key, {})
 	var how := ""
 	match car.unlock:
-		"barn": how = "  Find it in one of the barns hidden across the European map."
-		"championship": how = "  Win the Euro GT Festival Grand Finale to earn it."
+		"barn": how = " Find this car in a barn hidden across the Riviera."
+		"championship": how = " Win the Euro GT Festival Grand Finale to earn it."
 	_blurb.text = car.blurb + how
 
 func _buy(key: String) -> void:
 	var car := CarData.get_car(key)
 	if car.unlock in ["barn", "championship"]:
-		festival.toast("NOT FOR SALE — %s" % ("FIND IT IN A BARN" if car.unlock == "barn" else "WIN THE CROWN"))
+		festival.toast("NOT FOR SALE - %s" % ("FIND IT IN A BARN" if car.unlock == "barn" else "WIN THE CROWN"))
+		return
+	if Profile.owns(key):
+		festival.toast("ALREADY IN YOUR GARAGE")
 		return
 	var price := int(car.price)
 	if price > int(Profile.data.credits):
-		festival.toast("NOT ENOUGH CREDITS — NEED %s" % UIKit.money(price))
+		festival.toast("NOT ENOUGH CREDITS - NEED %s" % UIKit.money(price))
 		return
-	festival.choose("Buy the %s?" % car.name, "%s  ·  %s" % [UIKit.money(price), CarData.class_label(int(CarData.STOCK_PI[key]))], [
+	festival.choose("Buy the %s?" % car.name, "%s / %s" % [UIKit.money(price), CarData.class_label(int(CarData.STOCK_PI[key]))], [
 		["BUY", func():
 			if not Profile.spend(price):
 				return
@@ -85,3 +99,4 @@ func _buy(key: String) -> void:
 			])],
 		["CANCEL", Callable()],
 	])
+

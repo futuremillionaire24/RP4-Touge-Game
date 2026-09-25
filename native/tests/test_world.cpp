@@ -147,3 +147,154 @@ TEST_CASE("AI completes the touge ascent on real terrain") {
 	CHECK(finished);
 	CHECK(sim.progress[id].respawn_count <= 3);
 }
+
+// -------------------------------------------------------------------------------------------------
+// Real Riviera Map Tests (tools/mapbake NTMB blob from OpenStreetMap + Terrain Tiles)
+
+#include <fstream>
+
+static std::vector<uint8_t> read_riviera_blob() {
+	const char *candidates[] = {
+		"godot/assets/map/riviera.bin",
+		"../godot/assets/map/riviera.bin",
+		"../../godot/assets/map/riviera.bin",
+		"assets/map/riviera.bin"
+	};
+	for (const char *path : candidates) {
+		std::ifstream f(path, std::ios::binary);
+		if (!f) continue;
+		return std::vector<uint8_t>((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+	}
+	return {};
+}
+
+static World &shared_riviera_world() {
+	static World w;
+	static bool built = false;
+	if (!built) {
+		std::vector<uint8_t> data = read_riviera_blob();
+		if (!data.empty()) {
+			std::string err;
+			auto t0 = std::chrono::steady_clock::now();
+			bool ok = w.build_from_bake(data.data(), data.size(), err);
+			auto t1 = std::chrono::steady_clock::now();
+			if (ok) {
+				std::printf("\nreal Riviera build: %.0f ms, %zu bytes, %d roads, %d junctions, %d routes, %d pois\n",
+						std::chrono::duration<double, std::milli>(t1 - t0).count(), data.size(),
+						(int)w.roads.size(), (int)w.junctions.size(), (int)w.routes.size(), (int)w.pois.size());
+				built = true;
+				return w;
+			}
+		}
+		w.build(1);
+		built = true;
+	}
+	return w;
+}
+
+TEST_CASE("real Riviera map loads from baked data and builds world graph") {
+	World &w = shared_riviera_world();
+	REQUIRE(w.baked);
+	CHECK(w.roads.size() > 500);
+	CHECK(w.junctions.size() > 200);
+	CHECK(w.routes.size() >= 7);
+	CHECK(w.district_names.size() >= 14);
+
+	real total_len = 0.0;
+	int bridges = 0, tunnels = 0;
+	for (const Road &r : w.roads) {
+		total_len += r.length;
+		for (const RoadSampleX &s : r.samples) {
+			tunnels += s.type == ST_TUNNEL;
+			bridges += s.type == ST_BRIDGE;
+		}
+	}
+	std::printf("Riviera road length: %.1f km (tunnels: %.1f km, bridges: %.1f km)\n",
+			total_len / 1000.0, tunnels * 3.0 / 1000.0, bridges * 3.0 / 1000.0);
+	CHECK(total_len > 40000.0);
+
+	const char *required_routes[] = {"monaco_gp", "grande_corniche", "moyenne_corniche", "route_turbie", "basse_corniche", "col_mont_agel", "a8_sprint"};
+	for (const char *r_id : required_routes) {
+		auto it = std::find_if(w.routes.begin(), w.routes.end(), [r_id](const Route &r) { return r.id == r_id; });
+		CHECK(it != w.routes.end());
+		if (it != w.routes.end()) {
+			std::vector<RouteSample> comp = w.compose_route(it->roads);
+			std::printf("  route %-18s: %4zu samples (closed: %d)\n", it->id.c_str(), comp.size(), it->closed);
+			CHECK(comp.size() > 30);
+		}
+	}
+}
+
+TEST_CASE("real Riviera chunks build fast with PBR terrain and buildings") {
+	World &w = shared_riviera_world();
+	REQUIRE(w.baked);
+	ChunkOptions opt;
+	int cx = w.chunks_x() / 2, cz = w.chunks_z() / 2;
+	auto t0 = std::chrono::steady_clock::now();
+	ChunkOutput out;
+	build_chunk(w, cx, cz, opt, out);
+	auto t1 = std::chrono::steady_clock::now();
+	std::printf("Riviera chunk (%d, %d): %.1f ms, %d collision tris, %zu buildings, %zu trees\n",
+			cx, cz, std::chrono::duration<double, std::milli>(t1 - t0).count(),
+			out.collision.tri_count(), w.buildings.size(), w.trees.size());
+	CHECK(out.collision.tri_count() > 300);
+}
+
+TEST_CASE("AI completes real Riviera Grande Corniche hillclimb") {
+	World &w = shared_riviera_world();
+	REQUIRE(w.baked);
+	auto it = std::find_if(w.routes.begin(), w.routes.end(), [](const Route &r) { return r.id == "grande_corniche"; });
+	REQUIRE(it != w.routes.end());
+	std::vector<RouteSample> route = w.compose_route(it->roads);
+	REQUIRE(route.size() > 100);
+
+	WorldSim sim;
+	std::vector<int64_t> loaded;
+	auto load = [&](int cx, int cz) {
+		int64_t id = (int64_t)cx * 100000 + cz;
+		if (std::find(loaded.begin(), loaded.end(), id) != loaded.end()) return;
+		loaded.push_back(id);
+		ChunkOptions opt;
+		opt.props = false;
+		ChunkOutput o;
+		build_chunk(w, cx, cz, opt, o);
+		sim.grid.add_chunk(id, o.collision.positions.data(), o.collision.surfaces.data(), o.collision.flags.data(), o.collision.tri_count());
+	};
+	for (const RouteSample &s : route) {
+		int cx = (int)std::floor((s.center.x - w.min_x()) / World::CHUNK);
+		int cz = (int)std::floor((s.center.z - w.min_z()) / World::CHUNK);
+		for (int dx = -1; dx <= 1; ++dx)
+			for (int dz = -1; dz <= 1; ++dz) load(cx + dx, cz + dz);
+	}
+
+	std::vector<TrackSample> ts(route.size());
+	for (size_t i = 0; i < ts.size(); ++i) {
+		ts[i].center = route[i].center;
+		ts[i].tangent = route[i].tangent;
+		ts[i].normal = route[i].up;
+		ts[i].half_width_left = route[i].width_left;
+		ts[i].half_width_right = route[i].width_right;
+	}
+	sim.set_line(ts, false);
+	int id = sim.add_car(make_car_params(CAR_BMW_M3_E30), true, 101);
+	sim.ai[id].personality = difficulty_personality(4, 55);
+	const TrackSample &s0 = ts[0];
+	sim.cars[id].reset(s0.center + Vec3(0, 0.7, 0), quat_look(s0.tangent, Vec3(0, 1, 0)), 0.0);
+	sim.ai[id].set_line(&sim.line, sim.cars[id]);
+	sim.reset_progress(id);
+
+	real t = 0.0;
+	bool finished = false;
+	while (t < 300.0) {
+		sim.step(1.0 / 120.0);
+		t += 1.0 / 120.0;
+		if (sim.progress[id].line_index >= sim.line.size() - 20) {
+			finished = true;
+			break;
+		}
+	}
+	std::printf("Grande Corniche AI time: %.1f s (%.1f km/h avg), respawns %d\n",
+			t, sim.line.length() / t * 3.6, sim.progress[id].respawn_count);
+	CHECK(finished);
+	CHECK(sim.progress[id].respawn_count <= 5);
+}

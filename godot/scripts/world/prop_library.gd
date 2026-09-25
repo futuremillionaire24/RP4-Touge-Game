@@ -66,34 +66,77 @@ static func _model_mesh(t: int) -> Mesh:
 	if not ResourceLoader.exists(path):
 		return null
 	var scene: Node = (load(path) as PackedScene).instantiate()
-	var mi := scene.find_children("*", "MeshInstance3D", true, false)
-	if mi.is_empty():
+	var mesh_nodes := scene.find_children("*", "MeshInstance3D", true, false)
+	if mesh_nodes.is_empty():
 		scene.free()
 		return null
-	var src: Mesh = (mi[0] as MeshInstance3D).mesh
-	var m: ArrayMesh = src.duplicate() as ArrayMesh
-	var aabb := m.get_aabb()
-	for s in range(m.get_surface_count()):
-		var sm := src.surface_get_material(s) as BaseMaterial3D
-		var mat := ShaderMaterial.new()
-		mat.shader = MODEL_SHADER
-		if sm:
-			mat.set_shader_parameter("base_color", sm.albedo_color)
-			if sm.albedo_texture:
-				mat.set_shader_parameter("albedo_tex", sm.albedo_texture)
-				mat.set_shader_parameter("has_tex", true)
-			var cut := sm.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED
-			mat.set_shader_parameter("cutout", cut)
-			mat.set_shader_parameter("foliage", cut and def.has("sway"))
-			mat.set_shader_parameter("roughness", sm.roughness)
-			mat.set_shader_parameter("metallic", sm.metallic)
-		mat.set_shader_parameter("model_height", aabb.end.y)
-		mat.set_shader_parameter("sway_from", aabb.end.y * 0.2)
-		mat.set_shader_parameter("sway_amount", float(def.get("sway", 0.0)))
-		mat.set_shader_parameter("lamp_y", float(def.get("lamp_y", 1e6)))
-		mat.set_shader_parameter("bob", bool(def.get("bob", false)))
-		m.surface_set_material(s, mat)
+
+	var combined_aabb := AABB()
+	var has_aabb := false
+	for mn in mesh_nodes:
+		var mi := mn as MeshInstance3D
+		if mi.mesh:
+			var box := mi.transform * mi.mesh.get_aabb()
+			if not has_aabb:
+				combined_aabb = box
+				has_aabb = true
+			else:
+				combined_aabb = combined_aabb.merge(box)
+	if not has_aabb:
+		scene.free()
+		return null
+
+	var m := ArrayMesh.new()
+	for mn in mesh_nodes:
+		var mi := mn as MeshInstance3D
+		var src: Mesh = mi.mesh
+		if src == null:
+			continue
+		var xform: Transform3D = mi.transform
+		var is_ident := xform.is_equal_approx(Transform3D.IDENTITY)
+		for s in range(src.get_surface_count()):
+			var arrays := src.surface_get_arrays(s)
+			if not is_ident:
+				var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+				var new_verts := PackedVector3Array()
+				new_verts.resize(verts.size())
+				for vi in range(verts.size()):
+					new_verts[vi] = xform * verts[vi]
+				arrays[Mesh.ARRAY_VERTEX] = new_verts
+				var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+				if not normals.is_empty():
+					var new_normals := PackedVector3Array()
+					new_normals.resize(normals.size())
+					var basis := xform.basis.orthonormalized()
+					for ni in range(normals.size()):
+						new_normals[ni] = basis * normals[ni]
+					arrays[Mesh.ARRAY_NORMAL] = new_normals
+
+			var sm := src.surface_get_material(s) as BaseMaterial3D
+			var mat := ShaderMaterial.new()
+			mat.shader = MODEL_SHADER
+			if sm:
+				mat.set_shader_parameter("base_color", sm.albedo_color)
+				if sm.albedo_texture:
+					mat.set_shader_parameter("albedo_tex", sm.albedo_texture)
+					mat.set_shader_parameter("has_tex", true)
+				var cut := sm.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED
+				mat.set_shader_parameter("cutout", cut)
+				mat.set_shader_parameter("foliage", cut and def.has("sway"))
+				mat.set_shader_parameter("roughness", sm.roughness)
+				mat.set_shader_parameter("metallic", sm.metallic)
+			mat.set_shader_parameter("model_height", combined_aabb.end.y)
+			mat.set_shader_parameter("sway_from", combined_aabb.end.y * 0.2)
+			mat.set_shader_parameter("sway_amount", float(def.get("sway", 0.0)))
+			mat.set_shader_parameter("lamp_y", float(def.get("lamp_y", 1e6)))
+			mat.set_shader_parameter("bob", bool(def.get("bob", false)))
+
+			var surf_idx := m.get_surface_count()
+			m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+			m.surface_set_material(surf_idx, mat)
 	scene.free()
+	if m.get_surface_count() == 0:
+		return null
 	_model_meshes[t] = m
 	return m
 

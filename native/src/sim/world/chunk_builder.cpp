@@ -45,6 +45,18 @@ void quad(MeshData &m, const Vec3 &a, const Vec3 &b, const Vec3 &cc, const Vec3 
 	else m.add_quad(i, i + 3, i + 2, i + 1);
 }
 
+void quad_color(MeshData &m, const Vec3 &a, const Vec3 &b, const Vec3 &cc, const Vec3 &d, const Vec3 &n, const Vec2 &ua, const Vec2 &ub, const Vec2 &uc,
+		const Vec2 &ud, real u2, real v2, real r, real g, real b_col, real a_col) {
+	int i = m.vertex_count();
+	m.add_vertex(a, n, ua.x, ua.y, u2, v2, r, g, b_col, a_col);
+	m.add_vertex(b, n, ub.x, ub.y, u2, v2, r, g, b_col, a_col);
+	m.add_vertex(cc, n, uc.x, uc.y, u2, v2, r, g, b_col, a_col);
+	m.add_vertex(d, n, ud.x, ud.y, u2, v2, r, g, b_col, a_col);
+	Vec3 fn = (b - a).cross(cc - a);
+	if (fn.dot(n) >= 0) m.add_quad(i, i + 1, i + 2, i + 3);
+	else m.add_quad(i, i + 3, i + 2, i + 1);
+}
+
 // ---- Terrain ---------------------------------------------------------------------------
 
 uint8_t terrain_surface(int mat) {
@@ -225,6 +237,27 @@ void build_roads(Ctx &c) {
 					last_lamp = s.distance;
 					add_light(c, s.center + Vec3(0, crown - 0.6, 0), 0.8, 0.12);
 				}
+				// Concrete tunnel portal headwalls at entry and exit
+				if (i == 0 || r.samples[i - 1].type != ST_TUNNEL) {
+					MeshData &wm = c.out.groups[GROUP_WALL];
+					Vec3 pl = s.center - right * (out_l + 2.5);
+					Vec3 pr = s.center + right * (out_r + 2.5);
+					Vec3 top_l = pl + Vec3(0, crown + 2.0, 0);
+					Vec3 top_r = pr + Vec3(0, crown + 2.0, 0);
+					quad(wm, top_l, top_r, pr + Vec3(0, crown, 0), pl + Vec3(0, crown, 0), -s.tangent, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.9);
+					quad(wm, pl + Vec3(0, crown, 0), s.center - right * out_l + Vec3(0, crown, 0), s.center - right * out_l, pl, -s.tangent, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.9);
+					quad(wm, s.center + right * out_r + Vec3(0, crown, 0), pr + Vec3(0, crown, 0), pr, s.center + right * out_r, -s.tangent, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.9);
+				}
+				if (nx == n - 1 || r.samples[nx].type != ST_TUNNEL) {
+					MeshData &wm = c.out.groups[GROUP_WALL];
+					Vec3 pl = s1.center - right1 * (out_l + 2.5);
+					Vec3 pr = s1.center + right1 * (out_r + 2.5);
+					Vec3 top_l = pl + Vec3(0, crown + 2.0, 0);
+					Vec3 top_r = pr + Vec3(0, crown + 2.0, 0);
+					quad(wm, top_r, top_l, pl + Vec3(0, crown, 0), pr + Vec3(0, crown, 0), s1.tangent, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.9);
+					quad(wm, s1.center - right1 * out_l + Vec3(0, crown, 0), pl + Vec3(0, crown, 0), pl, s1.center - right1 * out_l, s1.tangent, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.9);
+					quad(wm, pr + Vec3(0, crown, 0), s1.center + right1 * out_r + Vec3(0, crown, 0), s1.center + right1 * out_r, pr, s1.tangent, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.9);
+				}
 				continue;
 			}
 			if (sx.type == ST_BRIDGE && i + 1 < n) {
@@ -242,6 +275,29 @@ void build_roads(Ctx &c) {
 					ground = std::max(ground, -12.0);
 					real h = s.center.y - 1.3 - ground;
 					if (h > 1.0) add_prop(c, PROP_PIER, Vec3(s.center.x, ground, s.center.z), yaw, Vec3((out_l + out_r) * 0.5, h, 1.0), 0.0);
+				}
+			}
+
+			if (sx.type == ST_GROUND && i + 1 < n) {
+				// Retaining walls on steep hillside cuts and drop-offs
+				MeshData &wm = c.out.groups[GROUP_WALL];
+				Vec3 l0 = s.center - right * out_l, r0 = s.center + right * out_r;
+				Vec3 l1 = s1.center - right1 * out_l, r1 = s1.center + right1 * out_r;
+				real hl0 = w.terrain.sample(l0.x, l0.z), hr0 = w.terrain.sample(r0.x, r0.z);
+				real hl1 = w.terrain.sample(l1.x, l1.z), hr1 = w.terrain.sample(r1.x, r1.z);
+				if (hl0 > l0.y + 1.2 && hl1 > l1.y + 1.2) {
+					real cut0 = std::min(hl0 - l0.y, 6.0), cut1 = std::min(hl1 - l1.y, 6.0);
+					quad(wm, l0, l1, l1 + Vec3(0, cut1, 0), l0 + Vec3(0, cut0, 0), right, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.85);
+				} else if (l0.y > hl0 + 1.2 && l1.y > hl1 + 1.2) {
+					real drop0 = std::min(l0.y - hl0, 8.0), drop1 = std::min(l1.y - hl1, 8.0);
+					quad(wm, l1 - Vec3(0, drop1, 0), l0 - Vec3(0, drop0, 0), l0, l1, -right, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.85);
+				}
+				if (hr0 > r0.y + 1.2 && hr1 > r1.y + 1.2) {
+					real cut0 = std::min(hr0 - r0.y, 6.0), cut1 = std::min(hr1 - r1.y, 6.0);
+					quad(wm, r1, r0, r0 + Vec3(0, cut0, 0), r1 + Vec3(0, cut1, 0), -right, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.85);
+				} else if (r0.y > hr0 + 1.2 && r1.y > hr1 + 1.2) {
+					real drop0 = std::min(r0.y - hr0, 8.0), drop1 = std::min(r1.y - hr1, 8.0);
+					quad(wm, r0 - Vec3(0, drop0, 0), r1 - Vec3(0, drop1, 0), r1, r0, right, {0, 0}, {1, 0}, {1, 1}, {0, 1}, 0, 0, 0.85);
 				}
 			}
 
@@ -743,6 +799,33 @@ void build_buildings(Ctx &c) {
 			Vec3 fn = (bb - a).cross(top);
 			if (fn.dot(nrm) >= 0) m.add_quad(i, i + 1, i + 2, i + 3);
 			else m.add_quad(i, i + 3, i + 2, i + 1);
+
+			// Procedural roof cornices: projecting eave along building top (LOD 0 & 1)
+			if (c.opt.lod <= 1 && h > 4.0) {
+				Vec3 c_a = a + top + nrm * 0.45;
+				Vec3 c_bb = bb + top + nrm * 0.45;
+				Vec3 c_a_dn = c_a - Vec3(0, 0.35, 0);
+				Vec3 c_bb_dn = c_bb - Vec3(0, 0.35, 0);
+				Vec3 wall_a = a + top - Vec3(0, 0.35, 0);
+				Vec3 wall_bb = bb + top - Vec3(0, 0.35, 0);
+				// Fascia
+				quad_color(m, c_a, c_bb, c_bb_dn, c_a_dn, nrm, {u, h}, {u + len, h}, {u + len, h - 0.35}, {u, h - 0.35}, style_seed, anchor, cr * 0.95, cg * 0.95, cb * 0.95, ha);
+				// Underside
+				quad_color(m, c_a_dn, c_bb_dn, wall_bb, wall_a, Vec3(0, -1, 0), {u, 0}, {u + len, 0}, {u + len, 0.45}, {u, 0.45}, style_seed, anchor, cr * 0.7, cg * 0.7, cb * 0.7, ha);
+			}
+
+			// Extruded balconies for apartment buildings (LOD 0 & 1)
+			if (c.opt.lod <= 1 && (b.style == 1 || b.style == 2) && h >= 9.0 && len > 3.0) {
+				for (real fy = anchor + 3.2; fy + 2.8 < h; fy += 6.2) {
+					Vec3 ba = a + Vec3(0, fy, 0), bbb = bb + Vec3(0, fy, 0);
+					Vec3 b_out_a = ba + nrm * 0.85, b_out_b = bbb + nrm * 0.85;
+					// Balcony slab top
+					quad_color(m, ba, bbb, b_out_b, b_out_a, Vec3(0, 1, 0), {u, 0}, {u + len, 0}, {u + len, 0.85}, {u, 0.85}, style_seed, anchor, cr * 0.9, cg * 0.9, cb * 0.9, ha);
+					// Front railing
+					quad_color(m, b_out_a, b_out_b, b_out_b + Vec3(0, 0.9, 0), b_out_a + Vec3(0, 0.9, 0), nrm, {u, 0}, {u + len, 0}, {u + len, 0.9}, {u, 0.9}, style_seed, anchor, 0.25, 0.25, 0.25, ha);
+				}
+			}
+
 			u += len;
 			if (c.opt.collision && c.opt.lod == 0) {
 				c.out.collision.add_tri(a, bb, bb + top, SURF_BUILDING, COL_SOLID);

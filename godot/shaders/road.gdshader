@@ -10,6 +10,7 @@ render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_sc
 global uniform float nt_wetness;
 global uniform float nt_rain;
 global uniform float nt_snow;
+global uniform float nt_night;
 
 uniform vec3 asphalt_color : source_color = vec3(0.18, 0.18, 0.19);
 uniform vec3 asphalt_light : source_color = vec3(0.28, 0.28, 0.29);
@@ -47,15 +48,13 @@ float junction_marks(int style, vec2 uv, vec2 size, out vec3 col) {
 		float stripes_x = step(0.5, fract(m.y / 1.0));
 		mark = max(band_z * stripes_z * step(z_back + z_depth, m.x) * step(m.x, size.x - (z_back + z_depth)), band_x * stripes_x * step(z_back + z_depth, m.y) * step(m.y, size.y - (z_back + z_depth)));
 		if (style == 2) {
-			// Shibuya scramble: diagonal crossings through the middle.
-			vec2 c = m - size * 0.5;
-			float d1 = abs(c.x - c.y) / 1.414;
-			float d2 = abs(c.x + c.y) / 1.414;
-			float along1 = (c.x + c.y) / 1.414;
-			float along2 = (c.x - c.y) / 1.414;
-			float diag = max(step(d1, 1.8) * step(0.5, fract(along1 / 1.0)), step(d2, 1.8) * step(0.5, fract(along2 / 1.0)));
-			float inner = step(4.8, m.x) * step(m.x, size.x - 4.8) * step(4.8, m.y) * step(m.y, size.y - 4.8);
-			mark = max(mark, diag * inner);
+			// European major junction: transverse yield/stop lines with setback pedestrian refuge
+			float stop_setback = z_back + z_depth + 1.2;
+			float stop_line_x = (step(stop_setback - 0.3, m.x) * step(m.x, stop_setback) + step(size.x - stop_setback, m.x) * step(m.x, size.x - stop_setback + 0.3))
+				* step(z_back, m.y) * step(m.y, size.y - z_back);
+			float stop_line_z = (step(stop_setback - 0.3, m.y) * step(m.y, stop_setback) + step(size.y - stop_setback, m.y) * step(m.y, size.y - stop_setback + 0.3))
+				* step(z_back, m.x) * step(m.x, size.x - z_back);
+			mark = max(mark, max(stop_line_x, stop_line_z));
 		}
 	} else if (style == 3) {
 		// Parking bays: 2.5 m wide, 5.5 m deep rows with a 7 m aisle.
@@ -91,6 +90,14 @@ void fragment() {
 		rgh = mix(rgh, 0.03, pud);
 		vec2 ripj = nt_ripples(wpj, TIME, nt_rain) * (0.25 + pud * 0.75);
 		NORMAL_MAP = normalize(vec3(ripj, 1.0)) * 0.5 + 0.5;
+		// Night ambient glow from intersection corner street lamps
+		if (nt_night > 0.02) {
+			vec2 jm = UV * size;
+			float dj1 = length(jm - vec2(1.2, 1.2));
+			float dj2 = length(jm - vec2(size.x - 1.2, size.y - 1.2));
+			float jpool = (exp(-dj1 * dj1 / 32.0) + exp(-dj2 * dj2 / 32.0)) * nt_night * 0.45;
+			alb += vec3(1.0, 0.78, 0.48) * jpool;
+		}
 		ALBEDO = alb;
 		ROUGHNESS = rgh;
 		SPECULAR = mix(0.5, 0.65, wetj);
@@ -182,6 +189,19 @@ void fragment() {
 	float snow_cover = nt_snow * (1.0 - tracks * 0.85) * smoothstep(0.25, 0.55, nt_fbm(wp * 0.3, 2) + nt_snow * 0.4 + wind_drift * 0.15);
 	albedo = mix(albedo, vec3(0.85, 0.87, 0.91), snow_cover);
 	rough = mix(rough, 0.72, snow_cover);
+
+	// ---- Night street lamp ground light pools (Riviera warm sodium glow) ----
+	if (nt_night > 0.02) {
+		float lamp_pitch = 26.0;
+		float lamp_u = mod(along_m, lamp_pitch);
+		// Left side lamps at u = 0, right side lamps at u = 13 (staggered)
+		float d_left = length(vec2(across_m - 0.4, lamp_u));
+		float d_right = length(vec2(width - 0.4 - across_m, abs(lamp_u - lamp_pitch * 0.5)));
+		float pool_l = exp(-d_left * d_left / 20.0);
+		float pool_r = exp(-d_right * d_right / 20.0);
+		vec3 lamp_warm = vec3(1.0, 0.78, 0.48);
+		albedo += lamp_warm * (pool_l + pool_r) * nt_night * 0.40;
+	}
 
 	ALBEDO = albedo;
 	ROUGHNESS = rough;

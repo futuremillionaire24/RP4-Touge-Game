@@ -1,17 +1,17 @@
-class_name PaintScreen
+﻿class_name PaintScreen
 extends MenuScreen
-## Paint shop: HSV colour, a JDM heritage palette and seven finishes (gloss, metallic, pearl,
+## Paint shop: European factory colours and seven automotive finishes (gloss, metallic, pearl,
 ## matte, satin, chrome, candy), previewed live on the stage car. A saves; B discards.
 
 const PALETTE := [
-	["Championship White", Color(0.94, 0.94, 0.92)], ["Super Black", Color(0.03, 0.03, 0.035)],
-	["Midnight Purple", Color(0.18, 0.06, 0.3)], ["Bayside Blue", Color(0.1, 0.3, 0.75)],
-	["Sunburst Orange", Color(0.95, 0.42, 0.05)], ["Vintage Red", Color(0.75, 0.04, 0.06)],
-	["Lightning Yellow", Color(0.98, 0.82, 0.1)], ["Millennium Jade", Color(0.55, 0.62, 0.55)],
-	["Sonic Silver", Color(0.72, 0.74, 0.77)], ["Spark Yellow", Color(0.95, 0.72, 0.1)],
+	["Carrara White", Color(0.94, 0.94, 0.92)], ["Obsidian Black", Color(0.03, 0.03, 0.035)],
+	["Amethyst Schwarz", Color(0.18, 0.06, 0.3)], ["Estoril Blue", Color(0.1, 0.3, 0.75)],
+	["Arancio Borealis", Color(0.95, 0.42, 0.05)], ["Rosso Corsa", Color(0.75, 0.04, 0.06)],
+	["Racing Yellow", Color(0.98, 0.82, 0.1)], ["British Racing Green", Color(0.55, 0.62, 0.55)],
+	["Titanium Silver", Color(0.72, 0.74, 0.77)], ["Giallo Modena", Color(0.95, 0.72, 0.1)],
 	["Racing Green", Color(0.03, 0.26, 0.12)], ["Neon Pink", Color(1.0, 0.18, 0.53)],
-	["Tofu Panda", Color(0.93, 0.93, 0.92)], ["Titanium Grey", Color(0.3, 0.31, 0.33)],
-	["Rally Blue", Color(0.08, 0.2, 0.55)], ["Lime Rock", Color(0.55, 0.85, 0.15)],
+	["Chalk White", Color(0.93, 0.93, 0.92)], ["Titanium Grey", Color(0.3, 0.31, 0.33)],
+	["Nogaro Blue", Color(0.08, 0.2, 0.55)], ["Lime Green", Color(0.55, 0.85, 0.15)],
 ]
 const FINISH_ORDER := ["gloss", "metallic", "pearl", "matte", "satin", "chrome", "candy"]
 
@@ -80,7 +80,7 @@ func build() -> void:
 	var save := UIRow.new("APPLY PAINT", "FREE")
 	save.on_accept = _save
 	col.add_child(save)
-	set_hints([["◀▶", "Adjust"], ["A", "Apply"], ["RS", "Look around"], ["B", "Discard"]])
+	set_hints([["â—€â–¶", "Adjust"], ["A", "Apply"], ["RS", "Look around"], ["B", "Discard"]])
 	stage.show_entry(e, true)
 	_apply()
 
@@ -98,7 +98,7 @@ func _apply() -> void:
 	var c := Color.from_hsv(_h, _s, _v)
 	_swatch.color = c
 	_rows.palette.set_value(PALETTE[_pal][0] if _pal >= 0 else "Custom")
-	_rows.hue.set_value("%d°" % roundi(_h * 360.0)).set_fraction(_h)
+	_rows.hue.set_value("%dÂ°" % roundi(_h * 360.0)).set_fraction(_h)
 	_rows.hue.bar_color = Color.from_hsv(_h, 1.0, 1.0)
 	_rows.sat.set_value("%d%%" % roundi(_s * 100.0)).set_fraction(_s)
 	_rows.val.set_value("%d%%" % roundi(_v * 100.0)).set_fraction(_v)
@@ -127,3 +127,4 @@ func back() -> void:
 		var p: Array = _orig.paint
 		stage.set_paint(Color(p[0], p[1], p[2]), _orig.finish)
 	super.back()
+

@@ -72,8 +72,17 @@ void fragment() {
 	float foam = shore * smoothstep(0.35, 0.8, lap * nt_value_noise(p * 2.5 + t * 0.2) + shore * 0.4);
 	col = mix(col, vec3(0.85, 0.88, 0.88), foam);
 	col *= mix(1.0, 0.25, nt_night);
+
+	// Mediterranean sun glitter sparkle across wave facets
+	vec3 V = normalize(CAMERA_POSITION_WORLD - world_pos);
+	vec3 sun_dir = normalize(vec3(0.42, 0.75, -0.50));
+	vec3 H = normalize(V + sun_dir);
+	float NdotH = max(dot(Nw, H), 0.0);
+	float sparkle = pow(NdotH, 64.0) * (1.0 - nt_night) * 1.8 * (1.0 - foam);
+	col += vec3(1.0, 0.96, 0.88) * sparkle;
+
 	ALBEDO = col;
 	ROUGHNESS = mix(0.04, 0.5, foam) + smoothstep(200.0, 2000.0, dist) * 0.08;
 	METALLIC = 0.0;
-	SPECULAR = mix(0.3, 0.5, foam); // F0 ~0.02 for water
+	SPECULAR = mix(0.4, 0.5, foam); // F0 ~0.02 for water
 }

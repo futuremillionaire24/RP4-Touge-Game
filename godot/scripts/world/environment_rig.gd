@@ -13,16 +13,18 @@ var sky_mat: ShaderMaterial
 func _ready() -> void:
 	sun = DirectionalLight3D.new()
 	sun.name = "Sun"
-	sun.light_energy = 1.45
-	sun.light_color = Color(1.0, 0.96, 0.86)
+	sun.light_energy = 1.50
+	sun.light_color = Color(1.0, 0.97, 0.90) # Warm Mediterranean sunlight
 	sun.shadow_enabled = true
-	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
-	sun.directional_shadow_max_distance = 160.0
-	sun.directional_shadow_split_1 = 0.2
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+	sun.directional_shadow_max_distance = 280.0
+	sun.directional_shadow_split_1 = 0.08 # 0-22m sharp car/road contact
+	sun.directional_shadow_split_2 = 0.22 # 22-61m roadside buildings & trees
+	sun.directional_shadow_split_3 = 0.50 # 61-140m upcoming corners & blocks
 	sun.shadow_blur = 1.0
 	sun.shadow_bias = 0.035
 	sun.shadow_normal_bias = 1.1
-	sun.rotation_degrees = Vector3(-28, 48, 0)
+	sun.rotation_degrees = Vector3(-30, 48, 0)
 	# Sharper shadow edges for better contact shadow definition (GT7-style)
 	sun.directional_shadow_pancake_size = 20.0
 	add_child(sun)

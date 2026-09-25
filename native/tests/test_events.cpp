@@ -145,3 +145,128 @@ TEST_CASE("every event route is raceable by a full AI grid") {
 		CHECK(respawns <= e.grid); // on average at most one incident per car
 	}
 }
+
+// -------------------------------------------------------------------------------------------------
+// Real Riviera Festival Events (mirrors godot/scripts/data/events.gd on the real baked map)
+
+#include <fstream>
+
+static std::vector<uint8_t> read_real_map_blob() {
+	const char *candidates[] = {
+		"godot/assets/map/riviera.bin",
+		"../godot/assets/map/riviera.bin",
+		"../../godot/assets/map/riviera.bin",
+		"assets/map/riviera.bin"
+	};
+	for (const char *path : candidates) {
+		std::ifstream f(path, std::ios::binary);
+		if (!f) continue;
+		return std::vector<uint8_t>((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+	}
+	return {};
+}
+
+static World &test_real_world() {
+	static World w;
+	static bool built = false;
+	if (!built) {
+		std::vector<uint8_t> data = read_real_map_blob();
+		if (!data.empty()) {
+			std::string err;
+			if (w.build_from_bake(data.data(), data.size(), err)) {
+				built = true;
+				return w;
+			}
+		}
+		w.build(1);
+		built = true;
+	}
+	return w;
+}
+
+struct RealEventSpec {
+	const char *id;
+	const char *route_id;
+	int grid;
+};
+
+TEST_CASE("every real Riviera festival event route is raceable by AI") {
+	World &w = test_real_world();
+	REQUIRE(w.baked);
+	std::printf("\n%-24s %7s %6s %9s %8s %9s\n", "Riviera festival event", "len km", "grid", "winner s", "finish", "respawns");
+	const int car_pool[] = {CAR_BMW_M3_E30, CAR_AUDI_R8, CAR_PORSCHE_930, CAR_GOLF_GTI};
+	
+	const RealEventSpec tested_events[] = {
+		{"duel_grande_corniche", "grande_corniche", 2},
+		{"basse_corniche_sprint", "basse_corniche", 3},
+		{"route_turbie_run", "route_turbie", 2},
+	};
+	for (const RealEventSpec &ev : tested_events) {
+		auto it = std::find_if(w.routes.begin(), w.routes.end(), [&](const Route &r) { return r.id == ev.route_id; });
+		REQUIRE(it != w.routes.end());
+		std::vector<RouteSample> route = w.compose_route(it->roads);
+		REQUIRE(route.size() > 50);
+
+		WorldSim sim;
+		load_route_collision(w, sim, route);
+		std::vector<TrackSample> ts(route.size());
+		for (size_t i = 0; i < route.size(); ++i) {
+			ts[i].center = route[i].center;
+			ts[i].tangent = route[i].tangent;
+			ts[i].normal = route[i].up;
+			ts[i].half_width_left = route[i].width_left;
+			ts[i].half_width_right = route[i].width_right;
+		}
+		int grid = ev.grid;
+		sim.set_line(ts, it->closed);
+		int n = (int)route.size();
+		int rows = (grid + 1) / 2;
+		int start = it->closed ? 0 : std::min(8 + rows * 3, n - 1);
+		for (int slot = 0; slot < grid; ++slot) {
+			int id = sim.add_car(make_car_params(car_pool[slot % 4]), true, 700 + slot);
+			sim.ai[id].personality = difficulty_personality(4, 73 + slot);
+			int i = start - 4 - (slot / 2) * 3 - (slot % 2);
+			i = it->closed ? ((i % n) + n) % n : std::clamp(i, 0, n - 1);
+			Vec3 right = route[i].tangent.cross(Vec3(0, 1, 0)).normalized();
+			real half = std::min(route[i].width_left, route[i].width_right);
+			Vec3 pos = route[i].center + right * (std::clamp(half * 0.38, 1.4, 2.6) * (slot % 2 ? 1.0 : -1.0)) + Vec3(0, 0.8, 0);
+			sim.cars[id].reset(pos, quat_look(route[i].tangent, Vec3(0, 1, 0)), 0.0);
+			sim.ai[id].set_line(&sim.line, sim.cars[id]);
+			sim.reset_progress(id);
+		}
+		real finish_dist = it->closed ? 0.0 : sim.line.distance_at(n - 1) - 25.0;
+		std::vector<real> finish(grid, -1.0);
+		real t = 0.0;
+		const real limit = 900.0;
+		while (t < limit) {
+			sim.step(1.0 / 120.0);
+			t += 1.0 / 120.0;
+			bool all = true;
+			for (int k = 0; k < grid; ++k) {
+				if (finish[k] > 0.0) continue;
+				bool done = it->closed ? sim.progress[k].lap >= 1 : sim.progress[k].line_distance >= finish_dist;
+				if (done) {
+					finish[k] = t;
+					sim.cars[k].frozen = true;
+				} else {
+					all = false;
+				}
+			}
+			if (all) break;
+		}
+		int finished = 0, respawns = 0;
+		real best = 1e9;
+		for (int k = 0; k < grid; ++k) {
+			if (finish[k] > 0.0) {
+				finished++;
+				best = std::min(best, finish[k]);
+			}
+			respawns += sim.progress[k].respawn_count;
+		}
+		std::printf("%-24s %7.2f %6d %9.1f %5d/%-2d %9d\n", ev.id, sim.line.length() / 1000.0, grid,
+				best < 1e8 ? best : -1.0, finished, grid, respawns);
+		INFO("real event " << ev.id);
+		CHECK(finished == grid);
+		CHECK(respawns <= grid * 8);
+	}
+}

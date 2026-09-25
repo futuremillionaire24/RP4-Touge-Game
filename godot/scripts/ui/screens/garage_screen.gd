@@ -3,7 +3,7 @@ extends MenuScreen
 ## Your garage: every owned car with class/PI; A opens the car menu (drive, set current,
 ## upgrades, tuning, paint, sell). The focused car is shown on the stage with its stats.
 
-var _list: VBoxContainer
+var _list: UITileGrid
 var _stats: CarStatsPanel
 var _info: Label
 var _focus_index := -1
@@ -11,7 +11,10 @@ var _focus_index := -1
 func build() -> void:
 	var col := make_column(540)
 	col.add_child(UIKit.header("My Garage", "", "%d vehicles" % Profile.data.garage.size()))
-	_list = make_list(col, 520)
+	_list = UITileGrid.new(Vector2(228, 112), 10)
+	_list.position = Vector2(44, 148)
+	_list.size = Vector2(690, 500)
+	add_child(_list)
 	_stats = CarStatsPanel.new()
 	_stats.position = Vector2(870, 470)
 	add_child(_stats)
@@ -21,26 +24,30 @@ func build() -> void:
 	set_hints([["A", "Car menu"], ["X", "Set current"], ["RS", "Look around"], ["B", "Back"]])
 
 func refresh() -> void:
-	for c in _list.get_children():
-		c.queue_free()
+	_list.clear()
 	var cur := Profile.current_index()
-	var focus_row: UIRow = null
+	var focus_row: UITile = null
 	for i in range(Profile.data.garage.size()):
 		var e: Dictionary = Profile.data.garage[i]
 		var car := CarData.get_car(e.key)
-		var row := UIRow.new(car.name, CarData.class_label(int(e.get("pi", 0))))
-		row.set_value(CarData.class_label(int(e.get("pi", 0))), CarData.CLASS_COLORS[CarData.pi_class(int(e.get("pi", 0)))])
+		var row := UITile.new(car.name, car.maker)
+		row.set_image(UIKit.art("cars", e.key))
+		row.set_tint(Color.from_hsv(float(i) / maxf(1.0, float(Profile.data.garage.size())), 0.62, 0.65))
+		row.set_info(CarData.class_label(int(e.get("pi", 0))), CarData.CLASS_COLORS[CarData.pi_class(int(e.get("pi", 0)))])
+
 		var tags := []
 		if i == cur:
 			tags.append("★ DRIVING")
 		if not (e.get("upgrades", {}) as Dictionary).is_empty():
 			tags.append("TUNED")
-		row.set_sub("  ".join(tags), UIKit.AMBER if i == cur else UIKit.DIM)
+		if not tags.is_empty():
+			row.add_tag("  ".join(tags), UIKit.AMBER if i == cur else UIKit.DIM)
 		row.on_focus = _on_focus.bind(i)
 		row.on_accept = _car_menu.bind(i)
-		_list.add_child(row)
+		_list.add_tile(row, i % 3, int(i / 3))
 		if (_focus_index < 0 and i == cur) or i == _focus_index:
 			focus_row = row
+	_list.link_focus()
 	if focus_row and is_inside_tree():
 		focus_row.call_deferred("grab_focus")
 
