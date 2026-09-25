@@ -167,7 +167,7 @@ func _payout(ev: Dictionary, pos: int, diff: int, rewind: bool) -> Array:
 func _test_economy() -> void:
 	print("## EVENT PAYOUTS (credits/xp) by difficulty & position")
 	for ev in EventData.all():
-		var len_km := float(EventData.LENGTHS.get(ev.id, 0)) * (int(ev.get("laps", 1)) if ev.closed else 1) / 1000.0
+		var len_km := EventData.length_of(ev.id) * (int(ev.get("laps", 1)) if ev.closed else 1) / 1000.0
 		var line := "PAY|%s|lvl %d|cls<=%s|rivals %d|%.1f km|" % [ev.id, int(ev.level), CarData.CLASS_NAMES[int(ev.class_max)], int(ev.rivals), len_km]
 		var cells := []
 		for d in [0, 3, 6]:

@@ -1,135 +1,174 @@
 class_name EventsScreen
 extends MenuScreen
-## Event browser: every festival event with type, district, class limit, rewards and your
-## record. Tabs filter by type group. A launches the event in the open world (the grid forms at
-## the route start). Locked events show the festival level they need; over-class cars can't enter.
+## Event browser (FH4 style): filter tabs across the top, a scrolling grid of event tiles on the
+## left, the focused event's card on the right (conditions, class limit, rewards, rival, record,
+## route map). A launches the event in the open world (the grid forms at the route start).
+## Locked events show the festival level they need; over-class cars can't enter.
 
-const TABS := [["All", []], ["Races", [EventData.Type.CIRCUIT, EventData.Type.SPRINT]],
-	["Touge", [EventData.Type.TOUGE_BATTLE, EventData.Type.TIME_ATTACK]], ["Duels", [EventData.Type.WANGAN_DUEL]]]
+const FILTERS := ["All", "Road Racing", "Duels", "Time Attack", "Pursuits"]
+const TYPE_TINT := {
+	EventData.Type.CIRCUIT: Color(0.55, 0.12, 0.2), EventData.Type.SPRINT: Color(0.5, 0.2, 0.1),
+	EventData.Type.TOUGE_BATTLE: Color(0.45, 0.25, 0.1), EventData.Type.WANGAN_DUEL: Color(0.12, 0.2, 0.45),
+	EventData.Type.TIME_ATTACK: Color(0.15, 0.4, 0.3), EventData.Type.SHOWCASE: Color(0.6, 0.45, 0.08),
+}
 
-var _tab := 0
-var _tabs: HBoxContainer
-var _list: VBoxContainer
-var _detail: PanelContainer
-var _detail_box: VBoxContainer
+var _filter := 0
+var _focus_id := ""
+var _tabs: FestivalTabs
+var _scroll: ScrollContainer
+var _grid: UITileGrid
+var _detail: VBoxContainer
 var _route_card: RaceRouteCard
 
+func _init(filter := 0, focus_id := "") -> void:
+	super()
+	_filter = filter
+	_focus_id = focus_id
+
 func build() -> void:
-	var col := make_column(560)
-	col.add_child(UIKit.header("Festival Events", "", "Compete across Europe. Win to earn credits, XP, and trophies."))
-	_tabs = make_tabs(col, TABS.map(func(t): return t[0]))
-	_list = make_list(col, 470)
-	
-	_detail = PanelContainer.new()
-	_detail.position = Vector2(620, 80)
-	_detail.custom_minimum_size = Vector2(670, 620)
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.04, 0.05, 0.08, 0.88)
-	sb.border_width_left = 2
-	sb.border_width_top = 2
-	sb.border_width_right = 2
-	sb.border_width_bottom = 2
-	sb.border_color = Color(0.91, 0.64, 0.09, 0.5)
-	sb.corner_radius_top_left = 8
-	sb.corner_radius_top_right = 8
-	sb.corner_radius_bottom_left = 8
-	sb.corner_radius_bottom_right = 8
-	sb.content_margin_left = 18
-	sb.content_margin_top = 14
-	sb.content_margin_right = 18
-	sb.content_margin_bottom = 14
-	_detail.add_theme_stylebox_override("panel", sb)
-	add_child(_detail)
-
-	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 10)
-	_detail.add_child(vb)
-
-	_detail_box = VBoxContainer.new()
-	_detail_box.add_theme_constant_override("separation", 4)
-	vb.add_child(_detail_box)
-
+	var dim := ColorRect.new()
+	dim.color = Color(0.02, 0.02, 0.03, 0.72)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(dim)
+	_tabs = FestivalTabs.new(PackedStringArray(FILTERS))
+	_tabs.position = Vector2(44, 14)
+	_tabs.current = _filter
+	add_child(_tabs)
+	_scroll = ScrollContainer.new()
+	_scroll.position = Vector2(34, 84)
+	_scroll.size = Vector2(690, 612)
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	_scroll.follow_focus = true
+	add_child(_scroll)
+	var pad := MarginContainer.new()
+	pad.add_theme_constant_override("margin_left", 10)
+	pad.add_theme_constant_override("margin_top", 8)
+	pad.add_theme_constant_override("margin_bottom", 16)
+	_scroll.add_child(pad)
+	_grid = UITileGrid.new(Vector2(322, 150), 12.0)
+	pad.add_child(_grid)
+	var panel := PanelContainer.new()
+	panel.position = Vector2(748, 84)
+	panel.size = Vector2(546, 612)
+	panel.custom_minimum_size = Vector2(546, 612)
+	add_child(panel)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 8)
+	panel.add_child(v)
+	_detail = VBoxContainer.new()
+	_detail.add_theme_constant_override("separation", 4)
+	v.add_child(_detail)
 	_route_card = RaceRouteCard.new()
-	_route_card.custom_minimum_size = Vector2(634, 250)
-	vb.add_child(_route_card)
+	_route_card.custom_minimum_size = Vector2(514, 250)
+	_route_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	v.add_child(_route_card)
+	set_hints([["A", "Start event"], ["LB", ""], ["RB", "Filter"], ["B", "Back"]])
 
-	set_hints([["A", "Start event"], ["L1", ""], ["R1", "Filter"], ["B", "Back"]])
+func _matches(ev: Dictionary) -> bool:
+	match _filter:
+		1: return ev.type in [EventData.Type.CIRCUIT, EventData.Type.SPRINT] and not ev.has("police_heat")
+		2: return ev.type in [EventData.Type.TOUGE_BATTLE, EventData.Type.WANGAN_DUEL]
+		3: return ev.type == EventData.Type.TIME_ATTACK
+		4: return ev.has("police_heat")
+	return true
 
 func refresh() -> void:
-	highlight_tabs(_tabs, _tab)
-	for c in _list.get_children():
-		c.queue_free()
-	var e := Profile.current_car()
-	var pi := int(e.get("pi", 500))
-	var first: UIRow = null
+	_tabs.select(_filter, false)
+	_grid.clear()
+	var pi := int(Profile.current_car().get("pi", 500))
+	var i := 0
+	var focus_tile: UITile = null
 	for ev in EventData.all():
-		var types: Array = TABS[_tab][1]
-		if not types.is_empty() and not types.has(ev.type):
+		if not _matches(ev):
 			continue
-		var row := UIRow.new(ev.name)
+		var t := UITile.new(ev.name, "%s · %s" % [EventData.TYPE_NAMES[ev.type], ev.district], UIKit.art("events", ev.id))
+		t.set_tint(TYPE_TINT.get(ev.type, Color(0.2, 0.22, 0.3)))
+		var cm := int(ev.class_max)
+		t.add_tag("%s class" % CarData.CLASS_NAMES[cm], CarData.CLASS_COLORS[cm])
+		if ev.has("police_heat"):
+			t.add_tag("Pursuit", Color(0.15, 0.3, 0.8))
 		var rec: Dictionary = Profile.data.records.get(ev.id, {})
 		var locked := int(ev.get("level", 0)) > int(Profile.data.level)
-		var over := CarData.pi_class(pi) > int(ev.class_max)
 		if locked:
-			row.set_value("LV %d" % int(ev.level), UIKit.DIM)
+			t.set_locked(true, "Festival level %d" % int(ev.level))
 		elif rec.has("best_pos") and int(rec.best_pos) == 1:
-			row.set_value("WON ★", UIKit.AMBER)
+			t.set_info("WON ★", UIKit.AMBER)
 		elif rec.has("best_pos"):
-			row.set_value("P%d" % int(rec.best_pos), UIKit.CYAN)
+			t.set_info("BEST P%d" % int(rec.best_pos))
 		else:
-			row.set_value("NEW", UIKit.GREEN)
-		row.set_sub(("%s ≤%s" % [EventData.TYPE_NAMES[ev.type], CarData.CLASS_NAMES[int(ev.class_max)]]), UIKit.RED if over else UIKit.DIM)
-		row.on_focus = _show_detail.bind(ev)
-		row.on_accept = _start.bind(ev, locked, over)
-		_list.add_child(row)
-		if first == null:
-			first = row
-	if first and is_inside_tree():
-		first.call_deferred("grab_focus")
+			t.add_tag("New", Color.WHITE)
+		if CarData.pi_class(pi) > cm and not locked:
+			t.set_info("CAR OVER CLASS", UIKit.RED)
+		t.on_focus = _show_detail.bind(ev)
+		t.on_accept = _start.bind(ev, locked, CarData.pi_class(pi) > cm)
+		_grid.add_tile(t, i % 2, i / 2)
+		if ev.id == _focus_id:
+			focus_tile = t
+		i += 1
+	_grid.link_focus()
+	var target: UITile = focus_tile if focus_tile else _grid.first()
+	if target and is_inside_tree():
+		target.call_deferred("grab_focus")
+	_focus_id = ""
+
+func focus_default() -> void:
+	if _grid.first():
+		_grid.first().grab_focus()
 
 func tab(dir: int) -> void:
-	_tab = wrapi(_tab + dir, 0, TABS.size())
+	_tabs.step(dir)
+	_filter = _tabs.current
 	refresh()
 
 func _show_detail(ev: Dictionary) -> void:
-	for c in _detail_box.get_children():
+	for c in _detail.get_children():
 		c.queue_free()
-	_detail_box.add_child(UIKit.label(ev.name.to_upper(), 24, Color.WHITE))
-	_detail_box.add_child(UIKit.label("%s  ·  %s" % [EventData.TYPE_NAMES[ev.type], ev.district], 16, UIKit.CYAN))
-	
+	var head := HBoxContainer.new()
+	head.add_child(UIKit.tag(EventData.TYPE_NAMES[ev.type], TYPE_TINT.get(ev.type, UIKit.ACCENT).lightened(0.15)))
+	head.add_child(UIKit.tag("%s class · PI %d" % [CarData.CLASS_NAMES[int(ev.class_max)], CarData.CLASS_MAX_PI[int(ev.class_max)]], CarData.CLASS_COLORS[int(ev.class_max)]))
+	_detail.add_child(head)
+	var title := UIKit.label(ev.name.to_upper(), 34, Color.WHITE, HORIZONTAL_ALIGNMENT_LEFT, "heavy")
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title.custom_minimum_size = Vector2(514, 0)
+	_detail.add_child(title)
+	_detail.add_child(UIKit.label(String(ev.district).to_upper(), 19, UIKit.DIM))
 	var hh := int(ev.time)
-	var cond := "%02d:%02d  ·  %s" % [hh, int((float(ev.time) - hh) * 60.0), SkyWeather.W_NAMES[int(ev.weather)]]
 	var laps := int(ev.get("laps", 1))
-	var length_m := _route_length(ev)
-	var rivals_str := "%d rivals" % int(ev.rivals) if int(ev.rivals) > 0 else "Solo vs clock"
-	var laps_str := ("  ·  %d laps" % laps) if bool(ev.closed) else ""
-	var class_str := "%s (PI ≤ %d)" % [CarData.CLASS_NAMES[int(ev.class_max)], CarData.CLASS_MAX_PI[int(ev.class_max)]]
-	
-	var sub_info := "%s  ·  %s%s  ·  Class %s" % [cond, rivals_str, laps_str, class_str]
-	_detail_box.add_child(UIKit.label(sub_info, 15, UIKit.TEXT))
-	
+	var km := EventData.length_of(ev.id) * (laps if bool(ev.closed) else 1) / 1000.0
+	var facts := [
+		["TIME", "%02d:%02d" % [hh, int((float(ev.time) - hh) * 60.0)]],
+		["WEATHER", SkyWeather.W_NAMES[int(ev.weather)]],
+		["DISTANCE", "%.1f KM%s" % [km, ("  ·  %d LAPS" % laps) if bool(ev.closed) else ""]],
+		["FIELD", ("%d RIVALS" % int(ev.rivals)) if int(ev.rivals) > 0 else "SOLO"],
+	]
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 24)
+	grid.add_theme_constant_override("v_separation", 0)
+	for f in facts:
+		grid.add_child(UIKit.label(f[0], 17, UIKit.DIM))
+		grid.add_child(UIKit.label(String(f[1]).to_upper(), 20, Color.WHITE, HORIZONTAL_ALIGNMENT_LEFT, "title"))
+	_detail.add_child(grid)
+	var reward := HBoxContainer.new()
+	reward.add_child(UIKit.label(UIKit.money(int(ev.credits)), 24, UIKit.GREEN, HORIZONTAL_ALIGNMENT_LEFT, "heavy"))
+	reward.add_child(UIKit.label("+%d XP" % int(ev.xp), 24, UIKit.AMBER, HORIZONTAL_ALIGNMENT_LEFT, "heavy"))
+	if ev.has("reward_car"):
+		reward.add_child(UIKit.label("+ " + String(CarData.get_car(ev.reward_car).get("name", "")).to_upper(), 20, Color.WHITE, HORIZONTAL_ALIGNMENT_LEFT, "title"))
+	_detail.add_child(reward)
 	var rec: Dictionary = Profile.data.records.get(ev.id, {})
-	var rec_str := ""
 	if not rec.is_empty():
-		rec_str = "   ·   Best: P%d (%s)" % [int(rec.best_pos), UIKit.time_str(float(rec.best_time))]
-	_detail_box.add_child(UIKit.label("Reward: %s  ·  %d XP%s" % [UIKit.money(int(ev.credits)), int(ev.xp), rec_str], 15, UIKit.GREEN))
-
+		_detail.add_child(UIKit.label("BEST  P%d  ·  %s" % [int(rec.best_pos), UIKit.time_str(float(rec.best_time))], 18, UIKit.CYAN))
 	if ev.has("rival"):
 		var r := RivalData.get_rival(ev.rival)
 		if not r.is_empty():
-			_detail_box.add_child(UIKit.label("Rival: %s \"%s\" — %s" % [r.name, r.title, CarData.get_car(r.car).name], 15, UIKit.NEON))
-
+			_detail.add_child(UIKit.label("RIVAL  %s \"%s\"  ·  %s" % [String(r.name).to_upper(), String(r.title).to_upper(), String(CarData.get_car(r.car).name).to_upper()], 18, UIKit.ACCENT.lightened(0.3)))
 	var pi := int(Profile.current_car().get("pi", 500))
 	if CarData.pi_class(pi) > int(ev.class_max):
-		var warn := UIKit.label("⚠ Your car is %s — select class %s or lower." % [CarData.class_label(pi), CarData.CLASS_NAMES[int(ev.class_max)]], 15, UIKit.RED)
-		_detail_box.add_child(warn)
-
+		_detail.add_child(UIKit.label("YOUR CAR IS %s — CHOOSE CLASS %s OR LOWER" % [CarData.class_label(pi), CarData.CLASS_NAMES[int(ev.class_max)]], 17, UIKit.RED))
 	if _route_card:
 		_route_card.set_event_id(ev.id)
-
-func _route_length(ev: Dictionary) -> float:
-	# Measured from the generated world by tools/event_lengths.gd (world seed 1).
-	return EventData.length_of(ev.id) * (int(ev.get("laps", 1)) if bool(ev.closed) else 1)
 
 func _start(ev: Dictionary, locked: bool, over: bool) -> void:
 	if locked:
@@ -142,4 +181,3 @@ func _start(ev: Dictionary, locked: bool, over: bool) -> void:
 		])
 		return
 	festival.drive({"event": ev.id})
-

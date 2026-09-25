@@ -36,8 +36,8 @@ func _ready() -> void:
 	var grad := TextureRect.new()
 	var gt := GradientTexture2D.new()
 	var g := Gradient.new()
-	g.set_color(0, Color(0.08, 0.08, 0.11, 0.94))
-	g.set_color(1, Color(0.08, 0.08, 0.11, 0.0))
+	g.set_color(0, Color(0.03, 0.03, 0.05, 0.7))
+	g.set_color(1, Color(0.03, 0.03, 0.05, 0.0))
 	gt.gradient = g
 	gt.fill_from = Vector2(0.0, 0.5)
 	gt.fill_to = Vector2(1.0, 0.5)
@@ -48,7 +48,7 @@ func _ready() -> void:
 	grad.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(grad)
 	_build_top_bar(root)
-	_toast = UIKit.label("", 22, UIKit.AMBER, HORIZONTAL_ALIGNMENT_CENTER)
+	_toast = UIKit.label("", 24, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER, "heavy")
 	_toast.position = Vector2(0, 640)
 	_toast.size = Vector2(1334, 40)
 	root.add_child(_toast)
@@ -77,33 +77,48 @@ func _build_top_bar(root: Control) -> void:
 	_top_bar.size = Vector2(1334, 60)
 	_top_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_top_bar)
+	# Dark fade behind the top row so tabs / level / credits read against a bright sky.
+	var shade := TextureRect.new()
+	var st := GradientTexture2D.new()
+	var sg := Gradient.new()
+	sg.set_color(0, Color(0, 0, 0, 0.55))
+	sg.set_color(1, Color(0, 0, 0, 0.0))
+	st.gradient = sg
+	st.fill_from = Vector2(0.5, 0.0)
+	st.fill_to = Vector2(0.5, 1.0)
+	shade.texture = st
+	shade.stretch_mode = TextureRect.STRETCH_SCALE
+	shade.position = Vector2.ZERO
+	shade.size = Vector2(1334, 96)
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_top_bar.add_child(shade)
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 18)
 	h.alignment = BoxContainer.ALIGNMENT_END
 	h.position = Vector2(560, 16)
 	h.size = Vector2(740, 36)
 	_top_bar.add_child(h)
-	_lv_label = UIKit.label("", 20, UIKit.TEXT)
+	_lv_label = UIKit.label("", 22, UIKit.TEXT, HORIZONTAL_ALIGNMENT_LEFT, "heavy")
 	h.add_child(_lv_label)
 	_xp_bar = ProgressBar.new()
 	_xp_bar.custom_minimum_size = Vector2(150, 8)
 	_xp_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_xp_bar.show_percentage = false
 	h.add_child(_xp_bar)
-	_draws_label = UIKit.label("", 20, UIKit.AMBER)
+	_draws_label = UIKit.label("", 22, UIKit.AMBER, HORIZONTAL_ALIGNMENT_LEFT, "heavy")
 	h.add_child(_draws_label)
-	_credits_label = UIKit.label("", 22, UIKit.GREEN)
+	_credits_label = UIKit.label("", 24, Color.WHITE, HORIZONTAL_ALIGNMENT_LEFT, "heavy")
 	h.add_child(_credits_label)
 
 func _refresh_top_bar() -> void:
 	if _lv_label == null:
 		return
 	var lv := int(Profile.data.level)
-	_lv_label.text = "LV %d" % lv
+	_lv_label.text = "FESTIVAL LV %d" % lv
 	_xp_bar.max_value = Profile.xp_for_level(lv)
 	_xp_bar.value = int(Profile.data.xp)
 	var draws := int(Profile.data.omikuji)
-	_draws_label.text = "WHEELSPINS ×%d" % draws if draws > 0 else ""
+	_draws_label.text = "WHEELSPIN ×%d" % draws if draws > 0 else ""
 	_credits_label.text = UIKit.money(int(Profile.data.credits))
 
 func set_top_bar_visible(v: bool) -> void:
@@ -279,6 +294,8 @@ func _run_ui_shots(dir: String) -> void:
 		["title", func(): push(TitleScreen.new())],
 		["starter", func(): reset_to(StarterScreen.new())],
 		["hub", func(): reset_to(HubScreen.new())],
+		["hub_cars", func(): top().tab(1)],
+		["hub_festival", func(): top().tab(1)],
 		["events", func(): push(EventsScreen.new())],
 		["garage", func(): reset_to(GarageScreen.new())],
 		["upgrades", func(): push(UpgradeScreen.new(Profile.current_index()))],
@@ -288,6 +305,7 @@ func _run_ui_shots(dir: String) -> void:
 		["omikuji", func(): reset_to(OmikujiScreen.new())],
 		["records", func(): reset_to(RecordsScreen.new())],
 		["settings", func(): reset_to(SettingsScreen.new())],
+		["credits", func(): reset_to(CreditsScreen.new())],
 	]
 	for s in shots:
 		s[1].call()

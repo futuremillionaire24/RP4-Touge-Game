@@ -1,29 +1,36 @@
 class_name CarStage
 extends Node3D
-## Festival car stage behind the menus: a night car-meet pad (glossy asphalt, neon rim lights,
-## grid lines), the selected car settled on its real suspension by a private NTSim, and an
-## orbit camera (auto-rotate, right stick to look around). Car swaps are debounced so fast list
-## scrolling doesn't rebuild meshes every frame.
+## Festival car stage behind the menus: an open-air plaza on the Riviera at golden hour (the
+## photographic day-cycle sky with scattered cloud, low sun, real stone paving that fades into the
+## horizon haze), the selected car settled on its real suspension by a private NTSim, and an orbit
+## camera (auto-rotate, right stick to look around). Car swaps are debounced so fast list scrolling
+## doesn't rebuild meshes every frame.
 
 const FLOOR_SHADER := """
 shader_type spatial;
 render_mode diffuse_burley, specular_schlick_ggx;
-uniform vec3 line_color : source_color = vec3(1.0, 0.18, 0.53);
+uniform sampler2DArray ground_albedo : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2DArray ground_normal : filter_linear_mipmap_anisotropic, repeat_enable;
 varying vec3 wpos;
 void vertex() { wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
 void fragment() {
+	vec3 uv = vec3(wpos.xz / 2.0, 5.0); // rectangular stone paving
+	vec4 a = texture(ground_albedo, uv);
+	vec4 n = texture(ground_normal, uv);
 	float r = length(wpos.xz);
-	vec2 g = abs(fract(wpos.xz / 2.0 + 0.5) - 0.5) * 2.0;
-	float line = 1.0 - smoothstep(0.0, 0.035, min(g.x, g.y));
-	float ring = 1.0 - smoothstep(0.0, 0.05, abs(r - 4.2));
-	float fade = smoothstep(18.0, 4.0, r);
-	ALBEDO = vec3(0.025, 0.022, 0.03);
-	ROUGHNESS = 0.18;
-	METALLIC = 0.0;
-	SPECULAR = 0.6;
-	EMISSION = line_color * (line * 0.22 + ring * 1.6) * fade;
+	// Freshly washed plaza: slightly darker and glossier around the car.
+	float wet = smoothstep(9.0, 3.0, r) * 0.5;
+	ALBEDO = a.rgb * mix(0.95, 0.7, wet);
+	ROUGHNESS = mix(n.b, 0.25, wet);
+	SPECULAR = 0.5;
+	AO = n.a;
+	vec3 N = normalize(vec3((n.r * 2.0 - 1.0) * 0.8, 1.0, -(n.g * 2.0 - 1.0) * 0.8));
+	NORMAL = normalize((VIEW_MATRIX * vec4(N, 0.0)).xyz);
 }
 """
+const STAGE_SKY := "qwantani_late_afternoon_puresky"
+const STAGE_CLOUDS := "kloofendal_48d_partly_cloudy_puresky"
+const SUN_AZIMUTH := 2.4 # radians from north: the sun low over the car's left shoulder
 
 var camera: Camera3D
 var yaw := PI + 0.7 # front three-quarter (cars face -Z)
@@ -48,101 +55,86 @@ func _ready() -> void:
 	_update_camera(0.0)
 
 func _build_studio() -> void:
-	_env = Environment.new()
-	var sky_mat := ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color(0.015, 0.01, 0.04)
-	sky_mat.sky_horizon_color = Color(0.12, 0.04, 0.16)
-	sky_mat.ground_horizon_color = Color(0.08, 0.03, 0.1)
-	sky_mat.ground_bottom_color = Color(0.01, 0.01, 0.02)
-	sky_mat.sun_angle_max = 0.0
+	# Keyframe data (sun position in the panorama, horizon colour) from the sky bake.
+	var meta := {}
+	var f := FileAccess.open("res://assets/env/sky/sky.json", FileAccess.READ)
+	if f:
+		for s in JSON.parse_string(f.get_as_text()).skies:
+			meta[s.id] = s
+	var key_sky: Dictionary = meta.get(STAGE_SKY, {"sun_u": 0.6, "sun_el": 19.0, "energy": 0.95, "horizon": [0.8, 0.75, 0.7]})
+	var clouds: Dictionary = meta.get(STAGE_CLOUDS, {"sun_u": 0.6})
+	var sky_mat := ShaderMaterial.new()
+	sky_mat.shader = preload("res://shaders/sky_hdri.gdshader")
+	var tex: Texture2D = load("res://assets/env/sky/%s.jpg" % STAGE_SKY) if ResourceLoader.exists("res://assets/env/sky/%s.jpg" % STAGE_SKY) else null
+	sky_mat.set_shader_parameter("sky_a", tex)
+	sky_mat.set_shader_parameter("sky_b", tex)
+	sky_mat.set_shader_parameter("energy", Vector2(1.0, 1.0))
+	var az_u := SUN_AZIMUTH / TAU
+	var rot := Vector4(float(key_sky.sun_u) - 0.5 - az_u, float(key_sky.sun_u) - 0.5 - az_u, float(clouds.sun_u) - 0.5 - az_u, 0.0)
+	if ResourceLoader.exists("res://assets/env/sky/%s.jpg" % STAGE_CLOUDS):
+		sky_mat.set_shader_parameter("sky_p", load("res://assets/env/sky/%s.jpg" % STAGE_CLOUDS))
+		sky_mat.set_shader_parameter("weather", Vector2(0.5, 0.0))
+	sky_mat.set_shader_parameter("rot", rot)
 	var sky := Sky.new()
 	sky.sky_material = sky_mat
-	sky.radiance_size = Sky.RADIANCE_SIZE_64
+	sky.radiance_size = Sky.RADIANCE_SIZE_128
+	_env = Environment.new()
 	_env.background_mode = Environment.BG_SKY
 	_env.sky = sky
 	_env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	_env.ambient_light_energy = 0.85
+	_env.ambient_light_energy = 1.0
 	_env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	_env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	_env.tonemap_exposure = 1.05
+	_env.tonemap_white = 7.5
 	_env.glow_enabled = true
-	_env.glow_intensity = 0.35
-	_env.glow_hdr_threshold = 1.15
+	_env.glow_intensity = 0.3
+	_env.glow_hdr_threshold = 1.2
 	_env.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
 	_env.adjustment_enabled = true
 	_env.adjustment_saturation = 1.06
+	# Haze: the plaza edge dissolves into the horizon colour of the panorama.
+	var h: Array = key_sky.horizon
+	_env.fog_enabled = true
+	_env.fog_light_color = Color(h[0], h[1], h[2])
+	_env.fog_density = 0.012
+	_env.fog_sky_affect = 0.0
 	var we := WorldEnvironment.new()
 	we.environment = _env
 	add_child(we)
 
-	# 1. Front 3/4 Studio Key Light (warm neutral daylight, natural specular on bonnet and front fender)
-	var key := SpotLight3D.new()
-	key.name = "StudioKey"
-	key.position = Vector3(2.5, 4.8, -4.5)
-	key.rotation_degrees = Vector3(-36, 150, 0)
-	key.spot_range = 16.0
-	key.spot_angle = 50.0
-	key.spot_attenuation = 1.0
-	key.light_energy = 2.4
-	key.light_color = Color(1.0, 0.98, 0.95)
-	key.shadow_enabled = true
-	add_child(key)
-
-	# 2. Rear Kicker / Rim Light (sculpts the rear quarter panels and roofline)
-	var rim := SpotLight3D.new()
-	rim.name = "StudioRim"
-	rim.position = Vector3(-3.8, 3.5, 4.0)
-	rim.rotation_degrees = Vector3(-28, -42, 0)
-	rim.spot_range = 14.0
-	rim.spot_angle = 45.0
-	rim.spot_attenuation = 1.0
-	rim.light_energy = 1.6
-	rim.light_color = Color(0.95, 0.97, 1.0)
-	rim.shadow_enabled = false
-	add_child(rim)
-
-	# 3. Overhead Soft White Studio Light Banks (creates clean, continuous reflections along car waistline)
-	var bank_col := Color(0.98, 0.98, 1.0)
-	for s in [[Vector3(-2.8, 3.4, 0.0), -1.0], [Vector3(2.8, 3.4, 0.0), 1.0]]:
-		var o := OmniLight3D.new()
-		o.position = s[0]
-		o.light_color = bank_col
-		o.light_energy = 1.2
-		o.omni_range = 7.5
-		o.omni_attenuation = 1.0
-		add_child(o)
-
-		# Overhead canopy light strips running front-to-back above each side
-		var tube := MeshInstance3D.new()
-		var cm := CapsuleMesh.new()
-		cm.radius = 0.045
-		cm.height = 5.2
-		tube.mesh = cm
-		var tm := StandardMaterial3D.new()
-		tm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		tm.albedo_color = bank_col
-		tm.emission_enabled = true
-		tm.emission = bank_col
-		tm.emission_energy_multiplier = 2.4
-		tube.material_override = tm
-		tube.position = Vector3(s[1] * 2.5, 3.6, 0.0)
-		tube.rotation_degrees = Vector3(90, 0, 0)
-		add_child(tube)
-
-	# 4. Subtle front-low fill bounce
+	# Low golden-hour sun where the panorama's sun is, with soft contact shadows.
+	var sun := DirectionalLight3D.new()
+	sun.name = "Sun"
+	var el := deg_to_rad(float(key_sky.sun_el))
+	var dir := Vector3(sin(SUN_AZIMUTH) * cos(el), sin(el), -cos(SUN_AZIMUTH) * cos(el))
+	sun.look_at_from_position(Vector3.ZERO, -dir, Vector3.UP)
+	sun.light_color = Color(1.0, 0.86, 0.68)
+	sun.light_energy = 1.5
+	sun.shadow_enabled = true
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	sun.directional_shadow_max_distance = 20.0
+	sun.shadow_blur = 1.5
+	add_child(sun)
+	# Cool sky fill from the opposite side keeps the shadowed flank readable.
 	var fill := DirectionalLight3D.new()
-	fill.rotation_degrees = Vector3(-20, 160, 0)
-	fill.light_energy = 0.35
-	fill.light_color = Color(0.94, 0.96, 1.0)
+	fill.look_at_from_position(Vector3.ZERO, Vector3(dir.x, -0.6, dir.z), Vector3.UP)
+	fill.light_color = Color(0.75, 0.84, 1.0)
+	fill.light_energy = 0.25
 	add_child(fill)
+
 	var floor_mi := MeshInstance3D.new()
 	var pm := PlaneMesh.new()
-	pm.size = Vector2(60, 60)
+	pm.size = Vector2(160, 160)
 	floor_mi.mesh = pm
 	var sh := Shader.new()
 	sh.code = FLOOR_SHADER
 	var fm := ShaderMaterial.new()
 	fm.shader = sh
+	for u in ["ground_albedo", "ground_normal"]:
+		var p := "res://assets/env/%s.webp" % u
+		if ResourceLoader.exists(p):
+			fm.set_shader_parameter(u, load(p))
 	floor_mi.material_override = fm
 	add_child(floor_mi)
 

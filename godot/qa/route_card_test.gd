@@ -4,7 +4,7 @@ func _ready() -> void:
 	print("--- BEGIN RACE MAP & NAVIGATION TEST ---")
 	
 	# 1. Verify all routes in RaceRoutes
-	var routes := RaceRoutes.all()
+	var routes: Dictionary = RaceRoutes.ROUTES
 	print("Loaded routes count: %d" % routes.size())
 	assert(routes.size() >= 17, "Expected at least 17 race routes")
 
@@ -43,8 +43,8 @@ func _ready() -> void:
 	events_screen.build()
 	events_screen.refresh()
 	
-	# Cycle tabs
-	for i in range(4):
+	# Cycle the filter tabs
+	for i in range(EventsScreen.FILTERS.size()):
 		events_screen.tab(1)
 	print("✓ EventsScreen tab cycle and detail updates PASSED!")
 

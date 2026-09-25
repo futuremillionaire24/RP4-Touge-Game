@@ -110,7 +110,19 @@ On-device (RP4 via adb) profiling to hold 60 fps; LOD/visibility ranges; APK ≤
   arrays for ground/road/facades (`envtex.mjs`), European facade shader (parallax windows,
   shutters, balconies, cornices, shop awnings), clay/gravel roofs, photographic day-cycle sky
   (`skybake.mjs`, qwantani set + weather layers), depth-aware sea with shore foam.
-  Remaining: yachts in the harbours, street furniture placement (benches, bins, bollards,
-  hydrants), guard-rail/kerb textures, landmarks, lamp density at plazas.
+- **E — mostly done (7fb9a1b).** Yachts moored stern-to in the ports, benches/bins/hydrants/bollards,
+  staggered lamps, paved sidewalks + granite kerbs through town, lit shop interiors, no Japanese
+  utility poles; lamp classes fixed on all cars (front/back split); MSAA kept by the perf governor.
+  Remaining: guard-rail texture, landmark buildings (Casino, Palace, Oceanographic Museum), night
+  frame-rate dip (54 fps desktop) to profile on the RP4.
+- **C — in progress.** Done: Barlow/Barlow Condensed type (OFL), FH4 theme (white focus slabs,
+  magenta accents, class plates), tile + tile-grid + LB/RB tab widgets, tabbed hub (Campaign / Cars /
+  My Festival / Options), tile-based events browser with filters and route card, credits screen
+  built from the asset credit records (CC-BY / CC0 / OSM), open-air plaza car stage under the
+  photographic sky, italic title logo. Remaining: tile art (car renders + location photos; tiles
+  show tinted gradients until then), Autoshow and Garage as car-tile grids, FH4 reel Wheelspin
+  (replaces the Omikuji wheel), restyle of upgrade/tuning/paint/settings/records pages, world map
+  and minimap for the baked map, in-race HUD pass.
 - Dev loop: `tools\play.ps1 [args]` opens/restarts a play-test window; native builds work while it
-  runs (the loaded DLL is moved aside).
+  runs (the loaded DLL is moved aside). `godot -- scene=check` compiles every script (136, 0
+  failures); `-- scene=festival ui_shot=<dir>` screenshots every menu.

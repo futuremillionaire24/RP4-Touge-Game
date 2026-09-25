@@ -21,18 +21,18 @@ func build() -> void:
 	add_child(name_box)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 14)
-	row.add_child(UIKit.label("EURO GT", 62, Color.WHITE))
-	row.add_child(UIKit.label("FESTIVAL", 62, UIKit.NEON))
+	row.add_child(UIKit.label("EURO GT", 88, Color.WHITE, HORIZONTAL_ALIGNMENT_LEFT, "hero"))
+	row.add_child(UIKit.label("FESTIVAL", 88, UIKit.ACCENT, HORIZONTAL_ALIGNMENT_LEFT, "hero"))
 	name_box.add_child(row)
-	var sub := UIKit.label("EUROPEAN GRAND TOURING  ·  RETROID POCKET 4 PRO", 18, UIKit.DIM)
+	var sub := UIKit.label("MONACO  ·  CÔTE D'AZUR  ·  EUROPEAN GRAND TOURING", 22, Color(1, 1, 1, 0.85), HORIZONTAL_ALIGNMENT_LEFT, "title")
 	name_box.add_child(sub)
 	var accent_line := ColorRect.new()
 	accent_line.color = UIKit.NEON
-	accent_line.custom_minimum_size = Vector2(280, 4)
+	accent_line.custom_minimum_size = Vector2(360, 6)
 	accent_line.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	name_box.add_child(accent_line)
 
-	_press = UIKit.label("PRESS  A  TO  START", 26, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER)
+	_press = UIKit.label("PRESS  A  TO  START", 28, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER, "heavy")
 	_press.position = Vector2(0, 610)
 	_press.size = Vector2(1334, 40)
 	add_child(_press)

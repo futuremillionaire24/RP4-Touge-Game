@@ -1,22 +1,22 @@
 extends SceneTree
+## Audits the six baked European traffic models (TrafficView.MODEL_KEYS): each must load as a
+## mesh with the lite surfaces and real-car proportions, plus its far LOD.
+## godot --headless --path . --script res://qa/traffic_model_test.gd
 
 func _init() -> void:
 	print("================================================================")
-	print("       AUDITING TRAFFIC 3D MODELS (6/6 VEHICLE CLASSES)        ")
+	print("       AUDITING TRAFFIC 3D MODELS (%d VEHICLES)" % TrafficView.MODEL_KEYS.size())
 	print("================================================================")
-	var names := ["Kei Car", "Sedan", "Tokyo Taxi", "Delivery Van", "Box Truck", "Transit Bus"]
-	for m in range(TrafficView.MODELS):
-		var mesh: Mesh = TrafficView._build_model(m)
-		assert(mesh != null, "Mesh for traffic vehicle %d (%s) must not be null!" % [m, names[m]])
-		var sc := mesh.get_surface_count()
-		assert(sc > 0, "Mesh %s has 0 surfaces!" % names[m])
-		var aabb := mesh.get_aabb()
-		var mat = mesh.surface_get_material(0)
-		print("  [%d/6] %-14s: AABB = %s | Surfaces = %d | HasMat = %s" % [
-			m + 1, names[m], str(aabb.size), sc, str(mat != null)
-		])
-		assert(aabb.size.x > 0.5 and aabb.size.y > 0.5 and aabb.size.z > 0.5, "Traffic model %s is degenerate!" % names[m])
+	var ok := true
+	for m in range(TrafficView.MODEL_KEYS.size()):
+		var key: String = TrafficView.MODEL_KEYS[m]
+		var meta := TrafficView._meta(key)
+		for suffix in ["", "_lod1"]:
+			var mesh := TrafficView._load_mesh("res://assets/cars/%s/%s%s.gltf" % [key, key, suffix], meta, m)
+			var aabb := mesh.get_aabb()
+			var good := mesh is ArrayMesh and mesh.get_surface_count() > 0 and aabb.size.x > 1.4 and aabb.size.y > 1.2 and aabb.size.z > 3.0
+			ok = ok and good
+			print("  [%d/%d] %-14s%-6s AABB %s | surfaces %d | %s" % [m + 1, TrafficView.MODEL_KEYS.size(), key, suffix, str(aabb.size), mesh.get_surface_count(), "OK" if good else "FAIL"])
 	print("================================================================")
-	print("       ALL 6 TRAFFIC 3D MODELS SUCCESSFULLY AUDITED & VERIFIED! ")
-	print("================================================================")
-	quit(0)
+	print("TRAFFIC MODELS: %s" % ("ALL OK" if ok else "FAILURES"))
+	quit(0 if ok else 1)

@@ -1,3 +1,4 @@
+class_name ControllerScreen
 extends MenuScreen
 ## In-Game Controller Configuration & Live Hardware Tester
 ## Designed specifically for Retroid Pocket 4 Pro & external gamepads.
