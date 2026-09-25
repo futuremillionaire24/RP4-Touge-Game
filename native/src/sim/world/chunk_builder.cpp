@@ -1076,6 +1076,54 @@ void scatter_baked(Ctx &c) {
 		}
 }
 
+// Quay and sea walls: marching squares over the sea mask on a 4 m grid; every boundary segment
+// whose land side is port or urban gets a concrete wall from the berth floor to the deck (and a
+// coping kerb), with bollards along the port quays. GROUP_WALL, UV2.x = 0 (concrete).
+void build_quays(Ctx &c) {
+	const World &w = c.w;
+	const real step = 4.0, deck = 0.9, floor_y = -4.5;
+	MeshData &m = c.out.groups[GROUP_WALL];
+	Rng rng(w.seed * 31 + (uint64_t)(c.out.cx * 131 + c.out.cz * 977));
+	auto sea = [&](real x, real z) { return w.is_sea(x, z); };
+	auto walled = [&](real x, real z) { uint8_t l = w.land_at(x, z); return l == LAND_PORT || l == LAND_URBAN; };
+	for (real z = c.mn.z; z < c.mx.z; z += step)
+		for (real x = c.mn.x; x < c.mx.x; x += step) {
+			bool s00 = sea(x, z), s10 = sea(x + step, z), s01 = sea(x, z + step), s11 = sea(x + step, z + step);
+			int k = s00 + s10 + s01 + s11;
+			if (k == 0 || k == 4) continue;
+			// Edge midpoints where the mask flips; pair them up into segments.
+			Vec3 pts[4];
+			int np = 0;
+			if (s00 != s10) pts[np++] = Vec3(x + step * 0.5, 0, z);
+			if (s10 != s11) pts[np++] = Vec3(x + step, 0, z + step * 0.5);
+			if (s11 != s01) pts[np++] = Vec3(x + step * 0.5, 0, z + step);
+			if (s01 != s00) pts[np++] = Vec3(x, 0, z + step * 0.5);
+			for (int q = 0; q + 1 < np; q += 2) {
+				Vec3 a = pts[q], b = pts[q + 1];
+				Vec3 mid = (a + b) * 0.5, along = (b - a).flat();
+				real len = along.length();
+				if (len < 0.5) continue;
+				Vec3 n = Vec3(-along.z, 0, along.x) / len; // one of the two sides
+				if (!sea(mid.x + n.x * 2.0, mid.z + n.z * 2.0)) n = -n; // n faces the water
+				Vec3 land = mid - n * 2.0;
+				if (!walled(land.x, land.z)) continue;
+				Vec3 a0(a.x, floor_y, a.z), b0(b.x, floor_y, b.z), a1(a.x, deck + 0.15, a.z), b1(b.x, deck + 0.15, b.z);
+				quad(m, a0, b0, b1, a1, n, {(float)a.x, (float)floor_y}, {(float)b.x, (float)floor_y}, {(float)b.x, (float)deck}, {(float)a.x, (float)deck}, 0.0, 0.0, 0.8);
+				// Coping stone along the edge (0.35 m on to the quay).
+				Vec3 in = -n * 0.35;
+				quad(m, a1, b1, b1 + in, a1 + in, Vec3(0, 1, 0), {(float)a.x, 0}, {(float)b.x, 0}, {(float)b.x, 0.35f}, {(float)a.x, 0.35f}, 0.0, 0.0, 1.0);
+				if (c.opt.collision) {
+					c.out.collision.add_tri(a0, b0, b1, SURF_CONCRETE, COL_SOLID);
+					c.out.collision.add_tri(a0, b1, a1, SURF_CONCRETE, COL_SOLID);
+				}
+				if (w.land_at(land.x, land.z) == LAND_PORT && rng.chance(len / 9.0)) {
+					Vec3 p = mid - n * 0.7;
+					add_prop(c, PROP_BOLLARD, Vec3(p.x, deck, p.z), std::atan2(n.x, n.z), Vec3(1.3, 0.8, 1.3), rng.next());
+				}
+			}
+		}
+}
+
 // Yachts moored Mediterranean-style (stern to the quay) along the port quays: walk the water
 // 2-5 m off LAND_PORT edges and fit boats side by side with a hull's width of clearance.
 void scatter_harbour(Ctx &c) {
@@ -1184,6 +1232,7 @@ void build_chunk(const World &w, int cx, int cz, const ChunkOptions &opt, ChunkO
 		build_buildings(c);
 		if (opt.props) scatter_baked(c);
 		if (opt.props && out.min_y < 0.5) scatter_harbour(c);
+		if (opt.lod <= 1 && out.min_y < 0.5) build_quays(c);
 		simplify_far(out);
 		return;
 	}

@@ -313,6 +313,30 @@ void World::dress_circuits() {
 	}
 }
 
+// Port Hercule, Fontvieille and the urban seafront meet the sea at quay and sea walls, not at a
+// sloping beach: stand the ground at deck height along the water and deepen the berth beside it
+// (the chunk builder puts the wall face on the boundary). Beaches and natural shore stay as baked.
+static bool walled(uint8_t lc) { return lc == LAND_PORT || lc == LAND_URBAN; }
+void World::shape_quays() {
+	const real deck = 0.9;
+	const real c = terrain.cell();
+	for (int iz = 0; iz < terrain.height(); ++iz)
+		for (int ix = 0; ix < terrain.width(); ++ix) {
+			real x = terrain.min_x() + ix * c, z = terrain.min_z() + iz * c;
+			uint8_t lc = land_at(x, z);
+			bool edge = false;
+			for (int dz = -1; dz <= 1 && !edge; ++dz)
+				for (int dx = -1; dx <= 1 && !edge; ++dx) {
+					uint8_t o = land_at(x + dx * c, z + dz * c);
+					edge = lc == LAND_SEA ? walled(o) : (walled(lc) && o == LAND_SEA);
+				}
+			if (!edge) continue;
+			float &h = terrain.at(ix, iz);
+			if (lc == LAND_SEA) h = std::min<float>(h, -4.5f);
+			else if (h < deck) h = (float)deck;
+		}
+}
+
 namespace {
 bool in_ring(const std::vector<Vec3> &ring, real x, real z) {
 	bool in = false;
@@ -560,6 +584,7 @@ bool World::build_from_bake(const uint8_t *data, size_t size, std::string &error
 	clear_buildings_off_roads();
 	dress_circuits();
 	carve_roads();
+	shape_quays();
 
 	// POIs: baked ones (snapped to roads) + collectibles scattered along the network.
 	for (Poi &p : baked_pois) {
