@@ -7,16 +7,16 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 1684,
+      "count": 6759,
       "max": [
-        3.1263720989227295,
-        12.522672653198242,
-        3.4097867012023926
+        4.844122886657715,
+        12.412099838256836,
+        6.748227596282959
       ],
       "min": [
-        -3.176048755645752,
-        9.23236279093409e-11,
-        -3.212190628051758
+        -8.452779769897461,
+        0,
+        -6.308571815490723
       ],
       "bufferView": 0,
       "byteOffset": 0
@@ -24,44 +24,44 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 1684,
+      "count": 6759,
       "bufferView": 0,
       "byteOffset": 12
     },
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 1684,
+      "count": 6759,
       "bufferView": 0,
       "byteOffset": 24
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
-      "count": 4008,
+      "count": 11340,
       "bufferView": 1,
       "byteOffset": 0
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
-      "count": 3885,
+      "count": 2772,
       "bufferView": 1,
-      "byteOffset": 8016
+      "byteOffset": 22680
     },
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 2927,
+      "count": 728,
       "max": [
-        4.491734504699707,
-        14,
-        4.395157337188721
+        10.697456359863281,
+        13.504162788391113,
+        10.320719718933105
       ],
       "min": [
-        -4.491734504699707,
-        3.456179141998291,
-        -4.395157337188721
+        -11.056292533874512,
+        6.027952671051025,
+        -10.370244979858398
       ],
       "bufferView": 2,
       "byteOffset": 0
@@ -69,14 +69,14 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 2927,
+      "count": 728,
       "bufferView": 2,
       "byteOffset": 12
     },
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 2927,
+      "count": 728,
       "bufferView": 2,
       "byteOffset": 24
     }
@@ -85,20 +85,20 @@
     {
       "buffer": 0,
       "byteOffset": 0,
-      "byteLength": 53888,
+      "byteLength": 216288,
       "byteStride": 32,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 53888,
-      "byteLength": 15788,
+      "byteOffset": 216288,
+      "byteLength": 28224,
       "target": 34963
     },
     {
       "buffer": 0,
-      "byteOffset": 69676,
-      "byteLength": 93664,
+      "byteOffset": 244512,
+      "byteLength": 23296,
       "byteStride": 32,
       "target": 34962
     }
@@ -121,10 +121,6 @@
     {
       "source": 2,
       "sampler": 0
-    },
-    {
-      "source": 3,
-      "sampler": 0
     }
   ],
   "images": [
@@ -142,26 +138,27 @@
       "name": "tree_pine_2",
       "mimeType": "image/png",
       "uri": "tree_pine_2.png"
-    },
-    {
-      "name": "tree_pine_3",
-      "mimeType": "image/jpeg",
-      "uri": "tree_pine_3.jpg"
     }
   ],
   "buffers": [
     {
       "name": "tree_pine.bin",
       "uri": "tree_pine.bin",
-      "byteLength": 163340
+      "byteLength": 267808
     }
   ],
   "materials": [
     {
-      "name": "BarkMat",
+      "name": "Umbrella_Pine_Bark_Material",
       "doubleSided": true,
       "pbrMetallicRoughness": {
-        "roughnessFactor": 0.94,
+        "baseColorFactor": [
+          0.37868078482875195,
+          0.37868078482875195,
+          0.37868078482875195,
+          1
+        ],
+        "roughnessFactor": 0.5,
         "metallicFactor": 0,
         "baseColorTexture": {
           "index": 0
@@ -172,19 +169,16 @@
       }
     },
     {
-      "name": "BranchMat",
+      "name": "Umbrella_Pine_Leaves_Material",
       "alphaMode": "MASK",
       "alphaCutoff": 0.4,
       "doubleSided": true,
       "pbrMetallicRoughness": {
-        "roughnessFactor": 0.8375,
+        "roughnessFactor": 0.5,
         "metallicFactor": 0,
         "baseColorTexture": {
           "index": 2
         }
-      },
-      "normalTexture": {
-        "index": 3
       }
     }
   ],

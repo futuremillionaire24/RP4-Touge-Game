@@ -37,6 +37,7 @@ struct RoadSample {
 	uint8_t barrier_right = BARRIER_NONE;
 	bool curb_left = false;
 	bool curb_right = false;
+	uint8_t race_kerb = 0; // bit 0 left, bit 1 right: red/white racing kerb even on a city street (circuits)
 	uint8_t lanes = 2; // for the marking shader (UV2.x)
 	uint8_t marking = 1; // 0 none, 1 center dashed, 2 center solid double, 3 highway lanes, 4 touge (edge lines only)
 	real distance = 0.0; // cumulative arc length

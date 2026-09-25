@@ -751,6 +751,7 @@ void build_junction_polys(Ctx &c) {
 		};
 		auto plain_uv = [&](const Vec3 &p) { return Vec2{0.5 + (p.x - j.center.x) / span, 0.5 + (p.z - j.center.z) / span}; };
 		for (int k = 0; k < n; ++k) {
+			if (k < (int)j.skip.size() && j.skip[k]) continue;
 			const Vec3 &pa = j.poly[k], &pb = j.poly[(k + 1) % n];
 			bool mouth = (k % 2) == 0 && n % 2 == 0;
 			real code = 80.0;

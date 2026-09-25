@@ -86,6 +86,8 @@ private:
 	void weld_baked_junctions();
 	void fit_baked_junctions();
 	void clear_buildings_off_roads();
+	void clip_junction_overlaps();
+	void dress_circuits();
 	real bake_height(real x, real z) const;
 	std::vector<RoadDef> defs_;
 	// Baked grids.

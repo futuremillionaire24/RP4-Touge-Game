@@ -293,7 +293,7 @@ CarEnvelope estimate_envelope(const VehicleParams &p) {
 		real t = p.torque_curve.ys[i] * (p.torque_curve.xs[i] > p.spool_rpm ? boost_mult : 1.0);
 		peak_power = std::max(peak_power, w * t);
 	}
-	peak_power += p.hybrid_boost_nm * 300.0 * 0.5;
+	peak_power += p.hybrid_power_kw > 0.0 ? p.hybrid_power_kw * 1000.0 : p.hybrid_boost_nm * 300.0 * 0.5;
 	real v_drag = std::cbrt(peak_power * p.drivetrain_efficiency / (0.5 * AIR_DENSITY * p.drag_area));
 	real R = p.wheel_radius_rear;
 	real v_gear = p.redline_rpm * TAU / 60.0 / (p.gear_ratios[p.gear_count - 1] * p.final_drive) * R;

@@ -162,12 +162,14 @@ void build_road(const std::vector<RoadSample> &samples, const RoadBuildOptions &
 		strip(out, GROUP_ROAD, o, r0.center, r0.r_edge, r1.center, r1.r_edge, r0.up, r1.up, v0, v1, uc, 1.0, marking, 1.0, ao_r, s0.road_surface, road_flags);
 
 		// Curbs. UV2.x: 0 = red/white racing kerb, 1 = grey city kerb (sidewalk edge).
-		real curb_kind = s0.shoulder_surface == SURF_CONCRETE ? 1.0 : 0.0;
-		uint8_t curb_surf = curb_kind > 0.5 ? (uint8_t)SURF_CONCRETE : (uint8_t)SURF_CURB;
+		real city_kind = s0.shoulder_surface == SURF_CONCRETE ? 1.0 : 0.0;
+		real kind_l = (s0.race_kerb & 1) ? 0.0 : city_kind, kind_r = (s0.race_kerb & 2) ? 0.0 : city_kind;
 		if (s0.curb_left)
-			strip(out, GROUP_CURB, o, r0.l_curb, r0.l_edge, r1.l_curb, r1.l_edge, r0.up, r1.up, v0 * 4.0, v1 * 4.0, 0, 1, curb_kind, 1, 1, curb_surf, road_flags);
+			strip(out, GROUP_CURB, o, r0.l_curb, r0.l_edge, r1.l_curb, r1.l_edge, r0.up, r1.up, v0 * 4.0, v1 * 4.0, 0, 1, kind_l, 1, 1,
+					kind_l > 0.5 ? (uint8_t)SURF_CONCRETE : (uint8_t)SURF_CURB, road_flags);
 		if (s0.curb_right)
-			strip(out, GROUP_CURB, o, r0.r_edge, r0.r_curb, r1.r_edge, r1.r_curb, r0.up, r1.up, v0 * 4.0, v1 * 4.0, 0, 1, curb_kind, 1, 1, curb_surf, road_flags);
+			strip(out, GROUP_CURB, o, r0.r_edge, r0.r_curb, r1.r_edge, r1.r_curb, r0.up, r1.up, v0 * 4.0, v1 * 4.0, 0, 1, kind_r, 1, 1,
+					kind_r > 0.5 ? (uint8_t)SURF_CONCRETE : (uint8_t)SURF_CURB, road_flags);
 
 		// Shoulders / verges. UV2.x carries the surface id for the verge shader.
 		if (s0.shoulder_left > 0.01)

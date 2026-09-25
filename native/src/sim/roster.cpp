@@ -76,7 +76,7 @@ VehicleParams make_car_params(int id) {
 			tires(p, TIRE_SPORT, 0.195, 0.195);
 			p.layout = DRIVE_FF; p.diff_front = DIFF_OPEN;
 			p.engine_kind = ENGINE_TURBO; p.cylinders = 4;
-			curve(p, {{800, 95}, {1800, 125}, {2750, 138}, {4000, 138}, {5500, 128}, {6250, 112}, {6600, 98}});
+			curve(p, {{800, 95}, {1800, 125}, {2750, 138}, {4000, 136}, {5500, 116}, {6250, 100}, {6600, 88}});
 			p.max_boost = 1.0; p.boost_gain = 0.5; p.spool_rpm = 2400; p.spool_rate = 4.0;
 			p.idle_rpm = 850; p.redline_rpm = 6400; p.limiter_rpm = 6600;
 			p.engine_inertia = 0.11;
@@ -346,7 +346,7 @@ VehicleParams make_car_params(int id) {
 			tires(p, TIRE_SPORT, 0.245, 0.335);
 			p.layout = DRIVE_MR;
 			p.engine_kind = ENGINE_TURBO; p.cylinders = 8;
-			curve(p, {{1000, 230}, {2500, 300}, {4000, 360}, {5500, 358}, {7000, 340}, {7750, 300}, {8000, 275}});
+			curve(p, {{1000, 230}, {2500, 300}, {4000, 360}, {5500, 352}, {7000, 302}, {7750, 262}, {8000, 240}});
 			p.max_boost = 1.1; p.boost_gain = 0.55; p.spool_rpm = 4000; p.spool_rate = 1.8; // famous lag, then a kick
 			p.idle_rpm = 1000; p.redline_rpm = 7750; p.limiter_rpm = 8000;
 			p.engine_inertia = 0.12;
@@ -354,7 +354,7 @@ VehicleParams make_car_params(int id) {
 			p.shift_time = 0.16;
 			p.diff_rear = DIFF_LSD; p.lsd_accel = 0.50; p.lsd_decel = 0.35;
 			p.brake_torque = 5600; p.brake_bias = 0.58;
-			p.drag_area = 0.66; p.lift_front = 0.12; p.lift_rear = 0.30;
+			p.drag_area = 0.60; // Cd 0.34 x ~1.8 m2 p.lift_front = 0.12; p.lift_rear = 0.30;
 			p.clutch_torque = 900;
 			springs(p, 2.30, 2.50, 0.34, 0.56);
 			p.arb_front = 26000; p.arb_rear = 18000;
@@ -407,7 +407,8 @@ VehicleParams make_car_params(int id) {
 			p.diff_front = DIFF_OPEN; p.diff_rear = DIFF_LSD; p.lsd_accel = 0.45; p.lsd_decel = 0.25;
 			p.engine_kind = ENGINE_HYBRID; p.cylinders = 8;
 			curve(p, {{1000, 330}, {3000, 440}, {5000, 500}, {6700, 528}, {8500, 505}, {9000, 470}, {9300, 430}});
-			p.hybrid_boost_nm = 380;
+			p.hybrid_boost_nm = 380; p.hybrid_power_kw = 205; // front + rear e-motors: 887 PS system
+			p.top_speed_limiter = 345.0 / 3.6; // factory Vmax
 			p.idle_rpm = 1000; p.redline_rpm = 9000; p.limiter_rpm = 9300;
 			p.engine_inertia = 0.11;
 			gears(p, {3.91, 2.35, 1.69, 1.31, 1.08, 0.90, 0.72}, 3.30); // PDK 7
@@ -426,7 +427,8 @@ VehicleParams make_car_params(int id) {
 			p.layout = DRIVE_MR;
 			p.engine_kind = ENGINE_HYBRID; p.cylinders = 12;
 			curve(p, {{1000, 380}, {3000, 520}, {5000, 610}, {6750, 700}, {8500, 670}, {9000, 630}, {9400, 580}});
-			p.hybrid_boost_nm = 270;
+			p.hybrid_boost_nm = 270; p.hybrid_power_kw = 120; // HY-KERS 163 PS: 963 PS system
+			p.top_speed_limiter = 350.0 / 3.6; // factory Vmax (electronically limited)
 			p.diff_rear = DIFF_LSD; p.lsd_accel = 0.50; p.lsd_decel = 0.30;
 			p.idle_rpm = 1000; p.redline_rpm = 9250; p.limiter_rpm = 9400;
 			p.engine_inertia = 0.13;
@@ -480,7 +482,7 @@ EngineAudioProfile make_car_audio(int id) {
 	X(max_steer) X(ackermann) X(caster_trail) \
 	X(idle_rpm) X(redline_rpm) X(limiter_rpm) X(engine_inertia) \
 	X(engine_brake) X(max_boost) X(boost_gain) X(spool_rpm) X(spool_rate) \
-	X(hybrid_boost_nm) X(reverse_ratio) X(final_drive) X(shift_time) \
+	X(hybrid_boost_nm) X(hybrid_power_kw) X(reverse_ratio) X(final_drive) X(shift_time) \
 	X(clutch_torque) X(drivetrain_efficiency) X(lsd_accel) X(lsd_decel) \
 	X(lsd_preload) X(awd_front_split) X(center_lock) X(brake_torque) \
 	X(brake_bias) X(handbrake_torque) X(drag_area) X(lift_front) \
@@ -578,6 +580,7 @@ bool apply_override(VehicleParams &p, const std::string &key, real v) {
 		p.spool_rate = donor.spool_rate;
 		p.cylinders = donor.cylinders;
 		p.hybrid_boost_nm = donor.hybrid_boost_nm;
+		p.hybrid_power_kw = donor.hybrid_power_kw;
 		p.clutch_torque = std::max(p.clutch_torque, donor.clutch_torque);
 		return true;
 	}

@@ -477,12 +477,21 @@ for (const e of edges) {
 	};
 	if (v0) pin(0, v0.y, 1);
 	if (v1) pin(n - 1, v1.y, -1);
-	// Grade limit (both directions) keeping the pinned ends.
+	// Grade limit (both directions). The clamps can drag a pinned end off its vertex height, and
+	// every road meeting at a vertex must arrive at the same height (else the junction patch
+	// becomes a step), so blend any residual back in along the whole edge: ends stay exact, the
+	// grade limit gives way only where the vertices themselves demand it.
 	const g = (MAX_GRADE[e.kind] || 0.12) * STEP;
 	for (let pass = 0; pass < 3; pass++) {
 		for (let k = 1; k < n; k++) y[k] = clamp(y[k], y[k - 1] - g, y[k - 1] + g);
 		for (let k = n - 2; k >= 0; k--) y[k] = clamp(y[k], y[k + 1] - g, y[k + 1] + g);
 	}
+	const r0 = v0 ? v0.y - y[0] : 0, r1 = v1 ? v1.y - y[n - 1] : 0;
+	if (n > 1 && (Math.abs(r0) > 0.01 || Math.abs(r1) > 0.01))
+		for (let k = 0; k < n; k++) {
+			const t = k / (n - 1);
+			y[k] += r0 * (1 - smooth(0, 1, t)) + r1 * smooth(0, 1, t);
+		}
 	e.P = P;
 	e.Y = y;
 	e.G = ground;
@@ -562,9 +571,12 @@ function trimEdge(e) {
 }
 edges = edges.filter(trimEdge);
 edges.forEach((e, k) => (e.idx = k));
+// Junction patches: each leg's mouth sits where that road now starts (its own grade over the trim
+// length), the centre at the mean - a flat patch at the vertex height left steps at every mouth.
 for (const j of junctions) {
-	j.y = j.v.y;
-	j.poly = j.poly.map((p) => [p[0], j.y, p[1]]);
+	const mouth = j.legs.map((l) => (l.e.out ? (l.atStart ? l.e.out[0][2] : l.e.out[l.e.out.length - 1][2]) : j.v.y));
+	j.y = mouth.reduce((a, b) => a + b, 0) / Math.max(mouth.length, 1);
+	j.poly = j.poly.map((p, k) => [p[0], mouth[k >> 1] ?? j.y, p[1]]);
 }
 log('roads after trim', edges.length);
 

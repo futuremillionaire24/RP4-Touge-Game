@@ -98,6 +98,9 @@ struct Intersection {
 	// Baked junctions: polygon (fan around `center`) and the roads that meet here.
 	std::vector<Vec3> poly;
 	std::vector<int> legs;
+	// Fan triangle k (centre, poly[k], poly[k+1]) left out: it lies over another road's carriageway
+	// at a different height (big roundabout patches overlapping a neighbouring street).
+	std::vector<uint8_t> skip;
 };
 
 // Baked building footprint (clockwise seen from above), walls from `base` to `top`.

@@ -227,6 +227,92 @@ void World::fit_baked_junctions() {
 	}
 }
 
+// A junction fan must not lay a second surface over some other road (not one of its legs) at a
+// different height: that makes a lip or a ledge in that road. Drop the fan triangles that cover
+// such a carriageway; the road's own surface carries the car there.
+void World::clip_junction_overlaps() {
+	auto in_tri = [](const Vec3 &p, const Vec3 &a, const Vec3 &b, const Vec3 &c, real &y) {
+		real d = (b.z - c.z) * (a.x - c.x) + (c.x - b.x) * (a.z - c.z);
+		if (std::fabs(d) < 1e-9) return false;
+		real l1 = ((b.z - c.z) * (p.x - c.x) + (c.x - b.x) * (p.z - c.z)) / d;
+		real l2 = ((c.z - a.z) * (p.x - c.x) + (a.x - c.x) * (p.z - c.z)) / d;
+		real l3 = 1.0 - l1 - l2;
+		if (l1 < 0 || l2 < 0 || l3 < 0) return false;
+		y = l1 * a.y + l2 * b.y + l3 * c.y;
+		return true;
+	};
+	for (Intersection &j : junctions) {
+		int n = (int)j.poly.size();
+		if (n < 3) continue;
+		j.skip.assign(n, 0);
+		std::vector<int> leg_roads;
+		for (int l : j.legs)
+			if (l >= 0 && l < (int)road_of_def.size() && road_of_def[l] >= 0) leg_roads.push_back(road_of_def[l]);
+		real reach = j.half_x + 8.0;
+		for (int ri = 0; ri < (int)roads.size(); ++ri) {
+			const Road &r = roads[ri];
+			if (std::find(leg_roads.begin(), leg_roads.end(), ri) != leg_roads.end()) continue;
+			if (r.bmax.x < j.center.x - reach || r.bmin.x > j.center.x + reach || r.bmax.z < j.center.z - reach || r.bmin.z > j.center.z + reach) continue;
+			// A road ending on one of the patch's mouths joins it (an unlisted leg): leave it.
+			bool joins = false;
+			for (int k = 0; k + 1 < n && !joins; k += 2) {
+				Vec3 mouth = (j.poly[k] + j.poly[k + 1]) * 0.5;
+				joins = (r.samples.front().rs.center - mouth).flat().length() < 3.5 || (r.samples.back().rs.center - mouth).flat().length() < 3.5;
+			}
+			if (joins) continue;
+			for (const RoadSampleX &s : r.samples) {
+				if (s.type == ST_TUNNEL || (s.rs.center - j.center).flat().length() > reach) continue;
+				Vec3 right = s.rs.tangent.cross(Vec3(0, 1, 0)).normalized();
+				for (real f : {-0.7, 0.0, 0.7}) {
+					Vec3 p = s.rs.center + right * (f * (f < 0 ? s.rs.width_left : s.rs.width_right));
+					for (int k = 0; k < n; ++k) {
+						real y;
+						if (!in_tri(p, j.center, j.poly[k], j.poly[(k + 1) % n], y)) continue;
+						// Well above/below is a crossing on another level (bridge, underpass): harmless.
+						real dy = std::fabs(y - s.rs.center.y);
+						if (dy > 0.2 && dy < 4.0) j.skip[k] = 1;
+					}
+				}
+			}
+		}
+	}
+}
+
+// Street circuits (the Circuit de Monaco): red/white racing kerbs on the inside of every real
+// corner (radius under ~70 m) and on the exit side of the tight ones, instead of city kerbs.
+void World::dress_circuits() {
+	for (const Route &rt : routes) {
+		if (rt.id != "monaco_gp") continue;
+		for (std::string name : rt.roads) {
+			if (!name.empty() && name[0] == '~') name = name.substr(1);
+			int ri = road_by_name(name);
+			if (ri < 0) continue;
+			std::vector<RoadSampleX> &sm = roads[ri].samples;
+			int n = (int)sm.size();
+			std::vector<uint8_t> want(n, 0);
+			for (int i = 0; i < n; ++i) {
+				const Vec3 &pa = sm[std::max(i - 3, 0)].rs.center, &pb = sm[i].rs.center, &pc = sm[std::min(i + 3, n - 1)].rs.center;
+				Vec3 ab = (pb - pa).flat(), bc = (pc - pb).flat(), ac = (pc - pa).flat();
+				real den = ab.length() * bc.length() * ac.length();
+				real k = den > 1e-6 ? 2.0 * (ab.x * bc.z - ab.z * bc.x) / den : 0.0;
+				if (std::fabs(k) < 1.0 / 70.0 || sm[i].type == ST_TUNNEL) continue;
+				// k > 0 turns towards the right-hand side (chevrons go on the left, the outside).
+				want[i] |= k > 0 ? 2 : 1;
+				if (std::fabs(k) > 1.0 / 25.0) want[i] |= k > 0 ? 1 : 2; // hairpins: exit kerb too
+			}
+			for (int i = 0; i < n; ++i) {
+				uint8_t w = 0;
+				for (int q = std::max(i - 2, 0); q <= std::min(i + 2, n - 1); ++q) w |= want[q];
+				if (!w) continue;
+				RoadSample &s = sm[i].rs;
+				s.race_kerb = w;
+				if (w & 1) s.curb_left = true;
+				if (w & 2) s.curb_right = true;
+			}
+		}
+	}
+}
+
 namespace {
 bool in_ring(const std::vector<Vec3> &ring, real x, real z) {
 	bool in = false;
@@ -470,7 +556,9 @@ bool World::build_from_bake(const uint8_t *data, size_t size, std::string &error
 		if (roads[i].def.id >= 0 && roads[i].def.id < (int)road_of_def.size()) road_of_def[roads[i].def.id] = i;
 	open_merges();
 	fit_baked_junctions();
+	clip_junction_overlaps();
 	clear_buildings_off_roads();
+	dress_circuits();
 	carve_roads();
 
 	// POIs: baked ones (snapped to roads) + collectibles scattered along the network.
