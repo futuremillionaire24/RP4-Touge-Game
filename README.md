@@ -1,176 +1,158 @@
-# Euro GT Festival (RP4 Edition)
+# Euro GT Festival
 
-> **Premier European Open-World Racing Festival on the French Riviera**  
-> Engineered specifically for the **Retroid Pocket 4 Pro** handheld console (Dimensity 1100, Mali-G77 MC9, $1334 \times 750$ @ 60 FPS locked).  
-> Built with **Godot Engine 4.7.2**, **C++ GDExtension Native Simulation**, and **Vulkan Mobile**.
+An open-world driving festival on the real roads of **Monaco and the French Riviera**, built for the
+**Retroid Pocket 4 Pro** handheld (Android, Dimensity 1100 / Mali-G77, 1334×750). Forza Horizon 4 in
+spirit: a festival hub, European sports and grand-touring cars, road races, rival duels, time attack and
+Gendarmerie pursuits across Monte-Carlo, the three Corniches, La Turbie and the A8.
 
----
+Godot 4.7.2 (Mobile / Vulkan) with the vehicle physics, world generation and traffic in a C++
+GDExtension. Version 0.5.0 — **a private, non-commercial fan project** (see [Legal](#legal)).
 
-## 🏁 Overview
+## Status
 
-**Euro GT Festival** is an authentic European open-world arcade-simulation racing game inspired by *Forza Horizon 4* and *Gran Turismo 7*. Set along the scenic Mediterranean coast of the **French Riviera** and the principality of **Monaco**, drivers explore iconic real-world roads including the **Monaco Grand Prix street circuit**, the **Grande, Moyenne, and Basse Corniches** ascending to La Turbie, and the high-speed **A8 autoroute** viaducts and tunnels.
+| Area | State |
+|---|---|
+| Cars | 19 real European cars + 6 traffic cars from CC-BY models, rigged for the game (steering / spinning wheels, lights, glass, paint), real-spec physics |
+| Map | Real Monaco / Riviera from OpenStreetMap and elevation data: ~9 × 6 km, the Monaco GP circuit (3.33 km, real 3.34 km), the Corniches, A8, harbours |
+| World | Photo-textured roads, pavements, hillsides and buildings (Riviera facades, tiled roofs), real trees and street furniture, yachts, day/night photographic sky, weather, sea with shallows |
+| Events | 17 events on real routes: circuits, sprints, rival duels, time attack, pursuits, the Festival Grand Prix finale |
+| Menus | Forza Horizon 4-style front end: LB/RB tabs, tile pages, events browser, credits. In progress: tile artwork, Autoshow / Garage car grids, Wheelspin |
+| Performance | Optimised draw calls and shadows (see `docs/RP4_PERFORMANCE_PLAN.md`); on-device RP4 measurements in progress |
 
-The game features an authentic **19-car European roster** spanning hot hatches, vintage grand tourers, Group B homologations, modern supercars, and flagship hypercars, all backed by real manufacturer engineering specs and locked at a solid **60 FPS** on mobile hardware.
+Planning and progress: [`docs/EURO_OVERHAUL_PLAN.md`](docs/EURO_OVERHAUL_PLAN.md) (overhaul phases and log),
+[`docs/RP4_PERFORMANCE_PLAN.md`](docs/RP4_PERFORMANCE_PLAN.md) (device budgets and measurements).
 
----
+## Cars
 
-## 🛠️ System Architecture
+FH4-style performance index (PI) and classes. Models are credited to their authors below and in the
+in-game Credits screen; each was scaled, re-rigged and optimised for the game.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Euro GT Festival Architecture                │
-├───────────────────────────────┬─────────────────────────────────┤
-│    GDScript 2.0 (Godot 4.7)   │      C++ Native GDExtension     │
-├───────────────────────────────┼─────────────────────────────────┤
-│ • FH4-Style Tile & Tab UI     │ • 120 Hz Sub-stepped Physics    │
-│ • CarBuilder PBR Rigging      │ • Pacejka Brush Tire Model      │
-│ • European PBR World Shaders  │ • 19-Car Dyno Engine Curves     │
-│ • OSM Vector Map & GPS Ribbon │ • Native Open-World Streamer    │
-│ • Weather & Mediterranean Rig │ • Procedural Multi-Cyl Audio    │
-├───────────────────────────────┴─────────────────────────────────┤
-│                 Android RP4 Bridge (Kotlin Plugin)              │
-├─────────────────────────────────────────────────────────────────┤
-│ • Active Fan Profiles (Quiet, Sport, High)                      │
-│ • Progressive Low-Latency Trigger Sampling (L2/R2)              │
-│ • Dual-Motor Force Feedback Haptics                             │
-└─────────────────────────────────────────────────────────────────┘
-```
+| Class | PI | Car | Year | How to get it | 3D model (CC-BY 4.0) |
+| :---: | :---: | :--- | :---: | :--- | :--- |
+| D | 224 | **Land Rover Defender 90** | 1998 | Autoshow · CR 42,000 | [Land Rover Defender 90 Lowpoly](https://sketchfab.com/3d-models/land-rover-defender-90-lowpoly-88e5f30687ec4d508cebafa876e014d6) by kekomag |
+| D | 377 | **Mercedes-Benz 300 SL Gullwing** | 1955 | Barn find | [Mercedes-Benz 300 SL Gullwing](https://sketchfab.com/3d-models/mercedes-benz-300-sl-gullwing-505241c829c540a4921533000736904e) by Lexyc16 |
+| C | 533 | **BMW M3 (E30)** | 1987 | Starter choice · CR 58,000 | [[FREE] BMW M3 E30](https://sketchfab.com/3d-models/free-bmw-m3-e30-ac3c7013434e403e8faff87948caf422) by Martin Trafas |
+| C | 551 | **Jaguar E-Type Lightweight** | 1963 | Barn find | [Jaguar E-Type Lightweight GT](https://sketchfab.com/3d-models/jaguar-e-type-lightweight-gt-8c53321301234400b70975fa6abb5e5d) by M17pro |
+| C | 561 | **Porsche 911 Turbo (930)** | 1975 | Autoshow · CR 125,000 | [FREE 1975 Porsche 911 (930) Turbo](https://sketchfab.com/3d-models/free-1975-porsche-911-930-turbo-8568d9d14a994b9cae59499f0dbed21e) by Lionsharp Studios |
+| C | 574 | **Audi quattro** | 1983 | Autoshow · CR 82,000 | [1980 Audi Ur Quattro](https://sketchfab.com/3d-models/1980-audi-ur-quattro-b9ccdd8ddc154ee99ab153794042fd07) by Robert Doman |
+| C | 593 | **Fiat Abarth 500** | 2008 | Starter choice · CR 32,000 | [Fiat Abarth 500](https://sketchfab.com/3d-models/fiat-abarth-500-b59a403dfa1d40318c1126e658f87c19) by Luquita |
+| B | 633 | **Volkswagen Golf GTI** | 2005 | Starter choice · CR 38,000 | [vw golf 5 gti](https://sketchfab.com/3d-models/vw-golf-5-gti-4389c32f54964b5ab01aa8462419b6c1) by Preview2SEbIT69 |
+| B | 663 | **Mercedes-AMG G 63** | 2019 | Autoshow · CR 178,000 | [Mersedes-Benz G63 AMG](https://sketchfab.com/3d-models/mersedes-benz-g63-amg-e5e2a1d2238048a1a494b3df983c16bb) by Black Snow |
+| A | 703 | **Ferrari Testarossa** | 1985 | Autoshow · CR 148,000 | [Ferrari Testarossa 84 Low Poly](https://sketchfab.com/3d-models/ferrari-testarossa-84-low-poly-1786b089bfbb40ea9ecd9dc4f4e73127) by kekomag |
+| A | 727 | **BMW M4 Coupé (F82)** | 2015 | Autoshow · CR 74,000 | [BMW M4 f82](https://sketchfab.com/3d-models/bmw-m4-f82-8e87379f40fd40dcac0a751e22c1a188) by Black Snow |
+| A | 788 | **Jaguar XJ220** | 1992 | Autoshow · CR 480,000 | [Jaguar XJ220 1991](https://sketchfab.com/3d-models/jaguar-xj220-1991-d99bb7b0fc0e4e3c9553246679dd067f) by Comrade1280 |
+| A | 792 | **Jaguar F-Type R Coupé** | 2017 | Autoshow · CR 115,000 | [2017 Jaguar F-Type R Coupe](https://sketchfab.com/3d-models/2017-jaguar-f-type-r-coupe-de4dfe1256564276b9a134535f324b7a) by Galaxy Car Showroom |
+| A | 793 | **Ferrari F40** | 1987 | Autoshow · CR 1,350,000 | [Ferrari f40](https://sketchfab.com/3d-models/ferrari-f40-52a66c41cfcd4f999fb1b1c49bf24d70) by Black Snow |
+| S1 | 829 | **Porsche 911 Turbo S (992)** | 2020 | Autoshow · CR 235,000 | [Porsche 911 with interior](https://sketchfab.com/3d-models/porsche-911-with-interior-877b1bc1739f4a2bb65d62fd7ffd9f75) by n.brizitskaya |
+| S1 | 835 | **Audi R8 V10 performance** | 2019 | Autoshow · CR 188,000 | [Audi R8](https://sketchfab.com/3d-models/audi-r8-e17e438f076f4427a58d93aa779edaed) by wallon |
+| S1 | 853 | **Lamborghini Aventador SVJ** | 2019 | Autoshow · CR 520,000 | [Lamborghini Aventador SVJ SDC ( FREE )](https://sketchfab.com/3d-models/lamborghini-aventador-svj-sdc-free-784e4656aca649cca55d6b18740a19b2) by SDC PERFORMANCE™ |
+| S1 | 866 | **Ferrari LaFerrari** | 2014 | Festival Grand Prix prize | [2013 Ferrari laferrari](https://sketchfab.com/3d-models/2013-ferrari-laferrari-f75b682bb0de4a14b3b6c1f52862ca48) by XENVOR creations |
+| S1 | 889 | **Porsche 918 Spyder** | 2015 | Autoshow · CR 1,600,000 | [Porsche 918 Free](https://sketchfab.com/3d-models/porsche-918-free-ec8eebcdbf534bbba151375b9992f6d7) by Black Snow |
 
-- **Godot 4.7.2 (Vulkan Mobile)**: MultiMesh GPU batching, 4-cascade directional shadows (280m), ACES filmic tonemapping, and customized PBR surface shaders.
-- **Native C++ Extension (`native/`)**: High-frequency sub-stepped physics simulation, arbitrary polygon junction meshing, 8m heightfield DEM terrain, and AI race director.
-- **RP4 Android Plugin (`android_plugin/`)**: Direct hardware access to cooling fan speeds, analog triggers, and dual rumble motors.
+Traffic (right-hand driving, near/far detail levels):
 
----
-
-## 🏎️ The European Vehicle Roster (19 Cars)
-
-Every vehicle is modeled from verified CC-BY / CC0 photoreal scans with separated spinning/steering wheels, real suspension travel, authentic manufacturer dimensions, dyno power/torque curves, and accurate gear ratios.
-
-| Class | Model | Year | Drivetrain | Power | Weight | Benchmark (0–100 / Top) | Source / Attribution |
-| :---: | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **D** | **Abarth 500 Esseesse** | 2012 | FWD (1.4L Turbo I4) | 160 hp | 1,035 kg | 7.4s / 211 km/h | Sketchfab CC-BY (@xplm) |
-| **D** | **Volkswagen Golf GTI (Mk2)** | 1990 | FWD (1.8L 16V I4) | 139 hp | 1,010 kg | 8.2s / 208 km/h | Sketchfab CC-BY (@alex.yaremenko) |
-| **D** | **Mercedes-Benz 300 SL Gullwing** | 1955 | RWD (3.0L M198 I6) | 215 hp | 1,295 kg | 8.8s / 225 km/h | Sketchfab CC-BY (@Lexyc16) |
-| **D** | **Land Rover Defender 90** | 1997 | 4WD (2.5L Td5 Turbo) | 122 hp | 1,770 kg | 15.8s / 140 km/h | Sketchfab CC-BY (@kekomag) |
-| **C** | **BMW M3 (E30)** *(Starter)* | 1988 | RWD (2.3L S14 I4) | 200 hp | 1,200 kg | 6.7s / 235 km/h | Sketchfab CC-BY (@TinoD2) |
-| **C** | **Porsche 911 Turbo (930)** *(Starter)* | 1982 | RWD (3.3L Turbo Flat-6) | 300 hp | 1,300 kg | 5.2s / 260 km/h | Sketchfab CC-BY (@Lexyc16) |
-| **C** | **Jaguar E-Type Lightweight** *(Starter)* | 1963 | RWD (3.8L XK I6) | 300 hp | 975 kg | 5.3s / 240 km/h | Sketchfab CC-BY (@m17pro) |
-| **B** | **Audi Sport quattro** | 1984 | AWD (2.1L 20V Turbo I5) | 306 hp | 1,298 kg | 4.8s / 250 km/h | Sketchfab CC-BY (@RDoman) |
-| **B** | **Jaguar F-Type R** | 2016 | AWD (5.0L Supercharged V8) | 550 hp | 1,730 kg | 4.1s / 300 km/h | Sketchfab CC-BY (@oneSteven) |
-| **B** | **Mercedes-AMG G 63** | 2019 | 4WD (4.0L BiTurbo V8) | 577 hp | 2,560 kg | 4.5s / 240 km/h | Sketchfab CC-BY (@BlackSnow02) |
-| **A** | **BMW M4 Coupe (F82)** | 2018 | RWD (3.0L Twin-Turbo I6) | 431 hp | 1,572 kg | 4.1s / 280 km/h | Sketchfab CC-BY (@BlackSnow02) |
-| **A** | **Ferrari Testarossa** | 1984 | RWD (4.9L Flat-12) | 390 hp | 1,506 kg | 5.3s / 290 km/h | Sketchfab CC-BY (@Lexyc16) |
-| **A** | **Audi R8 V10 Plus** | 2017 | AWD (5.2L FSI V10) | 610 hp | 1,555 kg | 3.2s / 330 km/h | Sketchfab CC-BY (@realwallon) |
-| **A** | **Porsche 911 GT3 (992)** | 2021 | RWD (4.0L Boxer-6) | 510 hp | 1,435 kg | 3.4s / 318 km/h | Sketchfab CC-BY (@n.brizitskaya) |
-| **A** | **Ferrari F40** | 1987 | RWD (2.9L Twin-Turbo V8) | 478 hp | 1,254 kg | 4.1s / 324 km/h | Sketchfab CC-BY (@BlackSnow02) |
-| **S1** | **Lamborghini Aventador SVJ** | 2019 | AWD (6.5L L539 V12) | 770 hp | 1,525 kg | 2.8s / 352 km/h | Sketchfab CC-BY (@Lambo_SC04) |
-| **S1** | **Jaguar XJ220** | 1992 | RWD (3.5L Twin-Turbo V6) | 542 hp | 1,470 kg | 3.8s / 349 km/h | Sketchfab CC-BY (@comrade1280) |
-| **S2** | **Porsche 918 Spyder** | 2015 | AWD (4.6L V8 Hybrid) | 887 hp | 1,674 kg | 2.6s / 345 km/h | Sketchfab CC-BY (@BlackSnow02) |
-| **S2** | **Ferrari LaFerrari** *(Championship)* | 2013 | RWD (6.3L V12 HY-KERS) | 963 hp | 1,430 kg | 2.6s / 352 km/h | Sketchfab CC-BY (@BlackSnow02) |
-
----
-
-## 🎨 Automotive Paint & PBR Material Pipeline
-
-The car paint shader (`car_paint.gdshader`) was completely overhauled to eliminate sub-pixel mobile glitter artifacts:
-
-- **Statistical Flake Formulation**: Replaced noisy per-pixel stochastic sparklers with a continuous micro-facet metallic flake lobe, providing authentic showroom depth without sub-pixel aliasing.
-- **Factory Finish Presets**:
-  - `Solid`: Pure high-gloss basecoat with deep clearcoat reflection.
-  - `Metallic`: Fine statistical aluminum flake (0.25 gain) with dual-layer clearcoat.
-  - `Pearlescent`: Angle-dependent color travel and thin-film interference.
-  - `Matte & Satin`: Micro-roughness scatter with suppressed specular highlights.
-  - `Chrome & Carbon`: Mirror specular reflectance and anisotropic carbon weave normals.
-- **Realistic Lighting Response**: PBR headlight lenses, front/rear split brake lights, thermal rotor glow, and exhaust overrun flames.
-
----
-
-## 🌍 Real-World Riviera Map & Environment
-
-The racing environment represents **~8.9 × 6.1 km** of the French Riviera and Monaco:
-
-1. **Real OpenStreetMap & Elevation Terrain**:
-   - Built via `tools/mapbake/` using OpenStreetMap vectors (ODbL) and AWS Terrarium 8m DEM elevation tiles (`riviera.bin`).
-   - Features **219.3 km of drivable roads**, 1,670 road spans, 813 arbitrary polygon junctions, and 14 districts.
-   - Includes the complete **Monaco Grand Prix street circuit** (3,331 m modeled, 3,337 m real), Sainte-Dévote, Casino Square, the Fairmont Hairpin Tunnel, and Portier.
-2. **Procedural Architectural Realism**:
-   - European facade shader (`facade.gdshader`) with parallax-recessed windows, Provencal shutters, and shop awnings.
-   - **Procedural 3D Balconies & Roof Cornices**: Extruded geometric balconies on Riviera apartment buildings and projecting eaves at rooflines cast true 3D silhouettes at high glancing angles.
-   - **Stone Retaining Walls (*Murs de Soutènement*)**: Mountain cuts along the Grande Corniche feature dressed-limestone retaining walls and concrete tunnel portal headwalls.
-3. **Authentic Road Infrastructure & Safety**:
-   - European standard road markings: transverse give-way lines, solid stop bars, and pedestrian zebra crossings (residual Shibuya scramble removed).
-   - **W-Beam Guardrails (`rail.gdshader`)**: Galvanized corrugated steel normal profile, post shadows, and retro-reflective delineator cat-eyes every 4 meters.
-   - **Night Streetlight Ground Cookies**: Projected warm sodium/LED light pools illuminate asphalt beneath streetlights with zero dynamic light draw-call overhead.
-4. **Foliage & Maritime Realism**:
-   - Merged multi-mesh glTF ingestion in `prop_library.gd`: Canary Island date palms, stone umbrella pines, pencil cypresses, and gnarled olive trees.
-   - **Port Hercule Marina**: Multi-deck mega-yachts moored Mediterranean-style stern-to along concrete quays with depth-based turquoise-to-ultramarine sea gradients and Mediterranean sun glitter (`water.gdshader`).
-
----
-
-## 🧭 Forza Horizon 4-Style European UI
-
-The user interface was redesigned from the ground up:
-
-- **Typography**: Authentic European road-sign DIN typeface (**D-DIN**) paired with bold uppercase headings (**Barlow Condensed**).
-- **Navigation**: Top **LB / RB category tab bar** (Campaign, Cars, My Festival, Settings), interactive tile grids with focus-pop frames, and bottom controller button glyph bar.
-- **Color Palette**: Sophisticated charcoal glass panels (`#1A1A2E`), Horizon pink accents, British Racing Green, and Italian Rosso Corsa class badges (**D, C, B, A, S1, S2**).
-- **Festival Hub**: Open-air seaside plaza vehicle stage set under a dynamic day-night photographic HDR sky cycle.
-- **European Economy**: Currency transitioned to **CR** (Credits), vehicle dealerships categorized by European marque, and Horizon-style Festival prize spins.
-
----
-
-## 🎮 Retroid Pocket 4 Pro Controls
-
-| Control | Action |
+| Traffic | 3D model (CC-BY 4.0) |
 | :--- | :--- |
-| **Left Stick / D-Pad** | Steering / Menu Tile Navigation |
-| **Right Trigger (R2)** | Progressive Analog Throttle |
-| **Left Trigger (L2)** | Progressive Analog Footbrake / Reverse |
-| **A Button** | Handbrake (Drift Initiation) / Confirm |
-| **B Button** | Back / Cancel / Clutch |
-| **X Button** | Shift Down (Manual Sequential) |
-| **Y Button** | Shift Up (Manual Sequential) |
-| **Select Button** | Full-Screen Vector Map (Toggle) |
-| **Start Button** | Pause Menu / Festival Hub |
-| **L1 / R1** | Tab Navigation (Left / Right) |
-| **R3 (Right Stick Click)** | Headlights Toggle (High / Low Beam) |
+| Volkswagen Polo | [2016 Volkswagen Polo](https://sketchfab.com/3d-models/2016-volkswagen-polo-bab77902c638427bb85e68b6762a481f) by BHP3D |
+| Škoda Superb | [2017 Skoda Superb](https://sketchfab.com/3d-models/2017-skoda-superb-2da5059c3068448b9541eafb930a45a0) by BHP3D |
+| Volvo V60 | [Volvo V60 Polestar (2013)](https://sketchfab.com/3d-models/volvo-v60-polestar-2013-504ce39150fe49c7979f702d5f0f8580) by Myedsu |
+| Volkswagen Transporter T6 | [Volkswagen van T6](https://sketchfab.com/3d-models/volkswagen-van-t6-b36c0e9bf97b479f9193cce337f4d4c2) by IrisProcess |
+| Mercedes-Benz Sprinter | [Mercedes Benz Sprinter 2006](https://sketchfab.com/3d-models/mercedes-benz-sprinter-2006-f69de1315bb049c8946d57f6006acd73) by Max |
+| Town bus | [Generic Town Bus](https://sketchfab.com/3d-models/generic-town-bus-14fe03d792914d51b6c6250b393c44fd) by own.guest |
 
----
+## The map
 
-## 🏗️ Build, Test & Verification Guide
+Everything drivable comes from real data, baked offline by `tools/mapbake` into
+`godot/assets/map/riviera.bin`:
 
-### Prerequisites
-- Toolchain: `D:\RP4Toolchain` (Clang++ 19, Python 3.12, Android SDK 36.1.0, NDK 28.1.13356709, JDK 17, Godot 4.7.2 official console).
+* **Roads** from OpenStreetMap: split at junctions, real widths and lane counts, one-way streets,
+  bridges and tunnels, junction polygons with French markings, grade-limited profiles.
+* **Terrain** from AWS Terrain Tiles (8 m grid) with land cover (town, park, forest, scrub, rock, sand,
+  farm, port) driving the surfaces and vegetation.
+* **Buildings** from OSM footprints and heights, dressed by a Riviera facade shader (recessed windows,
+  shutters, balconies, cornices, shop fronts) with clay-tile or flat roofs.
+* **Routes**: the Circuit de Monaco follows the real lap (Sainte-Dévote, Casino, Mirabeau, the tunnel,
+  Tabac, the Piscine), plus the Grande / Moyenne / Basse Corniche, the A8, Col du Mont Agel and the
+  Route de La Turbie.
 
-### 1. Run Automated Test Suites
-```powershell
-# Run native simulation doctest suite (19 test cases, 1,653 assertions - 100% PASS)
-powershell -ExecutionPolicy Bypass -File tools/run-native-tests.ps1
+## Controls (Retroid Pocket 4 Pro)
 
-# Run Godot script and shader compile verification (137 files, 0 failures)
-D:\RP4Toolchain\godot\godot_console.exe --headless --path godot -- scene=check
+| Input | Driving | Menus |
+|---|---|---|
+| Right trigger | Throttle | |
+| Left trigger | Brake / reverse | |
+| Left stick | Steer | Navigate |
+| A | Handbrake | Select |
+| B | Clutch | Back |
+| Y / X | Shift up / down | Screen actions |
+| LB | Rewind | Previous tab |
+| RB | Change camera | Next tab |
+| L3 | Look back | |
+| R3 | Map | |
+| D-pad up / down | Headlights / horn | Navigate |
+| D-pad left / right | Radio previous / next | Navigate |
+| Select | Recover car | |
+| Start | Pause | |
+
+Every action can be remapped in Options → Controls.
+
+## Repository layout
+
+```
+godot/            Godot project (scripts, shaders, scenes, baked assets)
+  assets/cars/    baked car models + metadata/credits (tools/carbake)
+  assets/props/   baked world props (tools/carbake/props.mjs)
+  assets/env/     texture arrays + sky panoramas (Poly Haven CC0)
+  assets/map/     riviera.bin / riviera.json (tools/mapbake)
+native/           C++ GDExtension: vehicle physics, world, traffic, AI (+ doctest suite)
+android_plugin/   RP4 Android bridge (thermal / performance hints, haptics)
+tools/            build, export, device and asset-pipeline scripts
+docs/             plans and progress
 ```
 
-### 2. Compile Native GDExtension Libraries
+## Building
+
+Toolchain: `D:\RP4Toolchain` (Godot 4.7.2, llvm-mingw, Android SDK/NDK 28, JDK 17, Python), set up by
+`tools/setup-toolchain.ps1`; `tools/env.ps1` puts it on the path.
+
 ```powershell
-# Builds Windows (.dll) and Android arm64 (.so) for debug and release
-powershell -ExecutionPolicy Bypass -File tools/build-native.ps1 -Platform all -Target both
+tools\build-native.ps1 -Platform windows -Target template_debug   # C++ GDExtension (desktop)
+tools\build-native.ps1 -Platform all -Target both                 # desktop + Android arm64
+tools\run-native-tests.ps1                                         # native physics / world tests
+tools\play.ps1 [scene=freeroam car=ferrari_f40 time=18]            # open (or restart) a play window
+tools\export-android.ps1                                           # signed APK for the RP4
+tools\device_harness.ps1 deploy                                    # install on the connected RP4
 ```
 
-### 3. Package & Sign Android APK
-```powershell
-# Builds Android RP4Bridge plugin, compiles release APK, signs with release keystore
-powershell -ExecutionPolicy Bypass -File tools/export-android.ps1 -SkipNative
-```
+Checks: `godot_console --headless --path godot -- scene=check` compiles every script;
+`-- scene=festival ui_shot=<dir>` screenshots every menu.
 
-The signed release APK will be output to:
-- `NeonTougeRP4.apk` (Root directory, 252.4 MB)
-- `dist/NeonTougeRP4.apk`
+## Asset pipelines
 
----
+| Tool | Does |
+|---|---|
+| `tools/carbake/fetch.mjs` + `bake.mjs` | Sketchfab download (licence-checked, CC-BY / CC0 only), orient/scale to real dimensions, split wheels to hub pivots, classify materials (paint, glass, lamps, tyres…), simplify, write credits |
+| `tools/carbake/props.mjs` | World props from model packs: real size, foliage-aware thinning, far LODs |
+| `tools/carbake/envtex.mjs` | Poly Haven texture arrays (ground, road, facade) |
+| `tools/carbake/skybake.mjs` | Poly Haven HDRI day cycle → sky panoramas |
+| `tools/mapbake` | OpenStreetMap + elevation → the baked map |
+| `tools/readme_tables.mjs` | Regenerates the car / credit tables in this README |
 
-## 📄 License & Attribution
+Downloading from Sketchfab needs a personal API token in the `SKETCHFAB_TOKEN` environment variable;
+it is never stored in the repository.
 
-- **Game Code & Shaders**: MIT License.
-- **Map & Geography**: OpenStreetMap data © OpenStreetMap contributors (ODbL), AWS Terrain Tiles / SRTM.
-- **3D Vehicle & Prop Models**: CC-BY 4.0 / CC0 models from Sketchfab authors (complete attribution list available on the in-game Credits screen and `credits.json`).
+## Credits
+
+* **Car and prop models**: the authors listed above, under Creative Commons Attribution 4.0
+  (props: see the in-game Credits screen or `godot/assets/props/*/*.json`).
+* **Textures and skies**: [Poly Haven](https://polyhaven.com) (CC0).
+* **Map data**: © OpenStreetMap contributors (ODbL). Elevation: AWS Terrain Tiles (SRTM, EU-DEM, NOAA).
+* **Type**: Barlow and Barlow Condensed by Jeremy Tribby (SIL Open Font License 1.1).
+* **Engine**: Godot Engine (MIT), Jolt Physics (MIT).
+
+## Legal
+
+This is an unofficial fan project for private use on the author's own device. Car makes, model names
+and logos are trademarks of their owners and are used for identification only; the project is not
+affiliated with or endorsed by any manufacturer, Microsoft / Playground Games (Forza Horizon) or the
+BBC (Top Gear). Do not distribute builds commercially.
