@@ -76,7 +76,7 @@ static func _model_mesh(t: int) -> Mesh:
 	for mn in mesh_nodes:
 		var mi := mn as MeshInstance3D
 		if mi.mesh:
-			var box := mi.transform * mi.mesh.get_aabb()
+			var box := _scene_xform(mi, scene) * mi.mesh.get_aabb()
 			if not has_aabb:
 				combined_aabb = box
 				has_aabb = true
@@ -92,25 +92,30 @@ static func _model_mesh(t: int) -> Mesh:
 		var src: Mesh = mi.mesh
 		if src == null:
 			continue
-		var xform: Transform3D = mi.transform
+		# Bake the node's full transform from the scene root (nested nodes, not just the local one).
+		var xform := _scene_xform(mi, scene)
 		var is_ident := xform.is_equal_approx(Transform3D.IDENTITY)
+		var nbasis := xform.basis.inverse().transposed() # normals under non-uniform scale
 		for s in range(src.get_surface_count()):
 			var arrays := src.surface_get_arrays(s)
 			if not is_ident:
 				var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-				var new_verts := PackedVector3Array()
-				new_verts.resize(verts.size())
 				for vi in range(verts.size()):
-					new_verts[vi] = xform * verts[vi]
-				arrays[Mesh.ARRAY_VERTEX] = new_verts
-				var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
-				if not normals.is_empty():
-					var new_normals := PackedVector3Array()
-					new_normals.resize(normals.size())
-					var basis := xform.basis.orthonormalized()
+					verts[vi] = xform * verts[vi]
+				arrays[Mesh.ARRAY_VERTEX] = verts
+				if arrays[Mesh.ARRAY_NORMAL] is PackedVector3Array:
+					var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
 					for ni in range(normals.size()):
-						new_normals[ni] = basis * normals[ni]
-					arrays[Mesh.ARRAY_NORMAL] = new_normals
+						normals[ni] = (nbasis * normals[ni]).normalized()
+					arrays[Mesh.ARRAY_NORMAL] = normals
+				if arrays[Mesh.ARRAY_TANGENT] is PackedFloat32Array:
+					var tang: PackedFloat32Array = arrays[Mesh.ARRAY_TANGENT]
+					for ti in range(0, tang.size(), 4):
+						var tv := (xform.basis * Vector3(tang[ti], tang[ti + 1], tang[ti + 2])).normalized()
+						tang[ti] = tv.x
+						tang[ti + 1] = tv.y
+						tang[ti + 2] = tv.z
+					arrays[Mesh.ARRAY_TANGENT] = tang
 
 			var sm := src.surface_get_material(s) as BaseMaterial3D
 			var mat := ShaderMaterial.new()
@@ -139,6 +144,17 @@ static func _model_mesh(t: int) -> Mesh:
 		return null
 	_model_meshes[t] = m
 	return m
+
+## Transform of `node` relative to the instantiated scene root (the scene is never in the tree,
+## so global_transform isn't available).
+static func _scene_xform(node: Node, root: Node) -> Transform3D:
+	var t := Transform3D.IDENTITY
+	var n := node
+	while n != null and n != root:
+		if n is Node3D:
+			t = (n as Node3D).transform * t
+		n = n.get_parent()
+	return t
 
 static func mesh(t: int) -> Mesh:
 	if _meshes.has(t):

@@ -11,6 +11,7 @@ render_mode cull_back, diffuse_burley, specular_schlick_ggx;
 global uniform float nt_night;
 global uniform float nt_rain;
 global uniform vec3 nt_wind;
+global uniform vec3 nt_sun_dir; // towards the sun (SkyWeather)
 
 uniform sampler2D sea_depth : filter_linear, repeat_disable;
 uniform vec4 sea_rect = vec4(-4500.0, -3100.0, 9000.0, 6200.0); // x0, z0, size x, size z
@@ -73,15 +74,15 @@ void fragment() {
 	col = mix(col, vec3(0.85, 0.88, 0.88), foam);
 	col *= mix(1.0, 0.25, nt_night);
 
-	// Mediterranean sun glitter sparkle across wave facets
+	// Sun glitter on the wave facets, from the real sun (a tight lobe on top of the GGX highlight).
 	vec3 V = normalize(CAMERA_POSITION_WORLD - world_pos);
-	vec3 sun_dir = normalize(vec3(0.42, 0.75, -0.50));
+	vec3 sun_dir = normalize(nt_sun_dir + vec3(0.0, 1e-4, 0.0));
 	vec3 H = normalize(V + sun_dir);
 	float NdotH = max(dot(Nw, H), 0.0);
-	float sparkle = pow(NdotH, 64.0) * (1.0 - nt_night) * 1.8 * (1.0 - foam);
-	col += vec3(1.0, 0.96, 0.88) * sparkle;
+	float sparkle = pow(NdotH, 256.0) * smoothstep(0.0, 0.08, sun_dir.y) * (1.0 - nt_night) * (1.0 - foam) * 2.5;
 
 	ALBEDO = col;
+	EMISSION = vec3(1.0, 0.95, 0.85) * sparkle;
 	ROUGHNESS = mix(0.04, 0.5, foam) + smoothstep(200.0, 2000.0, dist) * 0.08;
 	METALLIC = 0.0;
 	SPECULAR = mix(0.4, 0.5, foam); // F0 ~0.02 for water

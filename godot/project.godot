@@ -91,6 +91,10 @@ nt_wind={
 "type": "vec3",
 "value": Vector3(0.6, 0, 0.3)
 }
+nt_sun_dir={
+"type": "vec3",
+"value": Vector3(0.42, 0.75, -0.5)
+}
 
 [rendering]
 

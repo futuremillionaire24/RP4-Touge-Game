@@ -6,9 +6,11 @@ render_mode cull_back, diffuse_burley;
 
 #include "res://shaders/include/nt_noise.gdshaderinc"
 #include "res://shaders/include/env_layers.gdshaderinc"
+#include "res://shaders/include/lamp_pools.gdshaderinc"
 
 global uniform float nt_wetness;
 global uniform float nt_snow;
+global uniform float nt_night;
 global uniform float nt_season;
 
 uniform sampler2DArray ground_albedo : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
@@ -49,4 +51,5 @@ void fragment() {
 	ALBEDO = albedo;
 	ROUGHNESS = rough;
 	AO = COLOR.r * n.a;
+	if (nt_night > 0.02) EMISSION = albedo * lamp_pool_light(world_pos) * nt_night;
 }

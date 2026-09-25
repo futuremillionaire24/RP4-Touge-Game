@@ -15,12 +15,8 @@ func _ready() -> void:
 	sun.name = "Sun"
 	sun.light_energy = 1.50
 	sun.light_color = Color(1.0, 0.97, 0.90) # Warm Mediterranean sunlight
-	sun.shadow_enabled = true
-	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
-	sun.directional_shadow_max_distance = 280.0
-	sun.directional_shadow_split_1 = 0.08 # 0-22m sharp car/road contact
-	sun.directional_shadow_split_2 = 0.22 # 22-61m roadside buildings & trees
-	sun.directional_shadow_split_3 = 0.50 # 61-140m upcoming corners & blocks
+	apply_shadow_quality(int(Settings.get_value("graphics", "shadows", 2)))
+	Settings.changed.connect(_on_settings_changed)
 	sun.shadow_blur = 1.0
 	sun.shadow_bias = 0.035
 	sun.shadow_normal_bias = 1.1
@@ -69,3 +65,27 @@ func _ready() -> void:
 	world_env.environment = env
 	add_child(world_env)
 
+
+func _on_settings_changed(section: String) -> void:
+	if section == "graphics":
+		apply_shadow_quality(int(Settings.get_value("graphics", "shadows", 2)))
+
+## Graphics "shadows" setting: 0 off, 1 low (2 cascades to 160 m, the original mobile budget),
+## 2 high (4 cascades to 220 m), 3 ultra (4 cascades to 280 m so far cliffs and skyline blocks keep
+## their shadows). Each extra cascade re-renders its casters: profile on the RP4 before raising
+## the default.
+func apply_shadow_quality(q: int) -> void:
+	if sun == null:
+		return
+	sun.shadow_enabled = q > 0
+	if q <= 1:
+		sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+		sun.directional_shadow_max_distance = 160.0
+		sun.directional_shadow_split_1 = 0.2
+		return
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+	sun.directional_shadow_max_distance = 280.0 if q >= 3 else 220.0
+	# Near cascade stays ~20 m for crisp car and kerb contact shadows at either range.
+	sun.directional_shadow_split_1 = 0.08 if q >= 3 else 0.1
+	sun.directional_shadow_split_2 = 0.22 if q >= 3 else 0.27
+	sun.directional_shadow_split_3 = 0.5 if q >= 3 else 0.55

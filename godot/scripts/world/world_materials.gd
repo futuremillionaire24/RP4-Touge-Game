@@ -51,10 +51,7 @@ static func get_material(group: int) -> Material:
 		Group.RAIL:
 			m = _shader("res://shaders/rail.gdshader")
 		Group.WALL, Group.DECK:
-			var s := StandardMaterial3D.new()
-			s.albedo_color = Color(0.6, 0.59, 0.56)
-			s.roughness = 0.88
-			m = s
+			m = _cache.get(Group.WALL) if _cache.has(Group.WALL) else _shader("res://shaders/wall.gdshader")
 		Group.POST:
 			var s := StandardMaterial3D.new()
 			s.albedo_color = Color(0.55, 0.56, 0.58)
