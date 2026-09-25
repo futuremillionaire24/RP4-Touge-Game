@@ -7,6 +7,9 @@ extends Node3D
 
 const MAX_PER_MODEL := 90
 const NEAR_DISTANCE := 45.0
+const MAX_DISTANCE := 450.0 # beyond this traffic is not drawn (haze and buildings hide it)
+const CULL_NEAR := 25.0 # always draw cars this close (mirror view, shadows onto the road)
+const VIEW_COS := 0.2 # ~78 deg half-angle cone: the chase camera sees ~35 deg either side
 ## Native model slots (TrafficModel in native/src/sim/traffic.h) -> baked traffic car keys.
 const MODEL_KEYS := ["vw_polo", "skoda_superb", "volvo_v60", "vw_t6", "mb_sprinter", "town_bus"]
 const SHADER := preload("res://shaders/traffic_car.gdshader")
@@ -86,7 +89,15 @@ func _process(_delta: float) -> void:
 		return
 	var cam := get_viewport().get_camera_3d()
 	var eye := cam.global_position if cam else Vector3.ZERO
+	# View direction on the ground plane: MultiMesh instances are never frustum-culled one by one
+	# (the AABB spans the map), so cars behind the camera or well outside the view cone and beyond
+	# MAX_DISTANCE are simply not submitted.
+	var fwd := -cam.global_basis.z if cam else Vector3.FORWARD
+	var fl := Vector2(fwd.x, fwd.z).length()
+	var fx := fwd.x / maxf(fl, 1e-3)
+	var fz := fwd.z / maxf(fl, 1e-3)
 	var near2 := NEAR_DISTANCE * NEAR_DISTANCE
+	var max2 := MAX_DISTANCE * MAX_DISTANCE
 	for m in range(MODEL_KEYS.size()):
 		var buf := sim.traffic_buffer(m)
 		var count := mini(buf.size() / 16, MAX_PER_MODEL)
@@ -96,8 +107,13 @@ func _process(_delta: float) -> void:
 			var o := i * 16
 			var dx := buf[o + 3] - eye.x
 			var dz := buf[o + 11] - eye.z
+			var d2 := dx * dx + dz * dz
+			if d2 > max2:
+				continue
+			if d2 > CULL_NEAR * CULL_NEAR and dx * fx + dz * fz < VIEW_COS * sqrt(d2):
+				continue
 			# Packed arrays are value types: write the member arrays directly.
-			if dx * dx + dz * dz < near2:
+			if d2 < near2:
 				var d := n_near * 16
 				for k in range(16):
 					_near[d + k] = buf[o + k]

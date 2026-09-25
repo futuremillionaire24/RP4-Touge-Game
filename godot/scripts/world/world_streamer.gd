@@ -26,6 +26,7 @@ var _results := [] # finished chunk dictionaries
 var _mutex := Mutex.new()
 var _timer := 0.0
 var _initial_left := -1
+var _census := LaunchArgs.user_args().has("chunk_census") # debug: per-chunk triangle counts
 
 func setup(p_world: NTWorld, p_sim: NTSim) -> void:
 	world = p_world
@@ -163,6 +164,11 @@ func _upload_results() -> void:
 
 func _integrate(d: Dictionary) -> void:
 	var key := Vector2i(d.cx, d.cz)
+	if _census:
+		var vc := {} # vertices per mesh group (make_mesh has consumed the index arrays by now)
+		for g in d.groups:
+			vc[int(g.group)] = int(vc.get(int(g.group), 0)) + int(g.get("vertex_count", 0))
+		print("CHUNK %d,%d L%d verts road %d junction %d sidewalk %d shoulder %d terrain %d" % [key.x, key.y, d.lod, vc.get(0, 0), vc.get(8, 0), vc.get(16, 0), vc.get(1, 0), vc.get(7, 0)])
 	var node := Node3D.new()
 	node.name = "Chunk_%d_%d_L%d" % [key.x, key.y, d.lod]
 	var mesh: ArrayMesh = d.mesh

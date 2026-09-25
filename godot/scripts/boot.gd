@@ -18,7 +18,7 @@ const SCENES := {
 
 func _ready() -> void:
 	var target := "festival"
-	for a in OS.get_cmdline_user_args():
+	for a in LaunchArgs.user_args():
 		if a.begins_with("scene="):
 			target = a.substr(6)
 	var path: String = SCENES.get(target, SCENES["festival"])

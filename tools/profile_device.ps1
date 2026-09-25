@@ -3,7 +3,7 @@
 # godot/scripts/core/perf_audit.gd) through Godot's "command_line_params" intent extra, collects the
 # PERFJSON lines from logcat and writes build/qa/perf/report.md (desktop vs RP4).
 #   tools\profile_device.ps1 [-Desktop] [-NoInstall] [-Settle 8] [-Sample 15] [-Only day_parked,night_parked]
-param([switch]$Desktop, [switch]$NoInstall, [int]$Settle = 8, [int]$Sample = 15, [string]$Only = "", [string]$Spawn = "garage_port", [string]$Car = "golf_gti")
+param([switch]$Desktop, [switch]$NoInstall, [switch]$Ablate, [int]$Settle = 8, [int]$Sample = 15, [string]$Only = "", [string]$Spawn = "garage_port", [string]$Car = "golf_gti")
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "env.ps1")
 $out = Join-Path $NT_ROOT "build\qa\perf"
@@ -11,6 +11,8 @@ New-Item -ItemType Directory -Force $out | Out-Null
 $pkg = "com.neontouge.rp4"
 $auditArgs = @("scene=perf_audit", "settle=$Settle", "sample=$Sample", "spawn=$Spawn", "car=$Car")
 if ($Only) { $auditArgs += "only=$Only" }
+# -Ablate: one parked scene, each feature switched off in turn (GPU cost per feature).
+if ($Ablate) { $auditArgs += "ablate=1" }
 
 function Parse-Perf([string[]]$lines) {
     $lines | Where-Object { $_ -match "PERFJSON (\{.*\})" } | ForEach-Object { ([regex]::Match($_, "PERFJSON (\{.*\})")).Groups[1].Value | ConvertFrom-Json }
@@ -40,10 +42,13 @@ adb shell wm dismiss-keyguard | Out-Null
 adb shell input keyevent 82 | Out-Null
 adb shell am force-stop $pkg | Out-Null
 adb logcat -c
-$params = (@("--") + $auditArgs) -join ","
-Write-Host "== launching audit on the RP4 ($params)"
-# GodotApp itself is not exported; the launcher alias forwards the extras to it.
-adb shell am start -n "$pkg/com.godot.game.GodotAppLauncher" --esa command_line_params "$params" | Out-Host
+# Android has no command line: the game reads (and deletes) launch_args.txt from its external
+# files folder on start (godot/scripts/core/launch_args.gd).
+$argFile = "/sdcard/Android/data/$pkg/files/launch_args.txt"
+adb shell mkdir -p "/sdcard/Android/data/$pkg/files" | Out-Null
+adb shell "echo '$($auditArgs -join ' ')' > $argFile" | Out-Null
+Write-Host "== launching audit on the RP4 ($($auditArgs -join ' '))"
+adb shell monkey -p $pkg -c android.intent.category.LAUNCHER 1 | Out-Null
 $deadline = (Get-Date).AddMinutes(20)
 $lines = @()
 while ((Get-Date) -lt $deadline) {

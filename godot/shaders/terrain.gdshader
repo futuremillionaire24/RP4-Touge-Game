@@ -3,7 +3,7 @@
 // .b urban, .a farm; UV2.x forest, UV2.y park. The rest is Mediterranean scrub (garrigue: dry
 // grass, stones and bare soil). Layers are height-blended; rock is tri-planar on cliffs.
 shader_type spatial;
-render_mode cull_back, diffuse_burley;
+render_mode cull_back, diffuse_burley, skip_vertex_transform;
 
 #include "res://shaders/include/nt_noise.gdshaderinc"
 #include "res://shaders/include/env_layers.gdshaderinc"
@@ -26,12 +26,21 @@ const int L_FARM = 6;
 const int L_DIRT = 7;
 const float TILE[9] = float[](7.0, 2.4, 2.3, 6.5, 6.0, 2.0, 3.0, 4.0, 2.12);
 
+// Depth bias: the terrain is carved to road height, so roads, junctions, pavements, kerbs and
+// quays lie almost exactly on it and lose the depth test at a distance (grass and paving showed
+// through the streets). Every terrain vertex is pushed back along its view ray by this fraction of
+// its distance - same pixel on screen, ~0.3 m further at 100 m, ~1.2 m at 400 m - which also hides
+// the coarse far LOD triangles that cut across road cuttings.
+uniform float depth_push = 0.003;
+
 varying vec3 world_pos;
 varying vec3 world_nrm;
 
 void vertex() {
 	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	world_nrm = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
+	VERTEX = (MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).xyz * (1.0 + depth_push);
+	NORMAL = normalize((MODELVIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
 }
 
 void fragment() {

@@ -541,7 +541,8 @@ async function bake(key, cfg, isTraffic) {
 		fs.rmSync(outDir, { recursive: true, force: true });
 		fs.mkdirSync(outDir, { recursive: true });
 		await writeTrafficLite(key, '', cfg.budget || 24000, credit, parts, isl, wheels, log);
-		await writeTrafficLite(key, '_lod1', Math.round((cfg.budget || 24000) / 4), credit, parts, isl, wheels, []);
+		// Far LOD (beyond 45 m, up to ~50 cars on screen): a tenth of the near budget.
+		await writeTrafficLite(key, '_lod1', Math.round((cfg.budget || 24000) / 10), credit, parts, isl, wheels, []);
 		return;
 	}
 

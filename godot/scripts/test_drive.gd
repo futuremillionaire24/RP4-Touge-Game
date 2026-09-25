@@ -21,7 +21,7 @@ var args := {}
 var _shot_timer := -1.0
 
 func _ready() -> void:
-	for a in OS.get_cmdline_user_args():
+	for a in LaunchArgs.user_args():
 		var kv := a.split("=", true, 1)
 		args[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	var launch: Dictionary = get_tree().root.get_meta("launch", {})

@@ -25,3 +25,5 @@ node_modules/
 # Native DLLs moved aside while a play window holds them (tools/build-native.ps1)
 *.dll.old*
 *.TMP
+hs_err_pid*.log
+replay_pid*.log

@@ -36,7 +36,7 @@ func _defaults() -> Dictionary:
 	}
 
 func _ready() -> void:
-	for a in OS.get_cmdline_user_args():
+	for a in LaunchArgs.user_args():
 		if a.begins_with("profile="):
 			PATH = "user://profile_%s.json" % a.substr(8).validate_filename()
 	load_profile()

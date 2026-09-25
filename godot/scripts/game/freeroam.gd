@@ -38,12 +38,13 @@ var _entry := {} # Profile garage entry being driven (empty for dev runs)
 var _odo_m := 0.0
 var _play_s := 0.0
 var _car_probe: ReflectionProbe
-var _probe_tick := 0
+var _probe_age := 0.0
+var _probe_at := Vector3.INF
 var _cas_rect: ColorRect
 var gps_ribbon: GPSRibbon
 
 func _ready() -> void:
-	for a in OS.get_cmdline_user_args():
+	for a in LaunchArgs.user_args():
 		var kv := a.split("=", true, 1)
 		args[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	var launch: Dictionary = get_tree().root.get_meta("launch", {})
@@ -149,17 +150,22 @@ func _on_initial_load() -> void:
 		player.setup(sim, id, key, true)
 	else:
 		player.setup_entry(sim, id, _entry, true)
-	# Dynamic time-sliced ReflectionProbe on player car (Forza / GT dynamic vehicle reflection).
-	_car_probe = ReflectionProbe.new()
-	_car_probe.name = "PlayerCarProbe"
-	_car_probe.update_mode = ReflectionProbe.UPDATE_ONCE
-	_car_probe.size = Vector3(250.0, 90.0, 250.0)
-	_car_probe.origin_offset = Vector3(0.0, 1.2, 0.0)
-	_car_probe.box_projection = true
-	_car_probe.interior = false
-	_car_probe.enable_shadows = false
-	_car_probe.cull_mask = 0xFFFFFFFD # Exclude car layer 2 to avoid self-reflection
-	player.add_child(_car_probe)
+	# Local reflections on the player car. Each capture re-renders the scene into six cube faces, so
+	# it is refreshed only after the car has moved or every few seconds; on Android below Ultra the
+	# paint reflects the photographic sky instead (measured on the RP4: ~3 ms of GPU a frame when
+	# the probe refreshed at 10 Hz).
+	var probe_ok := OS.get_name() != "Android" or int(Settings.get_value("graphics", "tier", Settings.Tier.HIGH)) >= Settings.Tier.ULTRA
+	if probe_ok:
+		_car_probe = ReflectionProbe.new()
+		_car_probe.name = "PlayerCarProbe"
+		_car_probe.update_mode = ReflectionProbe.UPDATE_ONCE
+		_car_probe.size = Vector3(250.0, 90.0, 250.0)
+		_car_probe.origin_offset = Vector3(0.0, 1.2, 0.0)
+		_car_probe.box_projection = true
+		_car_probe.interior = false
+		_car_probe.enable_shadows = false
+		_car_probe.cull_mask = 0xFFFFFFFD # Exclude car layer 2 to avoid self-reflection
+		player.add_child(_car_probe)
 
 	camera = ChaseCamera.new()
 	camera.sim = sim
@@ -181,20 +187,22 @@ func _on_initial_load() -> void:
 	sky.season = float(args.get("season", "0"))
 	sky.set_weather(int(args.get("weather", "0")), true)
 
-	# Retro Arcade & CAS post-processing layer (CanvasLayer 1): Initial D speedlines, anamorphic flares, CAS filter.
-	var pp_layer := CanvasLayer.new()
-	pp_layer.layer = 1
-	add_child(pp_layer)
-	_cas_rect = ColorRect.new()
-	_cas_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_cas_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var cas_mat := ShaderMaterial.new()
-	cas_mat.shader = preload("res://shaders/retro_arcade_fx.gdshader")
-	cas_mat.set_shader_parameter("sharpness", 0.65)
-	var arcade_opt: int = int(Settings.get_value("graphics", "retro_arcade", 1))
-	cas_mat.set_shader_parameter("arcade_mode", arcade_opt)
-	_cas_rect.material = cas_mat
-	pp_layer.add_child(_cas_rect)
+	# Optional retro / CAS post-processing layer (CanvasLayer 1): speed lines, flares, sharpening.
+	# A full-screen pass (~1.4 ms on the RP4), so it only exists when enabled in the settings.
+	var arcade_opt: int = int(Settings.get_value("graphics", "retro_arcade", 0))
+	if arcade_opt > 0:
+		var pp_layer := CanvasLayer.new()
+		pp_layer.layer = 1
+		add_child(pp_layer)
+		_cas_rect = ColorRect.new()
+		_cas_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_cas_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var cas_mat := ShaderMaterial.new()
+		cas_mat.shader = preload("res://shaders/retro_arcade_fx.gdshader")
+		cas_mat.set_shader_parameter("sharpness", 0.65)
+		cas_mat.set_shader_parameter("arcade_mode", arcade_opt)
+		_cas_rect.material = cas_mat
+		pp_layer.add_child(_cas_rect)
 
 	# HUD CanvasLayer (layer 2): decoupled from 3D scaling, perfectly razor-sharp at native 1334x750.
 	layer = CanvasLayer.new()
@@ -302,11 +310,14 @@ func _exit_tree() -> void:
 
 func _play_update(delta: float) -> void:
 	_update_acoustics(delta)
-	# Dynamic time-sliced reflection probe update (10 Hz on 60 FPS target).
-	_probe_tick += 1
-	if _probe_tick % 6 == 0 and _car_probe:
-		_car_probe.update_mode = ReflectionProbe.UPDATE_ONCE
 	var pos := player.global_position
+	# Reflection probe: recapture after 40 m of travel or every 4 s (not every 6 frames).
+	if _car_probe:
+		_probe_age += delta
+		if _probe_age > 4.0 or pos.distance_squared_to(_probe_at) > 40.0 * 40.0:
+			_probe_age = 0.0
+			_probe_at = pos
+			_car_probe.update_mode = ReflectionProbe.UPDATE_ONCE
 	if _follow_player:
 		streamer.focus = pos
 		streamer.focus_velocity = sim.get_velocity(player.car_id)
@@ -595,6 +606,31 @@ func _recover() -> void:
 	camera.snap()
 
 func _save_shot(path: String) -> void:
+	# shotcam=<height>,<back>: a fixed camera that far behind and above the car, looking along the
+	# car's heading 150 m ahead (overview shots for checking roads at a distance).
+	if args.has("shotcam"):
+		var hb := String(args.shotcam).split(",")
+		var xf := player.global_transform
+		var fwd := -xf.basis.z
+		fwd.y = 0.0
+		fwd = fwd.normalized()
+		var cam := Camera3D.new()
+		cam.fov = 60.0
+		add_child(cam)
+		if hb.size() > 2 and hb[2] == "top":
+			# shotcam=<height>,<ahead>,top: straight down over the point <ahead> m in front of the car.
+			var target := xf.origin + fwd * float(hb[1])
+			cam.global_position = target + Vector3.UP * float(hb[0])
+			cam.look_at(target, fwd)
+		else:
+			cam.global_position = xf.origin - fwd * float(hb[1] if hb.size() > 1 else "20") + Vector3.UP * float(hb[0])
+			cam.look_at(xf.origin + fwd * 150.0, Vector3.UP)
+		cam.current = true
+		hud.visible = false
+		if minimap:
+			minimap.visible = false
+		for i in range(20):
+			await get_tree().process_frame
 	await RenderingServer.frame_post_draw
 	var img := get_viewport().get_texture().get_image()
 	img.save_png(path)

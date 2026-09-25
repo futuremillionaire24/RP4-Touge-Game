@@ -45,6 +45,18 @@ static func _shader(path: String) -> ShaderMaterial:
 static func get_material(group: int) -> Material:
 	if _cache.has(group):
 		return _cache[group]
+	# Debug: `debug_hide=terrain,building` renders those groups invisible (e.g. to see roads the
+	# terrain covers).
+	for a in LaunchArgs.user_args():
+		if a.begins_with("debug_hide="):
+			var names: PackedStringArray = a.substr(11).to_upper().split(",")
+			for n in names:
+				if Group.has(n) and Group[n] == group:
+					var hide := ShaderMaterial.new()
+					hide.shader = Shader.new()
+					hide.shader.code = "shader_type spatial;\nvoid fragment() { discard; }\n"
+					_cache[group] = hide
+					return hide
 	var m: Material
 	match group:
 		Group.ROAD, Group.JUNCTION:

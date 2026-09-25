@@ -227,7 +227,19 @@ void build_roads(Ctx &c) {
 		if (o.range_end <= o.range_begin && !(o.closed && span.end == (int)rs.size())) continue;
 		if (o.closed && span.end == (int)rs.size()) o.range_end = (int)rs.size();
 		RoadMeshOutput ro;
-		build_road(rs, o, ro);
+		if (c.opt.lod >= 3 && span.end - span.begin > 4) {
+			// Far ring: every third sample is plenty for a road seen from over 600 m away.
+			std::vector<RoadSample> thin;
+			for (int i = span.begin; i < span.end; i += 3) thin.push_back(rs[i]);
+			if ((span.end - 1 - span.begin) % 3 != 0) thin.push_back(rs[span.end - 1]);
+			RoadBuildOptions ot = o;
+			ot.closed = false;
+			ot.range_begin = 0;
+			ot.range_end = (int)thin.size() - 1;
+			build_road(thin, ot, ro);
+		} else {
+			build_road(rs, o, ro);
+		}
 		for (int g = 0; g < GROUP_COUNT; ++g) {
 			MeshData &dst = c.out.groups[g];
 			const MeshData &src = ro.groups[g];
@@ -743,9 +755,11 @@ void build_junction_polys(Ctx &c) {
 			m.add_vertex(a, up, ua.x, ua.y, code, width, 1.0, 0, 0, span);
 			m.add_vertex(b, up, ub.x, ub.y, code, width, 1.0, 0, 0, span);
 			m.add_vertex(cc, up, uc.x, uc.y, code, width, 1.0, 0, 0, span);
-			// Counter-clockwise seen from above.
+			// Godot's front faces are clockwise on screen. Seen from above (+X right, +Z down the
+			// screen) that is a positive x/z cross product, so emit whichever order has one - the
+			// fans used to come out counter-clockwise and were culled: junctions were holes.
 			real cross = (b.x - a.x) * (cc.z - a.z) - (b.z - a.z) * (cc.x - a.x);
-			if (cross < 0) m.indices.insert(m.indices.end(), {base, base + 1, base + 2});
+			if (cross > 0) m.indices.insert(m.indices.end(), {base, base + 1, base + 2});
 			else m.indices.insert(m.indices.end(), {base, base + 2, base + 1});
 			if (c.opt.collision) c.out.collision.add_tri(a, b, cc, j.surface, COL_ALL);
 		};
@@ -1198,12 +1212,9 @@ void simplify_far(ChunkOutput &out) {
 	for (int g : {(int)GROUP_CURB, (int)GROUP_RAIL, (int)GROUP_POST, (int)GROUP_WALL, (int)GROUP_TIREWALL, (int)WG_TUNNEL, (int)WG_TUNNEL_LIGHT, (int)WG_NEON,
 				 (int)GROUP_SHOULDER, (int)WG_SIDEWALK})
 		out.groups[g].clear();
-	if (out.lod >= 3) {
-		out.groups[GROUP_ROAD].clear();
-		out.groups[WG_JUNCTION].clear();
-	} else {
-		append_group(out.groups[GROUP_ROAD], out.groups[WG_JUNCTION]);
-	}
+	// Far rings keep their carriageways (thinned in build_roads) with the junction patches merged
+	// in: without them towns seen from the hills are houses on bare ground with no streets.
+	append_group(out.groups[GROUP_ROAD], out.groups[WG_JUNCTION]);
 }
 
 void build_chunk(const World &w, int cx, int cz, const ChunkOptions &opt, ChunkOutput &out) {

@@ -5,7 +5,7 @@ extends Node
 signal changed(section: String)
 
 var PATH := "user://settings.json" # "-- profile=<name>" isolates test runs
-const VERSION := 2
+const VERSION := 3
 
 enum Tier { LOW, MEDIUM, HIGH, ULTRA, CUSTOM }
 
@@ -29,7 +29,7 @@ func _defaults() -> Dictionary:
 			"particles": 1.0,
 			"motion_blur": true,
 			"lens_effects": true,
-			"retro_arcade": 1, # 0 = off, 1 = subtle, 2 = crt
+			"retro_arcade": 0, # 0 = off, 1 = subtle, 2 = crt (a full-screen pass: ~1.4 ms on the RP4)
 			"show_fps": false,
 		},
 		"audio": {
@@ -74,7 +74,7 @@ func _defaults() -> Dictionary:
 	}
 
 func _ready() -> void:
-	for a in OS.get_cmdline_user_args():
+	for a in LaunchArgs.user_args():
 		if a.begins_with("profile="):
 			PATH = "user://settings_%s.json" % a.substr(8).validate_filename()
 	load_settings()
@@ -111,6 +111,9 @@ func load_settings() -> void:
 	# v2: the RP4 free-roam budget - 4 shadow cascades only on Ultra (older saves stored "high").
 	if int(parsed.get("version", 1)) < 2 and int(data.graphics.tier) != Tier.ULTRA:
 		data.graphics.shadows = mini(int(data.graphics.shadows), 1)
+	# v3: the retro / CAS filter costs ~1.4 ms of GPU a frame on the RP4 - off unless re-enabled.
+	if int(parsed.get("version", 1)) < 3:
+		data.graphics.retro_arcade = 0
 
 func save_settings() -> void:
 	var tmp := PATH + ".tmp"
