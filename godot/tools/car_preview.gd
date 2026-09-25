@@ -23,8 +23,11 @@ func _ready() -> void:
 		elif a == "props":
 			asset_root = "res://assets/props" # tools/carbake/props.mjs output; the arrow marks +Z
 	if cars.is_empty():
-		for d in DirAccess.get_directories_at(asset_root):
-			cars.append(d)
+		if tile_mode:
+			cars = PackedStringArray(CarData.keys())
+		else:
+			for d in DirAccess.get_directories_at(asset_root):
+				cars.append(d)
 	var absolute_out := ProjectSettings.globalize_path(out_dir) if out_dir.begins_with("res://") else out_dir
 	DirAccess.make_dir_recursive_absolute(absolute_out)
 	var env := Environment.new()
